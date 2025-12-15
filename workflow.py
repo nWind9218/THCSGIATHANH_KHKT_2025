@@ -21,7 +21,7 @@ load_dotenv()
 llm = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0.7,
-    api_key=os.getenv("OPENAI_API_KEY")
+    api_key=os.getenv("GPT_API_KEY")
 )
 
 embedd = OllamaEmbeddings(model="bge-m3:latest",
