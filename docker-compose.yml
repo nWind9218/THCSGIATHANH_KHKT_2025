@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: my_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: hero
+      POSTGRES_PASSWORD: hero
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - D:/ManhProject/hyper-v-db/postgres-data:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: my_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: thcs@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: 1
+    ports:
+      - "8000:80"
+    depends_on:
+      - postgres
+    volumes:
+      - D:/ManhProject/hyper-v-db/pgadmin:/var/lib/pgadmin
+    restart: always
+  
+  redis:
+    image: redis:latest
+    container_name: my_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - D:/ManhProject/hyper-v-db/redis-data:/data
+    command: redis-server --appendonly yes
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: my_redis_commander
+    restart: always
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+
+
+  

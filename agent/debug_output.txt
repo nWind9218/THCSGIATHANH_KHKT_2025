@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "D:\ManhProject\THCSGIATHANH_KHKT_2025\agent\demo_logging.py", line 12, in <module>
+    func_a()
+  File "D:\ManhProject\THCSGIATHANH_KHKT_2025\agent\demo_logging.py", line 8, in func_a
+    return func_b()
+  File "D:\ManhProject\THCSGIATHANH_KHKT_2025\agent\demo_logging.py", line 10, in func_b
+    return 10 / 0
+ZeroDivisionError: division by zero
