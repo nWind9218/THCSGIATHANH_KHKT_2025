@@ -7,7 +7,8 @@ import httpx
 import logging
 import asyncio
 from contextlib import asynccontextmanager
-from utils.database import start_pooling, close_db_pools, get_pg_connection, get_redis_client
+from utils.database import start_pooling, close_db_pools, get_redis_client
+from workflow import workflow
 # Load environment variables
 load_dotenv()
 
@@ -117,8 +118,16 @@ async def await_sending(seconds: int, sender_id: str):
         logger.info(f"BẮT ĐẦU THIẾT LẬP HÀNG CHỜ CHO: {seconds} giây")
         await asyncio.sleep(seconds)
         logger.info(f"HẾT THỜI GIAN CHỜ, BÂY GIỜ BOT SẼ TIẾP TỤC CÔNG VIỆC!")
-        messages = await clear_tasks(sender_id=sender_id) 
-        return await send_message(sender_id, messages)
+        messages = await clear_tasks(sender_id=sender_id)
+        final_response = await workflow().ainvoke({
+            'messages': messages,
+            'bot_type': 'Bắt nạt học đường',
+            'rag_results': '',
+            'llm_response': '',
+            'final_response': '',
+            'error': ''
+        }, config={"configurable": {"thread_id": sender_id}})
+        return await send_message(sender_id, final_response['final_response'])
     except asyncio.CancelledError:
         logger.warning(f"Đã có tin nhắn mới từ {sender_id}!")
         raise

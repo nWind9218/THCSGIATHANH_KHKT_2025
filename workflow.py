@@ -42,12 +42,15 @@ class AgentState(TypedDict):
     llm_response: str
     final_response: str
     error: str
+    
 async def search_with_rag(state: AgentState) -> AgentState:
     try:
         question = state['messages']
         bot_type = state['bot_type']
 
         question_vector = embedding(question)
+        vector_str = '[' + ','.join(map(str, question_vector)) + ']'
+        
         pg_pool = await get_pg_connection()
         
         query = """
@@ -59,23 +62,41 @@ async def search_with_rag(state: AgentState) -> AgentState:
             LIMIT 3
         """
         
-        results = await fetchall(query, question_vector, bot_type)
+        results = await fetchall(query, vector_str, bot_type)
 
         if not results:
             state["rag_results"] = ""
             return state
+            
         formatted_results = []
         for row in results:
             formatted_results.append({
                 "question": row[0],
                 "answer": row[1],
-                "bot_type": row[2],
                 "similarity": float(row[3])
             })
-        print("✅ STEP 1: RAG SIMILARITY", formatted_results)
-        state["rag_results"] = json.dumps({
-            "results": formatted_results
-        }, ensure_ascii=False, indent=2)
+        
+        # ✅ Để LLM chọn câu trả lời tốt nhất
+        selection_prompt = f"""Dựa vào câu hỏi của người dùng, hãy chọn câu trả lời PHÙ HỢP NHẤT từ các đáp án sau:
+
+Câu hỏi: {question}
+
+Các đáp án:
+{json.dumps(formatted_results, ensure_ascii=False, indent=2)}
+
+Chỉ trả về JSON với format: {{"selected_answer": "câu trả lời được chọn"}}"""
+
+        messages = [
+            SystemMessage(content="Bạn là chuyên gia phân tích và lựa chọn thông tin chính xác."),
+            HumanMessage(content=selection_prompt)
+        ]
+        
+        response = await llm.ainvoke(messages)
+        selected = json.loads(response.content)
+        
+        print("✅ STEP 1: LLM SELECTED ANSWER", selected)
+        
+        state["rag_results"] = selected["selected_answer"]
         
         return state
     except Exception as e:
@@ -113,7 +134,7 @@ async def refine_response_node(state: AgentState) -> AgentState:
             - Tránh thuật ngữ phức tạp
             - Thêm ví dụ minh họa nếu cần
             - Giữ ngữ điệu thân thiện, khuyến khích"""),
-            HumanMessage(content=f"Câu hỏi: {question}\n\nCâu trả lời cần chỉnh sửa: {answer}")
+            HumanMessage(content=f"Câu hỏi: {question}\n\nCâu trả lời cần chỉnh sửa{answer}")
         ]
         response = await llm.ainvoke(messages)
         print("✅ STEP 3: REFINE BOT RESPONSE\n", response)
