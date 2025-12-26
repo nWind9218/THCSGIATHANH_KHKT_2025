@@ -1,6 +1,8 @@
 import asyncio
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Annotated
+import operator
+import asyncpg
 import os
 from dotenv import load_dotenv
 from langchain_core.tools import tool
@@ -29,10 +31,8 @@ PG_PORT_AI = 5432
 PG_USER = os.getenv("DB_USERNAME")
 PG_PASS = os.getenv("DB_PASSWORD")
 
-async def embedding(text):
-    """Async wrapper for embedding to avoid blocking"""
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, embedd.embed_query, text)
+def embedding(text):
+    return embedd.embed_query(text)
 
 class AgentState(TypedDict):
     messages: str
@@ -43,19 +43,12 @@ class AgentState(TypedDict):
     
 async def search_with_rag(state: AgentState) -> AgentState:
     try:
-        # ✅ Đảm bảo pool được khởi tạo (quan trọng cho LangGraph Studio)
-        from utils.database import start_pooling
-        try:
-            pg_pool = await get_pg_connection()
-        except Exception:
-            # Nếu pool chưa có, khởi tạo tự động
-            await start_pooling()
-            pg_pool = await get_pg_connection()
-        
         question = state['messages']
 
-        question_vector = await embedding(question)
+        question_vector = embedding(question)
         vector_str = '[' + ','.join(map(str, question_vector)) + ']'
+        
+        pg_pool = await get_pg_connection()
         
         query = """
             SELECT question, answer, bot_type,
@@ -112,7 +105,7 @@ async def ask_llm_node(state: AgentState) -> AgentState:
     try:
         question = state["messages"]
         messages = [
-            SystemMessage(content="Bạn là trợ lý ảo có tên gọi là Mimi, là trí thông minh nhân tạo được tạo ra bởi trường trung học cơ sở Gia Thanh, nhiệm vụ của bạn là giúp đỡ những bạn trẻ thanh thiếu niên từ 10-16 tuổi về các vấn đề liên quan tới học đường."),
+            SystemMessage(content="Bạn là trợ lý ảo có tên gọi là Mimi, là trí thông minh nhân tạo của một shop hàng trực tuyến, bạn sẽ là người có trách nhiệm hỗ trợ customers để tư vấn về sản phẩm. Sản phẩm là một ứng dụng website chatbot online trực tuyến"),
             HumanMessage(content=question)
         ]
         response = await llm.ainvoke(messages)
@@ -131,7 +124,7 @@ async def refine_response_node(state: AgentState) -> AgentState:
         answer = state.get("rag_results") or state.get("llm_response", "")
         
         messages = [
-            SystemMessage(content="""Bạn là trợ lý ảo có tên gọi là Mimi, là trí thông minh nhân tạo được tạo ra bởi trường trung học cơ sở Gia Thanh,thông minh chuyên biệt hỗ trợ trẻ em và thanh thiếu niên từ 10-16 tuổi.
+            SystemMessage(content="""
             Hãy điều chỉnh câu trả lời theo yêu cầu sau:
             - Sử dụng ngôn ngữ thật ngắn gọn, dễ hiểu, giọng điệu nhí nhảnh, phù hợp lứa tuổi
             - Tránh thuật ngữ phức tạp
@@ -155,28 +148,28 @@ def should_use_llm(state: AgentState) -> str:
         return "refine"
     return "ask_llm"
 
-def workflow():
+def workflow_demo():
     workflow = StateGraph(AgentState)
 
-    workflow.add_node("search_rag", search_with_rag)
+    # workflow.add_node("search_rag", search_with_rag)
     workflow.add_node("ask_llm", ask_llm_node)
     workflow.add_node("refine", refine_response_node)
 
-    workflow.set_entry_point("search_rag")
+    workflow.set_entry_point("ask_llm")
 
-    workflow.add_conditional_edges(
-        "search_rag",
-        should_use_llm,
-        {
-            "ask_llm":"ask_llm",
-            "refine": "refine" 
-        }
-    )
+    # workflow.add_conditional_edges(
+    #     "search_rag",
+    #     should_use_llm,
+    #     {
+    #         "ask_llm":"ask_llm",
+    #         "refine": "refine" 
+    #     }
+    # )
     workflow.add_edge("ask_llm", "refine")
-    workflow.add_edge("search_rag", END)
+    workflow.add_edge("refine", END)
 
     return workflow.compile()
-app = workflow()
+app = workflow_demo()
 
 async def main():
     """✅ Test workflow - CẦN KHỞI TẠO POOL TRƯỚC"""

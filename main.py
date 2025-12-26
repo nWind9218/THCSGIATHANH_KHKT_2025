@@ -1,6 +1,6 @@
 from typing import Dict
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 import os
 from dotenv import load_dotenv
 import httpx
@@ -9,6 +9,8 @@ import asyncio
 from contextlib import asynccontextmanager
 from utils.database import start_pooling, close_db_pools, get_redis_client
 from workflow import workflow
+from workflow_demo import workflow_demo
+from langsmith import Client, traceable
 # Load environment variables
 load_dotenv()
 
@@ -18,6 +20,7 @@ PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")
 GRAPH_API_URL = "https://graph.facebook.com/v21.0/me/messages"
 REDIS_URL = os.getenv("REDIS_URL")
 active_task: Dict[str, asyncio.Task] = {}
+client = Client()
 
 @asynccontextmanager
 async def lifespan(app : FastAPI):
@@ -31,7 +34,9 @@ async def lifespan(app : FastAPI):
         logger.error(f"Unexpected error: {e}")
     finally:
         #Shutdown
-        print("Cleaning..")
+        logging.info("Cleaning..")
+        logging.info("✅ Start shutting down gracefully...")
+        client.flush()
         await close_db_pools()
 
 app = FastAPI(lifespan=lifespan)
@@ -41,7 +46,31 @@ logger = logging.getLogger(__name__)
 @app.get("/")
 async def root():
     return {"message":"Hello World"}
-
+@app.post("/chatme")
+async def chatMe(request: Request):
+    try:
+        body = await request.json()  # Thêm await
+        message = body.get('message')
+        
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        # Không gọi workflow_demo() như function, nó đã là workflow object
+        final_response = await workflow_demo().ainvoke({
+            'messages': message,
+            'rag_results': '',
+            'llm_response': '',
+            'final_response': '',
+            'error': ''
+        }, config={"configurable": {"thread_id": "12321312321"}})
+        
+        return JSONResponse(content={
+            "status": "success",
+            "response": final_response['final_response']
+        })
+    except Exception as e:
+        logger.error(f"❌ Error at /chatme: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 @app.get("/chat")
 async def chat(request: Request):
     mode = request.query_params.get("hub.mode")
@@ -59,6 +88,17 @@ async def chat(request: Request):
     
 @app.post("/chat")
 async def receive_message(request: Request):    
+    """Receive Messages from Webhook, then send messages to Agent to handle messages in background task
+
+    Args:
+        request (Request): Information necessary packed in each Request
+
+    Raises:
+        HTTPException: 500 - Internal Server Error
+
+    Returns:
+        "status": To Inform facebook that we received successfully
+    """
     try:
         body = await request.json()
         logger. info(f"📩 Received: {body}")
@@ -110,10 +150,11 @@ async def reset_task(seconds: int, sender_id: str, message: str):
     logger.info(f"✅ CREATE TASK MỚI CHO {sender_id}")
     await stacking_messages(sender_id, message)
     new_task = asyncio.create_task(
-        await_sending(seconds, sender_id)
+        message_postback(seconds, sender_id)
     )
     active_task[sender_id] = new_task
-async def await_sending(seconds: int, sender_id: str):
+@traceable(client=client)
+async def message_postback(seconds: int, sender_id: str):
     try:
         logger.info(f"BẮT ĐẦU THIẾT LẬP HÀNG CHỜ CHO: {seconds} giây")
         await asyncio.sleep(seconds)
@@ -121,7 +162,6 @@ async def await_sending(seconds: int, sender_id: str):
         messages = await clear_tasks(sender_id=sender_id)
         final_response = await workflow().ainvoke({
             'messages': messages,
-            'bot_type': 'Bắt nạt học đường',
             'rag_results': '',
             'llm_response': '',
             'final_response': '',
@@ -161,4 +201,4 @@ async def block_ai_workflow():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    uvicorn.run(app, host="0.0.0.0", port=4001)

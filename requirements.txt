@@ -11,6 +11,7 @@ fastapi
 uvicorn
 asyncpg
 redis
-aioredis
+aioredis 
 sqlalchemy[asyncio]
 psycopg[binary,pool]
+langgraph-cli[inmem]
