@@ -12,7 +12,8 @@ import redis
 from redisvl.utils.vectorize import CustomTextVectorizer
 from redisvl.extensions.cache.llm import SemanticCache
 from utils.database import get_pg_connection, fetchall, fetch_one, get_redis_client
-
+from typing import Optional, List
+from agent.state import UserEmotion
 load_dotenv()
 
 llm = ChatOpenAI(
@@ -36,6 +37,8 @@ async def embedding(text):
 
 class AgentState(TypedDict):
     messages: str
+    emotion_state: UserEmotion
+    history: Optional[List[str]]
     rag_results: str
     llm_response: str
     final_response: str
@@ -82,12 +85,12 @@ async def search_with_rag(state: AgentState) -> AgentState:
         # ✅ Để LLM chọn câu trả lời tốt nhất
         selection_prompt = f"""Dựa vào câu hỏi của người dùng, hãy chọn câu trả lời PHÙ HỢP NHẤT từ các đáp án sau:
 
-Câu hỏi: {question}
+        Câu hỏi: {question}
 
-Các đáp án:
-{json.dumps(formatted_results, ensure_ascii=False, indent=2)}
+        Các đáp án:
+        {json.dumps(formatted_results, ensure_ascii=False, indent=2)}
 
-Chỉ trả về JSON với format: {{"selected_answer": "câu trả lời được chọn"}}"""
+        Chỉ trả về JSON với format: {{"selected_answer": "câu trả lời được chọn"}}"""
 
         messages = [
             SystemMessage(content="Bạn là chuyên gia phân tích và lựa chọn thông tin chính xác."),
@@ -176,8 +179,33 @@ def workflow():
     workflow.add_edge("search_rag", END)
 
     return workflow.compile()
-app = workflow()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app = workflow()
 async def main():
     """✅ Test workflow - CẦN KHỞI TẠO POOL TRƯỚC"""
     print("🚀 Starting workflow test...\n")

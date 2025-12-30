@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal, Dict, Any
 from typing_extensions import TypedDict, List
 class Conversation(TypedDict):
     conversation_id: str
@@ -21,3 +21,14 @@ class State(TypedDict):
     response: Response
     cache_hit: bool
     status: bool
+class UserEmotion(TypedDict):
+    status: Literal["Joy", "Sadness","Fear","Anger","Disgust","Surprise"]
+    crisis_level: Literal[""]
+    problem: str
+    need_llm: Literal["Therapeutic Help","Guidance Help","Emergency Help"]
+    metadata: Dict[str, Any]
+class UserEmotionMetadata(TypedDict):
+    duration: str
+    trigger: str 
+    context: str
+    notes: str

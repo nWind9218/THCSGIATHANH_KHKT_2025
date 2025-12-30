@@ -12,6 +12,10 @@ uvicorn
 asyncpg
 redis
 aioredis 
+redisvl
 sqlalchemy[asyncio]
 psycopg[binary,pool]
 langgraph-cli[inmem]
+numpy
+pandas
+torch

@@ -3,6 +3,7 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 load_dotenv()
+from langchain_ollama import OllamaEmbeddings
 
 embedd = OllamaEmbeddings(model="bge-m3:latest", base_url="http://localhost:11434")
 
@@ -11,7 +12,6 @@ PG_PORT_AI = 5432
 PG_USER= os.getenv("DB_USERNAME")
 PG_PASS= os.getenv("DB_PASSWORD")
 
-@tool("rag")
 async def rag(question: str, bot_type: str, top_k: int = 3) -> str:
     try:
         question_vector = embedd.embed_query(question)
