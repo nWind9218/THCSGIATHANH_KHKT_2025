@@ -19,3 +19,4 @@ langgraph-cli[inmem]
 numpy
 pandas
 torch
+neo4j

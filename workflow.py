@@ -56,7 +56,7 @@ async def search_with_rag(state: AgentState) -> AgentState:
             pg_pool = await get_pg_connection()
         
         question = state['messages']
-
+        
         question_vector = await embedding(question)
         vector_str = '[' + ','.join(map(str, question_vector)) + ']'
         
@@ -179,33 +179,63 @@ def workflow():
     workflow.add_edge("search_rag", END)
 
     return workflow.compile()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-app = workflow()
+from agent.state import State 
+from agent.tools import route_after_decision,is_urgent,bot_planning, should_rotate_plan, is_information_loaded, response_emergency, guest_risk_assesment,retrieve_risk_assessment,decide_next_step,get_user_information,summary_conv_history, should_get_emotion, get_emotion, generate_response
+def workflow2():
+    workflow2 = StateGraph(State)
+    workflow2.add_node("summary_conv_history", summary_conv_history)
+    workflow2.add_node("get_emotion", get_emotion)
+    workflow2.add_node("gen_response", generate_response)
+    workflow2.add_node("get_user_information", get_user_information)
+    workflow2.add_node("decide_next_step", decide_next_step)
+    workflow2.add_node("retrieve_risk_assessment", retrieve_risk_assessment)
+    workflow2.add_node("guest_risk_assessment", guest_risk_assesment)
+    workflow2.add_node("response_emergency", response_emergency)
+    workflow2.add_node("bot_planning", bot_planning)
+    
+    
+    workflow2.set_entry_point("summary_conv_history")   
+    workflow2.add_conditional_edges(
+        "summary_conv_history",
+        is_information_loaded,
+        {
+            "should_get_emotion": "get_emotion",  
+            "get_user_information": "get_user_information"
+        }
+    )
+    
+    # After getting user info, check emotion
+    workflow2.add_conditional_edges(
+        "get_user_information",
+        should_get_emotion,
+        {
+            "get_emotion": "get_emotion",
+            "retrieve_risk_assessment": "retrieve_risk_assessment"
+        }
+    )
+    
+    # Both emotion paths lead to risk assessment
+    workflow2.add_edge("get_emotion", "retrieve_risk_assessment")
+    workflow2.add_edge("retrieve_risk_assessment", "guest_risk_assessment")
+    
+    # Risk assessment leads to decision
+    workflow2.add_edge("guest_risk_assessment", "decide_next_step")
+    
+    workflow2.add_conditional_edges(
+    "decide_next_step",
+    route_after_decision,
+    {
+        "response_emergency": "response_emergency", # Nhánh khẩn cấp
+        "bot_planning": "bot_planning",             # Nhánh cần lập plan
+        "gen_response": "gen_response"              # Nhánh bình thường
+    }
+)
+    workflow2.add_edge("bot_planning","gen_response")
+    workflow2.add_edge("response_emergency", END)
+    workflow2.add_edge("gen_response", END)
+    
+    return workflow2.compile()
+app = workflow2()
 async def main():
     """✅ Test workflow - CẦN KHỞI TẠO POOL TRƯỚC"""
     print("🚀 Starting workflow test...\n")
