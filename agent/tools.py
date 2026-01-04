@@ -1,8 +1,5 @@
 import json
 import os
-import httpx
-import logging
-import psycopg2
 import asyncio
 from dotenv import load_dotenv
 load_dotenv()
