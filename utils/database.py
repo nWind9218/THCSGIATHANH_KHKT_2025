@@ -19,10 +19,7 @@ redis_pool: aioredis.Redis = None
 async def start_pooling():
     """Khởi tạo connection pools"""
     global pg_pool, redis_pool
-    global driver
-    if driver is not None:
-        logger.info("✅ Neo4j has been initialized!")
-        return
+    
     if pg_pool is not None:
         logger.warning("⚠️ Pool đã được cài đặt!")
         return
@@ -48,7 +45,7 @@ async def start_pooling():
         health_check_interval=30
     )
     
-    logger.info("✅ Pooling successfully (asyncpg + Redis + Neo4J)")
+    logger.info("✅ Pooling successfully (asyncpg + Redis )")
 
 async def close_db_pools():
     """Đóng connection pools"""
