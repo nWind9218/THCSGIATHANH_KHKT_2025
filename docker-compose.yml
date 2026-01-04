@@ -76,7 +76,7 @@ services:
   app:
     build: 
       dockerfile: Dockerfile
-      context: ./THCSGIATHANH_KHKT_2025
+      context: .
     container_name: chatbot_app
     restart: always
     ports:
