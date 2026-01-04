@@ -36,4 +36,4 @@ COPY . .
 EXPOSE 4000
 
 # 8. Lệnh chạy bot khi container start
-CMD ["python", "main.py"]
+CMD ["python3", "main.py"]
