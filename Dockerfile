@@ -14,9 +14,14 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # 4. Cài gói hệ thống cần thiết (nếu có thư viện build từ source)
+# Cài các gói hệ thống cần thiết
 RUN apt-get update && apt-get install -y \
     gcc \
+    g++ \
     python3-dev \
+    libffi-dev \
+    libpq-dev \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # 5. Copy requirements.txt và cài dependencies
