@@ -8,7 +8,7 @@ import logging
 import asyncio
 from contextlib import asynccontextmanager
 from utils.database import start_pooling, close_db_pools, get_redis_client
-from workflow import workflow
+from workflow import workflow2
 from workflow_demo import workflow_demo
 from langsmith import Client, traceable
 # Load environment variables
@@ -160,14 +160,16 @@ async def message_postback(seconds: int, sender_id: str):
         await asyncio.sleep(seconds)
         logger.info(f"HẾT THỜI GIAN CHỜ, BÂY GIỜ BOT SẼ TIẾP TỤC CÔNG VIỆC!")
         messages = await clear_tasks(sender_id=sender_id)
-        final_response = await workflow().ainvoke({
-            'messages': messages,
-            'rag_results': '',
-            'llm_response': '',
-            'final_response': '',
-            'error': ''
+        final_response = await workflow2().ainvoke({
+            "conversation":{
+                "user_id":sender_id,
+                "messages":{
+                    "content": messages,
+                    "role":"user"
+                },
+            }
         }, config={"configurable": {"thread_id": sender_id}})
-        return await send_message(sender_id, final_response['final_response'])
+        return await send_message(sender_id, final_response['response']['output'])
     except asyncio.CancelledError:
         logger.warning(f"Đã có tin nhắn mới từ {sender_id}!")
         raise

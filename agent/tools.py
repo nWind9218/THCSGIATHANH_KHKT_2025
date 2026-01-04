@@ -78,7 +78,6 @@ async def get_user_information(state: State):
         redis = await get_redis_client()
     user_id = state["conversation"]["user_id"]
     messages = state["conversation"]["messages"]
-    conversation_id = state["conversation"]["conversation_id"]
     
     problem = state.get("user_emotion",{}).get("problem", None)
     query = """
@@ -95,7 +94,6 @@ async def get_user_information(state: State):
             **state,
             "conversation":{
                 "user_id": user_id,
-                "conversation_id": conversation_id,
                 "messages": messages,
                 "is_new_user": True
             },
@@ -109,7 +107,42 @@ async def get_user_information(state: State):
 async def update_graphrag(state: State):
     pass
 async def update_cache(state: State):
-    pass
+    bot_plan = state["bot_plan"]
+    is_new_user = state["conversation"]["is_new_user"]
+    current_risk = state["risk"]
+    current_emotion = state['user_emotion']
+    user_id = state["conversation"]["user_id"]
+    messages = [message for message in state["conversation"]["messages"][-4:] if message["role"] == "user"]
+    try:
+        redis = await get_redis_client()
+    except Exception: 
+        await start_pooling()
+        redis = await get_redis_client()
+    summary_data = await redis.get(f"summary:{user_id}")
+    context_json = json.loads(summary_data)
+    message_payload = {
+        "messages": messages
+    }
+    bot_plan_verified = {
+        "problem": state["user_emotion"].get("problem",""),
+        "bot_plan": state["bot_plan"],
+        "confidence_score": state["confidence_score"],
+        "risk":state.get("risk", {}),
+        "language_signals": context_json.get("key_context")
+    }
+    payload = {
+        "bot_plan": bot_plan,
+        "is_new_user": is_new_user,
+        "past_risk": current_risk,
+        "past_emotion": current_emotion
+    }
+    # Điểm cần cải thiện
+    # Tất cả tin nhắn giữa staff, user, và system sẽ được lưu lại và đánh giá RHLF thông qua phương thức post để gửi tới server khác để update long term memory về knowlege base
+    # RHLF sẽ tạo một server khác riêng để cập nhật dữ liệu, và chúng ta sẽ gửi lại method post tới đó
+    await redis.set(f"past:rhlf:{user_id}",json.dumps(bot_plan_verified, ensure_ascii=False))
+    await redis.set(f"past:notes:{user_id}", json.dumps(payload, ensure_ascii=False))
+    await redis.set(f"past:conversation:{user_id}",json.dumps(message_payload, ensure_ascii=False))
+    return {}
 async def get_emotion(state: State):
     """
         This node will be done initially to get first wanting from user,
@@ -436,6 +469,7 @@ async def bot_planning(state: State):
         plan_data = json.loads(response.content)
         
         return {
+            **state,
             "bot_plan": {
                 "solution": plan_data.get("solution", "validate_feelings"),
                 "tone": plan_data.get("tone", "warm_supportive"),
@@ -443,8 +477,9 @@ async def bot_planning(state: State):
             }
         }
     except Exception as e:
-        print(f"[bot_plannin] Error: {str(e)}")
+        print(f"[bot_planning] Error: {str(e)}")
         return {
+            **state,
             "bot_plan": {
                 "solution": "validate_feelings",
                 "tone": "warm_supportive",
@@ -495,7 +530,7 @@ async def decide_next_step(state: State):
             **state,
             "next_step":"escalate"
         }
-    elif urgency == "watch" and crisis_level == "high" and confidence_score > 0.6:
+    elif urgency == "watch" and crisis_level == "high" and confidence_score >= 0.6:
         return {
             **state,
             "next_step":"guide"
@@ -536,9 +571,8 @@ async def summary_conv_history(state: State):
     try:
         redis = await get_redis_client()
     except Exception:
-            # Nếu pool chưa có, khởi tạo tự động
-            await start_pooling()
-            redis = await get_redis_client()
+        await start_pooling()
+        redis = await get_redis_client()
     user_id = state["conversation"]["user_id"]
     messages = state["conversation"]["messages"]
     if isinstance(messages, str):
@@ -585,6 +619,7 @@ async def summary_conv_history(state: State):
             "main_topic": "",
             "status": "continuing | changed",
             "key_context": []
+            "confidence_score": float in range [0.0, 1.0]
         }}
         RETURN JSON ONLY 
         """
@@ -593,9 +628,17 @@ async def summary_conv_history(state: State):
         summary_data = json.loads(response.content)
         await redis.set(
             f"summary:{user_id}",
-            json.dumps(summary_data, ensure_ascii=False)
+            json.dumps({
+                "intent":summary_data.get("intent",""),
+                "main_topic":summary_data.get("main_topic",""),
+                "status": summary_data.get("status","continuing"),
+                "key_context":summary_data.get("key_context",[])
+            }, ensure_ascii=False)
         )
-        return {}
+        return {
+            **state,
+            "confidence_score": summary_data.get("confidence_score", 0.3)
+        }
     except Exception as e:
         print(f"Error in summary_conv_history mode: {str(e)}")
         return state
@@ -788,7 +831,22 @@ async def is_urgent(state: State):
     else:
         return "should_rotate_plan"
 async def response_emergency(state: State):
-    pass
+    return {
+        **state,
+        "response":{
+            "output":"""
+                Mình rất tiếc khi nghe bạn đang trải qua điều này 💔
+                Có vẻ như lúc này bạn đang cảm thấy rất khó khăn, và cảm giác đó hoàn toàn không sai.
+                
+                Bạn không cần phải đối mặt với chuyện này một mình. Nếu có thể, bạn hãy thử chia sẻ với người lớn mà bạn tin tưởng như bố mẹ, thầy cô, hoặc người thân nhé.
+                Mình có thể giúp bạn liên hệ với cô Thúy và cô Trâm để chúng ta cùng nhau vượt qua vấn đề của bạn nhé!
+                
+                Điều quan trọng nhất là: **bạn xứng đáng được lắng nghe và được giúp đỡ** 🌱
+                Mimi vẫn ở đây để lắng nghe bạn
+            """
+        }
+    }
+
 async def empathy_node(state: State):
     pass
 async def pickup_mood(state:State):

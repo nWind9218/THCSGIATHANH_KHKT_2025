@@ -1,5 +1,10 @@
-from typing import Optional, Literal, Dict, Any
+from typing import Optional, Literal, Dict, Any, Annotated
 from typing_extensions import TypedDict, List
+
+def merge_last_five(old: List, new: List):
+    combined = (old or []) + (new or []) 
+    msg_needs = [m for m in combined if m["role"] == "user"]
+    return msg_needs[-5:]
 class AIParameter(TypedDict):
     model: str
     prompt: str
@@ -12,9 +17,8 @@ class Message(TypedDict):
     role: Literal['agent', 'staff','user']
     content: str
 class Conversation(TypedDict):
-    conversation_id: str
     user_id: str
-    messages: List[Message]
+    messages: Annotated[List[Message], merge_last_five]
     is_new_user: bool
 class Response(TypedDict):
     output: Optional[str]
@@ -45,4 +49,3 @@ class State(TypedDict):
     confidence_score: float
     response: Response # Response của các node
     next_step: Literal["listen", "clarify", "comfort","guide", "escalate"]
-    
