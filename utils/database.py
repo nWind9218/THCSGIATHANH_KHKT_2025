@@ -3,7 +3,6 @@ import redis.asyncio as aioredis
 import os
 import logging
 from dotenv import load_dotenv
-from neo4j import GraphDatabase
 
 load_dotenv()
 
@@ -17,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 pg_pool: asyncpg.Pool = None
 redis_pool: aioredis.Redis = None
-driver: GraphDatabase.driver = None 
 async def start_pooling():
     """Khởi tạo connection pools"""
     global pg_pool, redis_pool
@@ -48,15 +46,6 @@ async def start_pooling():
         socket_connect_timeout=5,
         socket_keepalive=True,
         health_check_interval=30
-    )
-    
-    # Neo4J 
-    driver = GraphDatabase.driver(
-        NEO_URL,
-        auth=(NEO_USERNAME, NEO_PASSWORD),
-        max_connection_lifetime=3600,
-        max_connection_pool_size=50,
-        connection_acquisition_timeout=30
     )
     
     logger.info("✅ Pooling successfully (asyncpg + Redis + Neo4J)")
