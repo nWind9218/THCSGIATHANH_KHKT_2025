@@ -1,0 +1,70 @@
+problem,solution,tone,must_not_do,level,language_signals,self_harm,violence,urgency
+The user says they want to die because they feel useless and pressured by grades.,"Respond with immediate empathy, acknowledge feelings, ensure safety, and guide the user to reach out to trusted adults or professional help.","Empathetic, calm, reassuring","[""Do not judge"",""Do not normalize self-harm"",""Do not delay emergency guidance""]",3,"[""want to die"",""useless"",""pressure"",""grades""]",TRUE,FALSE,immediate
+The student reports being bullied online and says life is meaningless.,"Express empathy, validate pain, discourage self-harm, and encourage contacting trusted people and reporting bullying.","Empathetic, supportive","[""Do not blame the victim"",""Do not minimize bullying""]",3,"[""bullied"",""life is meaningless"",""hate myself""]",TRUE,FALSE,immediate
+The user says they plan to hurt themselves tonight after an argument with parents.,"Acknowledge emotions, prioritize safety, encourage immediate help from adults or hotlines.","Urgent, empathetic","[""Do not argue"",""Do not give methods""]",3,"[""hurt myself"",""tonight"",""parents fight""]",TRUE,FALSE,immediate
+"The student feels trapped, hopeless, and says there is no future.","Offer empathy, normalize seeking help, and guide to support resources.","Empathetic, grounding","[""Do not invalidate feelings""]",3,"[""hopeless"",""no future"",""trapped""]",TRUE,FALSE,immediate
+The user says they want to disappear forever because no one cares.,"Respond with compassion, reflect feelings, and suggest reaching out to trusted adults.","Gentle, empathetic","[""Do not dismiss"",""Do not shame""]",3,"[""disappear"",""no one cares""]",TRUE,FALSE,immediate
+The student admits cutting themselves due to exam stress.,"Acknowledge pain, prioritize safety, encourage professional help.","Empathetic, urgent","[""Do not encourage harm""]",3,"[""cutting"",""exam stress""]",TRUE,FALSE,immediate
+The user expresses suicidal thoughts after being humiliated at school.,Provide empathetic support and guide to immediate help.,"Supportive, urgent","[""Do not blame""]",3,"[""suicidal"",""humiliated""]",TRUE,FALSE,immediate
+The student says they want to end everything because of family pressure.,Respond with empathy and direct to emergency support.,"Empathetic, reassuring","[""Do not normalize suicide""]",3,"[""end everything"",""family pressure""]",TRUE,FALSE,immediate
+The user says they cannot stop thinking about killing themselves.,"Ensure safety, encourage contacting hotlines or trusted adults.","Calm, empathetic","[""Do not provide details""]",3,"[""killing myself"",""can't stop thinking""]",TRUE,FALSE,immediate
+The student feels completely alone and wants to die.,Offer empathy and immediate guidance to seek help.,"Gentle, urgent","[""Do not minimize""]",3,"[""alone"",""want to die""]",TRUE,FALSE,immediate
+The user threatens to harm a classmate who bullied them.,"De-escalate, validate feelings without endorsing violence, and guide to safe help.","Calm, firm","[""Do not endorse violence""]",3,"[""hurt them"",""bullied""]",FALSE,TRUE,immediate
+The student says they might jump from a building due to shame.,"Respond urgently, prioritize safety, and guide to immediate help.","Urgent, empathetic","[""Do not delay""]",3,"[""jump"",""shame""]",TRUE,FALSE,immediate
+The user reports hearing voices telling them to die.,Acknowledge distress and guide to immediate professional help.,"Calm, empathetic","[""Do not validate voices""]",3,"[""voices"",""die""]",TRUE,FALSE,immediate
+The student says they will run away and never come back.,"Express concern, ensure safety, and guide to trusted adults.","Concerned, supportive","[""Do not encourage running away""]",3,"[""run away"",""never come back""]",TRUE,FALSE,immediate
+The user says they feel like a burden and want to disappear.,Respond with empathy and encourage support.,"Gentle, reassuring","[""Do not dismiss""]",3,"[""burden"",""disappear""]",TRUE,FALSE,immediate
+The student admits planning self-harm due to bullying.,Ensure safety and immediate help.,"Empathetic, urgent","[""Do not blame""]",3,"[""planning self-harm"",""bullying""]",TRUE,FALSE,immediate
+The user says death is the only solution to their problems.,Challenge gently and guide to help.,"Empathetic, grounding","[""Do not argue aggressively""]",3,"[""only solution"",""death""]",TRUE,FALSE,immediate
+The student says they want to hurt themselves because they failed exams.,Provide empathy and emergency guidance.,"Supportive, urgent","[""Do not normalize harm""]",3,"[""hurt myself"",""failed exams""]",TRUE,FALSE,immediate
+The user says they hate life and want it to end.,Respond with empathy and safety planning.,"Gentle, urgent","[""Do not minimize""]",3,"[""hate life"",""end""]",TRUE,FALSE,immediate
+The student expresses violent thoughts toward teachers.,De-escalate and guide to safe outlets.,"Calm, firm","[""Do not endorse violence""]",3,"[""hurt teachers"",""angry""]",FALSE,TRUE,immediate
+The student feels extremely anxious before exams and can't sleep.,Offer coping strategies and reassurance.,Supportive,"[""Do not trivialize anxiety""]",2,"[""anxious"",""can't sleep"",""exams""]",FALSE,FALSE,watch
+The user reports being bullied and feeling very sad.,Validate feelings and suggest support resources.,Empathetic,"[""Do not blame""]",2,"[""bullied"",""sad""]",FALSE,FALSE,watch
+The student feels constant pressure from parents to get high scores.,Acknowledge stress and suggest communication strategies.,Supportive,"[""Do not judge parents""]",2,"[""pressure"",""parents"",""scores""]",FALSE,FALSE,watch
+The user feels lonely after transferring schools.,Provide empathy and tips to build connections.,Gentle,"[""Do not dismiss""]",2,"[""lonely"",""new school""]",FALSE,FALSE,watch
+The student has frequent panic attacks at school.,Offer grounding techniques and suggest professional help.,Calm,"[""Do not diagnose""]",2,"[""panic"",""heart racing""]",FALSE,FALSE,watch
+The user reports cyberbullying and fear of going online.,Validate concerns and suggest reporting tools.,Supportive,"[""Do not minimize""]",2,"[""cyberbullying"",""afraid""]",FALSE,FALSE,watch
+The student feels depressed after a breakup.,Offer empathy and healthy coping ideas.,Gentle,"[""Do not rush recovery""]",2,"[""heartbroken"",""sad""]",FALSE,FALSE,watch
+The user feels worthless compared to classmates.,Challenge negative self-talk gently.,Encouraging,"[""Do not compare students""]",2,"[""worthless"",""compare""]",FALSE,FALSE,watch
+The student is stressed about national exams.,Provide reassurance and planning tips.,Calm,"[""Do not pressure further""]",2,"[""national exam"",""stress""]",FALSE,FALSE,watch
+The user feels angry and wants to break things.,Help de-escalate and suggest safe outlets.,Calm,"[""Do not endorse aggression""]",2,"[""angry"",""break things""]",FALSE,TRUE,watch
+The student feels ignored by teachers.,Validate feelings and suggest communication.,Supportive,"[""Do not blame""]",2,"[""ignored"",""teachers""]",FALSE,FALSE,watch
+The user feels anxious about public speaking in class.,Offer coping strategies.,Encouraging,"[""Do not mock fears""]",2,"[""public speaking"",""nervous""]",FALSE,FALSE,watch
+The student struggles with body image issues.,Provide empathy and positive reframing.,Gentle,"[""Do not shame""]",2,"[""body image"",""ugly""]",FALSE,FALSE,watch
+The user feels homesick at boarding school.,Normalize feelings and suggest support.,Warm,"[""Do not dismiss""]",2,"[""homesick"",""miss family""]",FALSE,FALSE,watch
+The student feels constant fatigue and sadness.,Encourage rest and talking to adults.,Supportive,"[""Do not diagnose""]",2,"[""tired"",""sad""]",FALSE,FALSE,watch
+The user worries about disappointing family.,Validate pressure and suggest dialogue.,Empathetic,"[""Do not judge family""]",2,"[""disappoint"",""family""]",FALSE,FALSE,watch
+The student is anxious about choosing a future career.,Provide reassurance and exploration tips.,Encouraging,"[""Do not force decisions""]",2,"[""future"",""career""]",FALSE,FALSE,watch
+The user feels stressed due to too much homework.,Offer time-management tips.,Helpful,"[""Do not trivialize""]",2,"[""too much homework"",""stress""]",FALSE,FALSE,watch
+The student reports frequent conflicts with friends.,Encourage communication and empathy.,Supportive,"[""Do not take sides""]",2,"[""conflict"",""friends""]",FALSE,FALSE,watch
+The user feels overwhelmed by expectations.,Normalize feelings and suggest coping.,Calm,"[""Do not add pressure""]",2,"[""overwhelmed"",""expectations""]",FALSE,FALSE,watch
+The student feels shy and struggles to make friends.,Encourage gradual social steps.,Warm,"[""Do not force extroversion""]",1,"[""shy"",""no friends""]",FALSE,FALSE,normal
+The user feels bored and unmotivated in class.,Suggest engagement strategies.,Encouraging,"[""Do not scold""]",1,"[""bored"",""unmotivated""]",FALSE,FALSE,normal
+The student worries about low grades.,Offer study tips and reassurance.,Supportive,"[""Do not shame""]",1,"[""low grades"",""worried""]",FALSE,FALSE,normal
+The user feels nervous on the first day of school.,Normalize feelings and give tips.,Friendly,"[""Do not dismiss""]",1,"[""first day"",""nervous""]",FALSE,FALSE,normal
+The student feels pressure to fit in.,Encourage authenticity.,Encouraging,"[""Do not judge peers""]",1,"[""fit in"",""pressure""]",FALSE,FALSE,normal
+The user feels upset after a small argument with friends.,Validate emotions and suggest resolution.,Supportive,"[""Do not escalate""]",1,"[""argument"",""upset""]",FALSE,FALSE,normal
+The student is stressed before presentations.,Offer calming techniques.,Calm,"[""Do not mock""]",1,"[""presentation"",""stress""]",FALSE,FALSE,normal
+The user feels tired due to late-night studying.,Suggest healthier routines.,Helpful,"[""Do not criticize""]",1,"[""tired"",""late night""]",FALSE,FALSE,normal
+The student feels disappointed after failing a quiz.,Encourage resilience.,Encouraging,"[""Do not minimize effort""]",1,"[""failed quiz"",""disappointed""]",FALSE,FALSE,normal
+The user feels confused about school rules.,Clarify calmly.,Friendly,"[""Do not ridicule""]",1,"[""confused"",""rules""]",FALSE,FALSE,normal
+The student feels anxious about teacher feedback.,Normalize concern.,Supportive,"[""Do not dismiss""]",1,"[""feedback"",""anxious""]",FALSE,FALSE,normal
+The user feels lonely during recess.,Encourage small social steps.,Warm,"[""Do not force""]",1,"[""lonely"",""recess""]",FALSE,FALSE,normal
+The student feels stressed balancing study and hobbies.,Suggest balance tips.,Helpful,"[""Do not discourage hobbies""]",1,"[""balance"",""stress""]",FALSE,FALSE,normal
+The user feels embarrassed answering in class.,Normalize experience.,Encouraging,"[""Do not shame""]",1,"[""embarrassed"",""answer wrong""]",FALSE,FALSE,normal
+The student worries about homework deadlines.,Offer planning advice.,Supportive,"[""Do not scold""]",1,"[""deadlines"",""worried""]",FALSE,FALSE,normal
+The user feels awkward in group work.,Encourage communication.,Friendly,"[""Do not label""]",1,"[""group work"",""awkward""]",FALSE,FALSE,normal
+The student feels pressure from comparisons.,Encourage self-focus.,Encouraging,"[""Do not compare""]",1,"[""compared"",""pressure""]",FALSE,FALSE,normal
+The user feels nervous about exams but motivated.,Reinforce positive coping.,Positive,"[""Do not add stress""]",1,"[""nervous"",""motivated""]",FALSE,FALSE,normal
+The student feels distracted in class.,Offer focus tips.,Helpful,"[""Do not blame""]",1,"[""distracted"",""class""]",FALSE,FALSE,normal
+The user feels mildly stressed about school workload.,Suggest organization tips.,Calm,"[""Do not exaggerate""]",0,"[""mild stress"",""workload""]",FALSE,FALSE,normal
+The student feels curious but unsure about joining clubs.,Encourage exploration.,Friendly,"[""Do not pressure""]",0,"[""curious"",""clubs""]",FALSE,FALSE,normal
+The user feels happy but tired after exams.,Acknowledge feelings and suggest rest.,Warm,"[""Do not dismiss fatigue""]",0,"[""happy"",""tired""]",FALSE,FALSE,normal
+The student feels slight anxiety before quizzes.,Normalize and reassure.,Calm,"[""Do not overreact""]",0,"[""slight anxiety"",""quiz""]",FALSE,FALSE,normal
+The user feels bored during online classes.,Suggest engagement tips.,Helpful,"[""Do not scold""]",0,"[""bored"",""online class""]",FALSE,FALSE,normal
+The student feels nervous meeting new classmates.,Normalize feelings.,Friendly,"[""Do not force interaction""]",0,"[""new classmates"",""nervous""]",FALSE,FALSE,normal
+The user feels okay but wants study tips.,Provide practical advice.,Supportive,"[""Do not overwhelm""]",0,"[""study tips"",""okay""]",FALSE,FALSE,normal
+The student feels slightly stressed before deadlines.,Offer reassurance.,Calm,"[""Do not escalate""]",0,"[""slight stress"",""deadline""]",FALSE,FALSE,normal
+The user feels motivated to improve grades.,Encourage planning.,Positive,"[""Do not pressure""]",0,"[""motivated"",""improve grades""]",FALSE,FALSE,normal
+The student feels calm and asks about managing time.,Provide tips.,Helpful,"[""Do not complicate""]",0,"[""manage time"",""calm""]",FALSE,FALSE,normal

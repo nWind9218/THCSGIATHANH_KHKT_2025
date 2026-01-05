@@ -3,80 +3,113 @@ import os
 from dotenv import load_dotenv
 import pandas as pd
 import psycopg2
-from langchain_community.document_loaders import UnstructuredExcelLoader
-
+from langchain_ollama import OllamaEmbeddings
 
 load_dotenv()
 
 PG_HOST_AI = "localhost"
 PG_PORT_AI = 5432
-PG_USER= os.getenv("DB_USERNAME")
-PG_PASS= os.getenv("DB_PASSWORD")
+PG_USER = os.getenv("DB_USERNAME")
+PG_PASS = os.getenv("DB_PASSWORD")
 
 try:
     connection = psycopg2.connect(
         host=PG_HOST_AI,
         port=PG_PORT_AI,
         user=PG_USER,
-        password=PG_PASS,
-        database= "mydb"
+         password=PG_PASS,
+        database="mydb"
     )
     cursor = connection.cursor()
     
-    excel_01 = pd.read_excel('data_embedd.xlsx', sheet_name="Bullying")
-    excel_02 = pd.read_excel('data_embedd.xlsx', sheet_name="Pressure")
-    excel_03 = pd.read_excel('data_embedd.xlsx', sheet_name="Conflicts")
-    excel_04 = pd.read_excel('data_embedd.xlsx', sheet_name="Online_Safety")
-    excel_05 = pd.read_excel('data_embedd.xlsx', sheet_name="Sadness_Loneliness")
+    # Đọc CSV file
+    print(f"\n{'='*50}")
+    print("📂 Đang đọc file bot_knowledge.csv...")
+    print(f"{'='*50}")
     
-    from langchain_ollama import OllamaEmbeddings
-    embedding = OllamaEmbeddings(model="bge-m3:latest", base_url="http://localhost:11434")
+    df = pd.read_csv('bot_knowledge.csv')
     
-    excel_lst = [excel_01, excel_02, excel_03, excel_04, excel_05]
-    bot_type_lst = ["Bắt nạt học đường","Áp lực","Mâu thuẫn","An toàn không gian mạng","Nỗi buồn cô đơn"]
+    # Hiển thị thông tin
+    print(f"✅ Đã đọc {len(df)} dòng từ CSV")
+    print(f"📋 Columns: {list(df.columns)}")
     
-    for i, excel in enumerate(excel_lst):
-        excel = excel.dropna(subset=['question', 'answer'])
-        question = list(excel["question"])
-        answer = list(excel["answer"])
-        bot = bot_type_lst[i]
+    # Loại bỏ các dòng có problem rỗng
+    df = df.dropna(subset=['problem'])
+    print(f"📊 Sau khi loại bỏ problem rỗng: {len(df)} dòng")
+    
+    # Khởi tạo embedding model
+    print(f"\n🤖 Khởi tạo Ollama Embedding Model...")
+    embedding_model = OllamaEmbeddings(model="bge-m3:latest", base_url="http://localhost:11434")
+    
+    # Lưu cặp (index, vector) để mapping đúng
+    successful_embeddings = []
+    
+    print(f"\n{'='*50}")
+    print("🔄 Bắt đầu embedding...")
+    print(f"{'='*50}\n")
+    
+    for idx, row in df.iterrows():
+        problem = row['problem']
         
-        print(f"\n{'='*50}")
-        print(f"Đang xử lý: {bot}")
-        print(f"Số câu hỏi: {len(question)}")
-        print(f"{'='*50}")
-        
-        # Lưu cặp (index, vector) để mapping đúng với question/answer
-        successful_embeddings = []
-        
-        for j, q in enumerate(question):
-            if isinstance(q, str) and q.strip():
-                try: 
-                    vector = embedding.embed_query(q)
-                    successful_embeddings.append((j, vector))
-                    print(f"✅ Embedded câu {j+1}/{len(question)}")
-                except Exception as e:
-                    print(f"❌ Lỗi embedding câu {j+1}: {e}")
-            else:
-                print(f"⚠️ Bỏ qua câu {j+1}: giá trị không hợp lệ")
-
-        # # Insert vào database
-        # print(f"\nĐang lưu vào database...")
-        # inserted_count = 0
-        # for j, vector in successful_embeddings:
-        #     try:
-        #         quest = question[j]
-        #         ans = answer[j]
-        #         cursor.execute(
-        #             "INSERT INTO bot_knowledge(question, answer, embedding, bot_type) VALUES (%s,%s,%s,%s)",
-        #             (quest, ans, vector, bot)
-        #         )
-        #         inserted_count += 1
-        #     except Exception as e:
-        #         print(f"❌ Lỗi insert câu {j+1}: {e}")
-        
-        # connection.commit()
-        # print(f"✅ Đã lưu {inserted_count}/{len(successful_embeddings)} câu vào database")
+        if isinstance(problem, str) and problem.strip():
+            try: 
+                vector = embedding_model.embed_query(problem)
+                successful_embeddings.append((idx, vector))
+                print(f"✅ Embedded {idx+1}/{len(df)}: {problem[:50]}...")
+            except Exception as e:
+                print(f"❌ Lỗi embedding dòng {idx+1}: {e}")
+        else:
+            print(f"⚠️ Bỏ qua dòng {idx+1}: problem không hợp lệ")
+    
+    # Insert vào database
+    print(f"\n{'='*50}")
+    print("💾 Đang lưu vào database...")
+    print(f"{'='*50}\n")
+    
+    inserted_count = 0
+    for idx, vector in successful_embeddings:
+        try:
+            row = df.iloc[idx]
+            
+            # Parse must_not_do nếu là string
+            must_not_do = row.get('must_not_do', '')
+            if isinstance(must_not_do, str):
+                # Tách chuỗi thành array nếu có dấu phân cách
+                must_not_do = must_not_do if must_not_do else ''
+            
+            # Parse language_signals nếu là string
+            language_signals = row.get('language_signals', '')
+            if isinstance(language_signals, str):
+                language_signals = language_signals if language_signals else ''
+            
+            cursor.execute(
+                """INSERT INTO bot_knowledge(
+                    problem, solution, tone, must_not_do, level, 
+                    language_signals, embedding, self_harm, violence, urgency
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (
+                    row['problem'],
+                    row.get('solution', ''),
+                    row.get('tone', ''),
+                    must_not_do,
+                    int(row.get('level', 0)),
+                    language_signals,
+                    vector,
+                    bool(row.get('self_harm', False)),
+                    bool(row.get('violence', False)),
+                    row.get('urgency', 'normal')
+                )
+            )
+            inserted_count += 1
+            print(f"✅ Đã lưu dòng {idx+1}: {row['problem'][:50]}...")
+        except Exception as e:
+            print(f"❌ Lỗi insert dòng {idx+1}: {e}")
+            print(f"   Data: {row.to_dict()}")
+    
+    connection.commit()
+    print(f"\n{'='*50}")
+    print(f"🎉 Hoàn thành! Đã lưu {inserted_count}/{len(successful_embeddings)} dòng vào database")
+    print(f"{'='*50}")
     
     print(f"\n{'='*50}")
     print("🎉 Hoàn thành tất cả!")
