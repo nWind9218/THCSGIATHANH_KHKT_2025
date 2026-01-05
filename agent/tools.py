@@ -119,7 +119,7 @@ async def get_emotion(state: State):
     llm = ChatOpenAI(
         model="gpt-4o-mini",
         temperature=0.5,
-        api_key=os.getenv("OPEN_API_KEY")
+        api_key=os.getenv("OPENAI_API_KEY")
     )
     try:
         redis = await get_redis_client()
