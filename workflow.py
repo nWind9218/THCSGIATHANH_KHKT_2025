@@ -180,9 +180,10 @@ def workflow():
 
     return workflow.compile()
 from agent.state import State 
-from agent.tools import route_after_decision,is_urgent,bot_planning, should_rotate_plan, is_information_loaded, response_emergency, guest_risk_assesment,retrieve_risk_assessment,decide_next_step,get_user_information,summary_conv_history, should_get_emotion, get_emotion, generate_response
+from agent.tools import update_cache,route_after_decision,is_urgent,bot_planning, should_rotate_plan, is_information_loaded, response_emergency, guest_risk_assesment,retrieve_risk_assessment,decide_next_step,get_user_information,summary_conv_history, should_get_emotion, get_emotion, generate_response
 def workflow2():
     workflow2 = StateGraph(State)
+    workflow2.add_node("update_short_term_memory", update_cache)
     workflow2.add_node("summary_conv_history", summary_conv_history)
     workflow2.add_node("get_emotion", get_emotion)
     workflow2.add_node("gen_response", generate_response)
@@ -231,6 +232,8 @@ def workflow2():
     }
 )
     workflow2.add_edge("bot_planning","gen_response")
+    workflow2.add_edge("bot_planning","update_short_term_memory")
+    workflow2.add_edge("update_short_term_memory","gen_response")
     workflow2.add_edge("response_emergency", END)
     workflow2.add_edge("gen_response", END)
     
