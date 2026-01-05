@@ -14,4 +14,3 @@ psycopg[binary,pool]
 langgraph-cli[inmem]
 numpy
 pandas
-pgvector
