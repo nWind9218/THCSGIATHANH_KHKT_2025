@@ -179,10 +179,13 @@ def workflow():
     workflow.add_edge("search_rag", END)
 
     return workflow.compile()
-from agent.state import State 
+from agent.state import State
 from agent.tools import update_cache,route_after_decision,is_urgent,bot_planning, should_rotate_plan, is_information_loaded, response_emergency, guest_risk_assesment,retrieve_risk_assessment,decide_next_step,get_user_information,summary_conv_history, should_get_emotion, get_emotion, generate_response
+from langgraph.checkpoint.memory import MemorySaver
+
 def workflow2():
     workflow2 = StateGraph(State)
+
     workflow2.add_node("update_short_term_memory", update_cache)
     workflow2.add_node("summary_conv_history", summary_conv_history)
     workflow2.add_node("get_emotion", get_emotion)
@@ -193,51 +196,45 @@ def workflow2():
     workflow2.add_node("guest_risk_assessment", guest_risk_assesment)
     workflow2.add_node("response_emergency", response_emergency)
     workflow2.add_node("bot_planning", bot_planning)
-    
-    
-    workflow2.set_entry_point("summary_conv_history")   
+
+    workflow2.set_entry_point("summary_conv_history")
+
     workflow2.add_conditional_edges(
         "summary_conv_history",
         is_information_loaded,
         {
-            "should_get_emotion": "get_emotion",  
+            "should_get_emotion": "get_emotion",
             "get_user_information": "get_user_information"
         }
     )
-    
-    # After getting user info, check emotion
-    workflow2.add_conditional_edges(
-        "get_user_information",
-        should_get_emotion,
-        {
-            "get_emotion": "get_emotion",
-            "retrieve_risk_assessment": "retrieve_risk_assessment"
-        }
-    )
-    
-    # Both emotion paths lead to risk assessment
+    workflow2.add_edge("get_user_information","get_emotion")
     workflow2.add_edge("get_emotion", "retrieve_risk_assessment")
     workflow2.add_edge("retrieve_risk_assessment", "guest_risk_assessment")
-    
-    # Risk assessment leads to decision
     workflow2.add_edge("guest_risk_assessment", "decide_next_step")
-    
+
     workflow2.add_conditional_edges(
-    "decide_next_step",
-    route_after_decision,
-    {
-        "response_emergency": "response_emergency", # Nhánh khẩn cấp
-        "bot_planning": "bot_planning",             # Nhánh cần lập plan
-        "gen_response": "gen_response"              # Nhánh bình thường
-    }
-)
-    workflow2.add_edge("bot_planning","gen_response")
-    workflow2.add_edge("bot_planning","update_short_term_memory")
-    workflow2.add_edge("update_short_term_memory","gen_response")
+        "decide_next_step",
+        route_after_decision,
+        {
+            "response_emergency": "response_emergency",
+            "bot_planning": "bot_planning",
+            "gen_response": "gen_response"
+        }
+    )
+
+    workflow2.add_edge("bot_planning", "gen_response")
+    workflow2.add_edge("bot_planning", "update_short_term_memory")
+    workflow2.add_edge("update_short_term_memory", "gen_response")
+
     workflow2.add_edge("response_emergency", END)
     workflow2.add_edge("gen_response", END)
-    
-    return workflow2.compile()
+
+    checkpointer = MemorySaver()
+
+    return workflow2.compile(
+        checkpointer=checkpointer
+    )
+
 app = workflow2()
 async def main():
     """✅ Test workflow - CẦN KHỞI TẠO POOL TRƯỚC"""
@@ -252,18 +249,18 @@ async def main():
             question = input("Nhập câu hỏi: ")
             if question == "end":
                 break
-                
+            
             config = {"configurable": {"thread_id": "user_123"}}
+            # ✅ Chỉ truyền tin nhắn mới - LangGraph sẽ tự merge với checkpoint
             input_data = {
-                'messages': question,
-                'rag_results': '',
-                'llm_response': '',
-                'final_response': '',
-                'error': ''
+                "conversation": {
+                    "messages": [{"content": question, "role": "user"}],
+                    "user_id": "test_user"
+                }
             }
             result = await app.ainvoke(input_data, config=config)
             
-            print("\n📦 Final Response:", result.get("final_response"))
+            print(f"\n📦 Final Response: {result.get('response', {}).get('output', '')}")
             
     finally:
         await close_db_pools()

@@ -2,9 +2,10 @@ from typing import Optional, Literal, Dict, Any, Annotated
 from typing_extensions import TypedDict, List
 
 def merge_last_five(old: List, new: List):
-    combined = (old or []) + (new or []) 
-    msg_needs = [m for m in combined if m["role"] == "user"]
-    return msg_needs[-5:]
+    """Merge messages và giữ lại 5 messages gần nhất (cả user và assistant)"""
+    combined = (old or []) + (new or [])
+    # Giữ tất cả messages, không chỉ user
+    return combined[-5:]
 class AIParameter(TypedDict):
     model: str
     prompt: str

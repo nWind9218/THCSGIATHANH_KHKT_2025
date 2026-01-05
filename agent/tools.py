@@ -7,7 +7,7 @@ from langchain_ollama import OllamaEmbeddings
 from utils.database import start_pooling, get_pg_connection, fetchall, get_redis_client
 from agent.state import State
 embedd = OllamaEmbeddings(model="bge-m3:latest", base_url="http://localhost:11434")
-
+import traceback
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")
 GRAPH_API_URL = "https://graph.facebook.com/v21.0/me/messages"
@@ -21,47 +21,6 @@ async def embedding(text):
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(None, embedd.embed_query, text)
 
-async def rag(question: str, bot_type: str, top_k: int = 3) -> str:
-    try:
-        question_vector = embedd.embed_query(question)
-        try:
-            await get_pg_connection()
-        except Exception:
-            await start_pooling()
-            await get_pg_connection()
-        
-        query = """
-            SELECT question, answer, bot_type,
-            1 - (embedding <=> $1::vector) as similarity
-            FROM bot_knowledge
-            ORDER BY embedding <=> $1::vector
-            LIMIT 3
-        """
-        
-        results = await fetchall(query, question_vector)
-        if not results: 
-            return json.dumps({ 
-                "message":""
-            }, ensure_ascii=False)
-        formatted_results = []
-        for row in results:
-            formatted_results.append({
-                "question": row[0],
-                "answer": row[1],
-                "bot_type":row[2],
-                "similarity": float(row[3])
-            })
-        return json.dumps({
-            "status":"success",
-            "results": formatted_results,
-        }, ensure_ascii=False, indent=2)
-    except Exception as e:
-        return json.dumps({
-            "status":"error",
-            "message":str(e)
-        }, ensure_ascii=False)
-async def hitl() -> str:
-    pass
 async def get_user_information(state: State):
     """
         This node must be done first before get deep chat with person
@@ -84,8 +43,8 @@ async def get_user_information(state: State):
     user = await fetchall(query, user_id)
     if user:
         # Cho vào trong GraphRAG
-        await redis.set(f"memory:{user_id}:preferences", user.preferences)
-        await redis.set(f"memory:{user_id}:hates", user.hates)
+        await redis.set(f"memory:{user_id}:preferences", user.preferences, ex=3*60*60)
+        await redis.set(f"memory:{user_id}:hates", user.hates, ex=3*60*60)
     if (not user and not problem) or not problem:        
         return {
             **state,
@@ -99,13 +58,13 @@ async def get_user_information(state: State):
                 "problem":"MUST CLARIFY MORE INFORMATION."
             }
         }
-    return {}
+    return {**state}
     
 async def update_graphrag(state: State):
     pass
 async def update_cache(state: State):
     bot_plan = state["bot_plan"]
-    is_new_user = state["conversation"]["is_new_user"]
+    is_new_user = state["conversation"].get("is_new_user", True)
     current_risk = state["risk"]
     current_emotion = state['user_emotion']
     user_id = state["conversation"]["user_id"]
@@ -115,11 +74,26 @@ async def update_cache(state: State):
     except Exception: 
         await start_pooling()
         redis = await get_redis_client()
+    
     summary_data = await redis.get(f"summary:{user_id}")
+    conversation_data = await redis.get(f"past:conversation:{user_id}")
+    if conversation_data:
+        try:
+            conversation_json = json.loads(conversation_data)
+            # Append messages mới vào history
+            if "messages" in conversation_json:
+                conversation_json["messages"].extend(messages)
+            else:
+                conversation_json["messages"] = messages
+        except json.JSONDecodeError:
+            # Nếu parse lỗi, tạo mới
+            conversation_json = {"messages": messages}
+    else:
+        # Không có history cũ, tạo mới
+        conversation_json = {"messages": messages}
+    
     context_json = json.loads(summary_data)
-    message_payload = {
-        "messages": messages
-    }
+    
     bot_plan_verified = {
         "problem": state["user_emotion"].get("problem",""),
         "bot_plan": state["bot_plan"],
@@ -136,10 +110,27 @@ async def update_cache(state: State):
     # Điểm cần cải thiện
     # Tất cả tin nhắn giữa staff, user, và system sẽ được lưu lại và đánh giá RHLF thông qua phương thức post để gửi tới server khác để update long term memory về knowlege base
     # RHLF sẽ tạo một server khác riêng để cập nhật dữ liệu, và chúng ta sẽ gửi lại method post tới đó
-    await redis.set(f"past:rhlf:{user_id}",json.dumps(bot_plan_verified, ensure_ascii=False))
-    await redis.set(f"past:notes:{user_id}", json.dumps(payload, ensure_ascii=False))
-    await redis.set(f"past:conversation:{user_id}",json.dumps(message_payload, ensure_ascii=False))
+    await redis.set(f"past:rhlf:{user_id}",json.dumps(bot_plan_verified, ensure_ascii=False), ex=60*60)
+    await redis.set(f"past:notes:{user_id}", json.dumps(payload, ensure_ascii=False), ex=60*60)
+    await redis.set(f"past:conversation:{user_id}",json.dumps(conversation_json, ensure_ascii=False), ex=60*60)
     return {}
+def strip_markdown_json(content: str) -> str:
+    """Remove markdown code block wrapper from LLM JSON response"""
+    if not content:
+        return "{}"
+    
+    # Remove ```json ... ``` or ``` ... ```
+    content = content.strip()
+    if content.startswith("```"):
+        # Find first newline after ```
+        first_newline = content.find('\n')
+        if first_newline != -1:
+            content = content[first_newline+1:]
+        # Remove trailing ```
+        if content.endswith("```"):
+            content = content[:-3]
+        return content.strip()
+    else: return content
 async def get_emotion(state: State):
     """
         This node will be done initially to get first wanting from user,
@@ -162,64 +153,105 @@ async def get_emotion(state: State):
     messages = state["conversation"]["messages"][-1]["content"]
     user_id = state['conversation']["user_id"]
     conv_summary = await redis.get(f"summary:{user_id}")
+    if conv_summary:
+        try:
+            prev = json.loads(conv_summary)
+            prev_intense = prev.get("intense")
+        except:
+            prev_intense = None
     emotion_prompt = f"""
-        You are an emotion SIGNAL extractor for an AI system.
+        You are an EMOTION SIGNAL EXTRACTOR for an AI system.
 
-        Input:
+        Your role:
+        - Extract emotional signals ONLY from the CURRENT user message.
+        - Urgency is NOT emotional — it reflects PROGRESSION over time and MUST be derived from INTENSE in conversation memory.
+
+        Inputs:
         - Current user message
-        - Previous conversation summary (optional)
-
-        Message:
+        - Conversation summary (authoritative memory, may be null)
+        Current Intense:
+        - CURRENT INTENSE
+        Current Intense:
+        "{prev_intense}"
+        Current message:
         "{messages}"
 
         Conversation summary:
         {conv_summary}
-        Rules:
-        - Analyze ONLY this message.
-        - Do NOT infer mental health conditions.
-        - Do NOT assess risk or crisis level.
-        - If emotion signals are weak, factual, or neutral → emotion = "uncertain".
-        - Prefer uncertain over guessing.
-        **SPECIAL CASES:**
 
-        1. **Greetings/Small Talk** (e.g., "Hi", "Hello", "How are you?", "Xin chào", "Chào bạn"):
-        - status: "joy" (neutral positive)
-        - problem: "" (empty string)
+        --------------------------------
+        CORE RULES (VERY IMPORTANT):
+
+        1. Analyze ONLY the current message for emotion.
+        2. Do NOT diagnose mental health conditions.
+        3. Do NOT determine crisis level.
+        4. If emotional signals are weak, factual, or neutral → status = "uncertain".
+        5. Prefer "uncertain" over guessing.
+
+        --------------------------------
+        INTENSE → URGENCY LOGIC (AUTHORITATIVE):
+
+        INTENSE represents progression, NOT emotion.
+
+        Minimum urgency MUST follow INTENSE:
+        - starting → urgency = "normal"
+        - growing → urgency = "watch"
+        - request_high_urgency → urgency = "immediate"
+
+        Rules:
+        - Urgency can ONLY stay the same or increase.
+        - Urgency MUST NEVER be lower than the INTENSE-based minimum.
+        - The current message may ONLY increase urgency if it explicitly indicates immediacy.
+        - If INTENSE is missing or undefined → assume "starting".
+
+        --------------------------------
+        SPECIAL CASE OVERRIDES (DO NOT VIOLATE INTENSE RULES):
+
+        1. Greetings / Small Talk
+        Examples: "Hi", "Hello", "Xin chào"
+        - status: "joy"
+        - problem: ""
         - self_harm: false
         - violence: false
-        - urgency: "normal"
-        - confidence_score: 0.9 (high confidence for simple greetings)
+        - urgency: INTENSE-based minimum
+        - confidence_score: 0.9
 
-        2. **Casual Questions** (e.g., "What's your name?", "Bạn là ai?"):
+        2. Casual identity questions
+        Examples: "What's your name?", "Bạn là ai?"
         - status: "uncertain"
         - problem: ""
+        - urgency: INTENSE-based minimum
         - confidence_score: 0.8
 
-        3. **Unclear/Vague Messages**:
+        3. Unclear or vague messages
         - status: "uncertain"
         - problem: "MUST CLARIFY MORE INFORMATION."
+        - urgency: INTENSE-based minimum
         - confidence_score: 0.3
 
-        Return JSON with EXACT schema:
+        --------------------------------
+        OUTPUT FORMAT (STRICT):
+
+        Return JSON ONLY with EXACT schema:
         {{
         "status": "joy | sadness | fear | disgust | anger | surprise | uncertain",
-        "problem": "short phrase or empty string" - describe user's problem,
+        "problem": "short phrase or empty string",
         "metadata": {{
             "trigger": "",
             "duration": "",
             "context": ""
         }},
-        self_harm: true | false, if language have tendency to cause harm to themselves,
-        urgency: "normal"| "watch"| "immediate" 
-        violence: true |  false, if language have tendency to be violent,
-        "confidence_score": range from [0.0 to 1.0]
+        "self_harm": true | false,
+        "violence": true | false,
+        "urgency": "normal | watch | immediate",
+        "confidence_score": 0.0
         }}
 
-        Return JSON only.
     """
     try:
         response = await llm.ainvoke(emotion_prompt)
-        data = json.loads(response.content)
+        cleaned_content = strip_markdown_json(response.content)
+        data = json.loads(cleaned_content)
 
         return {
             **state,
@@ -231,7 +263,6 @@ async def get_emotion(state: State):
                     "duration": "",
                     "context": ""
                 }),
-                "crisis_level": "low" if data.get("status", "uncertain") == "uncertain" else data.get("crisis_level"),
             },
             "risk": {
                 "self_harm": data.get("self_harm", False),
@@ -256,70 +287,105 @@ async def get_emotion(state: State):
             },
             "confidence_score": 0.1
         }
+SIM_THRESHOLD = 0.78
+
 async def retrieve_risk_assessment(state: State):
     query = """
-        Select problem, solution, tone, must_not_do, level, language_signals,
-        1 - (embedding <=> $1::vector) as similarity
+        SELECT
+            problem,
+            solution,
+            tone,
+            must_not_do,
+            level,
+            language_signals,
+            self_harm,
+            violence,
+            urgency,
+            1 - (embedding <=> $1::vector) AS similarity
         FROM bot_knowledge
         ORDER BY embedding <=> $1::vector
         LIMIT 1
-    """ 
+    """
+
+    # ---- Ensure DB connection ----
     try:
         await get_pg_connection()
-    except Exception :
+    except Exception:
         await start_pooling()
         await get_pg_connection()
-    problem = state["user_emotion"]["problem"]
-    vector_str = await embedding(problem)
-    rows = await fetchall(query, str(vector_str))
+
+    problem = state["user_emotion"].get("problem")
+
+    # ---- Hard guard: no clear problem ----
     if not problem or problem == "MUST CLARIFY MORE INFORMATION.":
         return {
             **state,
-            "user_emotion":{
+            "user_emotion": {
                 **state["user_emotion"],
                 "is_new_problem": False
             }
         }
-    # Nếu mà không có phát hiện gần với một problem nào đó cụ thể
+
+    vector = await embedding(problem)
+    rows = await fetchall(query, str(vector))
+
+    # ---- No retrieval result ----
     if not rows:
         return {
             **state,
-            "user_emotion":{
+            "user_emotion": {
                 **state["user_emotion"],
                 "is_new_problem": True
             }
         }
+
+    result = rows[0]
+    similarity = result.get("similarity", 0)
+
+    # ---- 🔥 CORE SAFETY: similarity too low → IGNORE ----
+    if similarity < SIM_THRESHOLD:
+        return {
+            **state,
+            "user_emotion": {
+                **state["user_emotion"],
+                "is_new_problem": True
+            },
+            "rag_meta": {
+                "ignored": True,
+                "similarity": similarity
+            }
+        }
+
+    # ---- Accepted retrieval ----
     crisis_dict = {
         "0": "low",
         "1": "medium",
         "2": "high",
         "3": "critical"
     }
-    results = rows[0]
-    solution = results["solution"]
-    level = crisis_dict.get(results["level"])
-    must_not_do = results["must_not_do"]
-    self_harm = results["self_harm"]
-    violence = results["violence"]
-    urgency = results.get("urgency", "normal")
-    tone = results["tone"]
+
     return {
         **state,
-        "bot_plan":{
-            "solution": solution,
-            "must_not_do": must_not_do,
-            "tone": tone
+        "bot_plan": {
+            "solution": result["solution"],
+            "must_not_do": result["must_not_do"],
+            "tone": result["tone"]
         },
-        "risk":{
-            "self_harm": self_harm,
-            "violence": violence,
-            "urgency": urgency
+        "risk": {
+            "self_harm": result["self_harm"],
+            "violence": result["violence"],
+            "urgency": result.get("urgency", "normal")
         },
-        "crisis_level": level
+        "crisis_level": crisis_dict.get(str(result["level"]), "low"),
+        "rag_meta": {
+            "ignored": False,
+            "similarity": similarity
+        }
     }
-    
+
+
 async def guest_risk_assesment(state: State):
-    should_guest = state["user_emotion"].get("is_new_problem", False)
+    should_guest = state["user_emotion"].get("is_new_problem", True)
     if should_guest:
         confidence_score = state["confidence_score"]
         risk_violence = state["risk"]["violence"]
@@ -375,7 +441,7 @@ async def guest_risk_assesment(state: State):
                 }
             }
     else:
-        return {}
+        return {**state, "crisis_level": "low"}
 async def route_after_decision(state: State):
     urgency_res = await is_urgent(state)
     if urgency_res == "response_emergency":
@@ -401,7 +467,7 @@ async def bot_planning(state: State):
     user_message = state["conversation"]["messages"][-1]["content"]
     emotion_status = state["user_emotion"]["status"]
     problem = state["user_emotion"]["problem"]
-    crisis_level = state["user_emotion"]["crisis_level"]
+    crisis_level = state["user_emotion"].get("crisis_level", "low")
     metadata = state["user_emotion"]["metadata"]
     confidence_score = state["confidence_score"]
     urgency = state["risk"]["urgency"]
@@ -411,7 +477,7 @@ async def bot_planning(state: State):
     # Get conversation summary
     conv_summary = await redis.get(f"summary:{user_id}")
     summary_data = json.loads(conv_summary) if conv_summary else {}
-    
+    print("[bot_planning] PREVIOUS SUMM: ", summary_data)
     # Get user preferences if available
     user_preferences = await redis.get(f"memory:{user_id}:preferences")
     user_hates = await redis.get(f"memory:{user_id}:hates")
@@ -463,7 +529,9 @@ async def bot_planning(state: State):
    """
     try:
         response = await llm.ainvoke(plan_prompt)
-        plan_data = json.loads(response.content)
+        cleaned_content = strip_markdown_json(response.content)
+        plan_data = json.loads(cleaned_content)
+        print(f"✅ RECEIVED [bot_planning]: {plan_data}")
         
         return {
             **state,
@@ -515,7 +583,7 @@ async def should_rotate_plan(state: State):
     else:
         return "gen_response"
 async def decide_next_step(state: State):
-    crisis_level = state["user_emotion"]["crisis_level"]
+    crisis_level = state["user_emotion"].get("crisis_level","low")
     urgency = state["risk"]["urgency"]
     confidence_score = state["confidence_score"]
     self_harm = state["risk"]["self_harm"]
@@ -563,7 +631,7 @@ async def summary_conv_history(state: State):
     llm = ChatOpenAI(
         model="gpt-4o-mini",
         temperature=0.2, 
-        api_key=os.getenv("OPEN_API_KEY")
+        api_key=os.getenv("OPENAI_API_KEY")
     )
     try:
         redis = await get_redis_client()
@@ -572,6 +640,8 @@ async def summary_conv_history(state: State):
         redis = await get_redis_client()
     user_id = state["conversation"]["user_id"]
     messages = state["conversation"]["messages"]
+    
+    # Parse messages if string
     if isinstance(messages, str):
         try:
             messages = json.loads(messages)
@@ -582,38 +652,84 @@ async def summary_conv_history(state: State):
     if not isinstance(messages, list):
         messages = []
     
-    recent_msgs = [
-        m["content"]
-        for m in messages[-4:]
-        if isinstance(m, dict) and m.get("role") == "user" and m.get("content")
-    ]
-
-    if not recent_msgs:
-        recent_msgs = [messages[-1]["content"]] if messages and isinstance(messages[-1], dict) else [""]
-
-    if not recent_msgs:
-        recent_msgs = [state["conversation"]["messages"][-1]["content"]] if state["conversation"]["messages"] else [""]
-    lastest_message = " | ".join(recent_msgs)
+    # Extract CHỈ user messages từ toàn bộ messages (đã được reducer giữ lại 5 cái gần nhất)
+    recent_user_msgs = []
+    for m in messages:
+        if isinstance(m, dict):
+            # Chỉ lấy user messages
+            if m.get("role") == "user" and m.get("content"):
+                recent_user_msgs.append(m["content"])
+    
+    # Nếu không lấy được tin nhắn nào, lấy tin nhắn cuối cùng
+    if not recent_user_msgs and messages:
+        last_msg = messages[-1]
+        if isinstance(last_msg, dict) and "content" in last_msg:
+            recent_user_msgs = [last_msg["content"]]
+    
+    lastest_message = " | ".join(recent_user_msgs) if recent_user_msgs else ""
+    recent_msgs = await redis.get(f"past:conversation:{user_id}")
+    print(f"[summary_conv_history] 📨 Recent user messages: {recent_msgs}")
+    print(f"Curent messages: ", lastest_message)
     last_summary = await redis.get(f"summary:{user_id}")
+    prev_intense = None
+    if last_summary:
+        try:
+            prev = json.loads(last_summary)
+            prev_intense = prev.get("intense")
+        except:
+            prev_intense = None
+
     new_summary_prompt = f"""
         Nhiệm vụ của bạn là Cập nhật trí nhớ về Ý ĐỊNH + CONTEXT của người dùng trở nên thật ngắn gọn, súc tích, diễn đạt được context mà cuộc trò chuyện đã trải qua
         INPUT:
         - Previous summary:{json.dumps(last_summary, ensure_ascii=False) if last_summary else "None"}
-        - Recent user messages: {json.dumps(lastest_message, ensure_ascii=False)}
+        - Previous Intense Level: {prev_intense}
+        - Recent messages: {recent_msgs}
+        - Current user messages: {json.dumps(lastest_message, ensure_ascii=False)}
+
         Task:
         - Decide whether the user's intent is CONTINUING or CHANGED. 
         - If continuing: enrich or slightly update the summary.
         - If changed: replace the summary to reflect the new intent.
-
+        
         Rules:
         - Focus on user intent and context only.
+        - If previous status is CONTINUING, current status is CHANGED, replace EVERYTHING
         - Ignore assistant messages.
         - Keep it concise and durable.
         - Do NOT guess emotions if unclear.
         - If previous summary IS NOT DEFINED, status MUST AUTOMATICALLY be set to CHANGED
+        - INTENSE must be based on previous summary, RECENT MESSAGES, CURRENT USER MESSAGES, if
+        - "intense" indicates the urgency or progression level of the user's intent,
+        INTENSE DECISION RULES (STRICT):
+
+        You MUST decide intense by PROGRESSION, not emotion.
+
+        1. starting:
+        - First time this intent appears
+        - OR previous summary does not exist
+        - OR user speaks in general / exploratory terms
+
+        2. growing:
+        - Same intent appears AGAIN
+        - OR user adds more details / examples
+        - OR user asks follow-up questions on same topic
+        - Previous intense MUST be starting or growing
+
+        3. request_high_urgency:
+        - User explicitly requests immediate action, help, or resolution
+        - OR language indicates "cannot wait", "right now", "urgent"
+        - OR repetition with frustration + demand for action
+        - Previous intense MUST be growing
+
+        IMPORTANT:
+        - Intense can ONLY stay the same or increase.
+        - NEVER decrease intense.
+
         {{
             "intent": "",
             "main_topic": "",
+            "intense": starting → growing → request_high_urgency
             "status": "continuing | changed",
             "key_context": []
             "confidence_score": float in range [0.0, 1.0]
@@ -622,22 +738,29 @@ async def summary_conv_history(state: State):
         """
     try:
         response = await llm.ainvoke(new_summary_prompt)
-        summary_data = json.loads(response.content)
+        print(response.content)
+        cleaned_content = strip_markdown_json(response.content)
+        summary_data = json.loads(cleaned_content)
         await redis.set(
             f"summary:{user_id}",
             json.dumps({
                 "intent":summary_data.get("intent",""),
+                "intense":summary_data.get("intense",""),
                 "main_topic":summary_data.get("main_topic",""),
                 "status": summary_data.get("status","continuing"),
                 "key_context":summary_data.get("key_context",[])
-            }, ensure_ascii=False)
+            }, ensure_ascii=False),
+            ex=60*60
         )
         return {
             **state,
             "confidence_score": summary_data.get("confidence_score", 0.3)
         }
     except Exception as e:
-        print(f"Error in summary_conv_history mode: {str(e)}")
+        print(f"[summary_conv_history] Error: {str(e)}")
+        print(f"[summary_conv_history] Error type: {type(e).__name__}")
+        print(f"[summary_conv_history] Error details: {repr(e)}")
+        print(f"[summary_conv_history] Traceback:\n{traceback.format_exc()}")
         return state
 async def is_information_loaded(state: State):
     user_id = state["conversation"]["user_id"]
@@ -692,7 +815,7 @@ async def generate_response(state: State):
     user_message = state["conversation"]["messages"][-1]["content"]
     emotion_status = state["user_emotion"]["status"]
     problem = state["user_emotion"]["problem"]
-    crisis_level = state["user_emotion"]["crisis_level"]
+    crisis_level = state["user_emotion"].get("crisis_level", "low")
     next_step = state.get("next_step", "listen")
     
     # Get bot plan
@@ -802,7 +925,8 @@ RETURN JSON ONLY."""
     
     try:
         response = await llm.ainvoke(generation_prompt)
-        data = json.loads(response.content)
+        cleaned_content = strip_markdown_json(response.content)
+        data = json.loads(cleaned_content)
 
         return {
             **state,
@@ -822,7 +946,7 @@ RETURN JSON ONLY."""
 
 async def is_urgent(state: State):
     urgency = state["risk"]["urgency"]
-    crisis_level = state["user_emotion"]["crisis_level"]
+    crisis_level = state["user_emotion"].get("crisis_level", "low")
     if urgency == "immediate" and crisis_level in ["high", "critical"]: 
         return "response_emergency"
     else:

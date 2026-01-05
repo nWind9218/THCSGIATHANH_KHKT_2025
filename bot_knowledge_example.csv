@@ -1,0 +1,6 @@
+problem,solution,tone,must_not_do,level,language_signals,self_harm,violence,urgency
+"Tôi bị bạn bè bắt nạt","Hãy nói chuyện với giáo viên hoặc phụ huynh về việc này. Bạn không đơn độc và có nhiều người sẵn sàng giúp đỡ.","warm_supportive","Đổ lỗi cho nạn nhân|Khuyên im lặng|Xem nhẹ vấn đề",2,"bị bắt nạt|không có bạn|bị chế giễu",false,false,watch
+"Con không muốn đi học nữa","Mình hiểu con đang gặp khó khăn. Hãy chia sẻ với ba mẹ hoặc thầy cô để họ có thể giúp con vượt qua.","calm_reassuring","Bắt buộc phải đi|Phạt hoặc đe dọa",1,"không muốn đi học|sợ đi học|mệt mỏi",false,false,normal
+"Tôi cảm thấy cô đơn và buồn","Cảm xúc của bạn hoàn toàn bình thường. Hãy thử tham gia các hoạt động nhóm hoặc tìm người để tâm sự.","gentle_curious","Nói con yếu đuối|So sánh với người khác",1,"cô đơn|buồn|không ai hiểu",false,false,normal
+"Con bị áp lực học tập quá nhiều","Ba mẹ và thầy cô muốn con thành công, nhưng sức khỏe tinh thần của con cũng rất quan trọng. Hãy cùng tìm cách cân bằng.","serious_concerned","Tăng thêm áp lực|Chỉ tập trung vào kết quả",2,"áp lực|stress|quá tải",false,false,watch
+"Tôi tự làm đau bản thân","Đây là dấu hiệu nghiêm trọng. Con cần được hỗ trợ từ chuyên gia ngay. Hãy liên hệ hotline hoặc người lớn đáng tin cậy.","serious_concerned","Phán xét|Xem nhẹ|Để một mình",3,"tự làm đau|cắt|đau khổ",true,false,immediate
