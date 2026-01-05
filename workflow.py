@@ -23,7 +23,8 @@ llm = ChatOpenAI(
 )
 
 embedd = OllamaEmbeddings(model="bge-m3:latest",
-                          base_url="http://localhost:11434")
+                          base_url="http://127.0.0.1:11434"
+)
 REDIS_URL = os.getenv("REDIS_URL")
 PG_HOST_AI = "localhost"
 PG_PORT_AI = 5432

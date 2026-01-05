@@ -6,7 +6,8 @@ load_dotenv()
 from langchain_ollama import OllamaEmbeddings
 from utils.database import start_pooling, get_pg_connection, fetchall, get_redis_client
 from agent.state import State
-embedd = OllamaEmbeddings(model="bge-m3:latest", base_url="http://localhost:11434")
+embedd = OllamaEmbeddings(model="bge-m3:latest", base_url="http://127.0.0.1:11434"
+)
 import traceback
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")

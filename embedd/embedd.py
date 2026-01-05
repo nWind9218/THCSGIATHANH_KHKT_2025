@@ -39,7 +39,8 @@ try:
     
     # Khởi tạo embedding model
     print(f"\n🤖 Khởi tạo Ollama Embedding Model...")
-    embedding_model = OllamaEmbeddings(model="bge-m3:latest", base_url="http://localhost:11434")
+    embedding_model = OllamaEmbeddings(model="bge-m3:latest", base_url="http://127.0.0.1:11434"
+)
     
     # Lưu cặp (index, vector) để mapping đúng
     successful_embeddings = []
