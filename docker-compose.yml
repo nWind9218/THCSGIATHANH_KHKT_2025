@@ -1,7 +1,4 @@
 services:
-  api: 
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
   postgres:
     image: pgvector/pgvector:pg16
     container_name: postgres
@@ -87,6 +84,8 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
       - redis
