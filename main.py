@@ -24,20 +24,12 @@ client = Client()
 
 @asynccontextmanager
 async def lifespan(app : FastAPI):
-    try:
-        logger.info("✅ START BUILDING...")
-        await start_pooling()
-        yield
-    except KeyboardInterrupt:
-        logger.warning("😎 ABOUT TO SHUTDOWN")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-    finally:
-        #Shutdown
-        logging.info("Cleaning..")
-        logging.info("✅ Start shutting down gracefully...")
-        client.flush()
-        await close_db_pools()
+    logger.info("✅ START BUILDING...")
+    await start_pooling()
+    yield
+    logger.info("🛑 SHUTDOWN")
+    client.flush()
+    await close_db_pools()
 
 app = FastAPI(lifespan=lifespan)
 logging.basicConfig(level=logging.INFO)
