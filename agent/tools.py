@@ -29,7 +29,7 @@ SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME = os.getenv("SMTP_USERNAME")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-EMERGENCY_EMAIL_RECIPIENTS = os.getenv("EMERGENCY_EMAIL_RECIPIENTS", "evkingwind9218@gmail.com").split(",")
+EMERGENCY_EMAIL_RECIPIENTS = os.getenv("EMERGENCY_EMAIL_RECIPIENTS", "evkingwind9218@gmail.com,thanhtam852009@gmail.com").split(",")
 async def embedding(text):
     """Async wrapper for embedding to avoid blocking"""
     loop = asyncio.get_event_loop()
