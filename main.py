@@ -161,20 +161,24 @@ async def message_postback(seconds: int, sender_id: str):
         logger.info(f"HẾT THỜI GIAN CHỜ, BÂY GIỜ BOT SẼ TIẾP TỤC CÔNG VIỆC!")
         messages = await clear_tasks(sender_id=sender_id)
         final_response = await workflow2().ainvoke({
-            "conversation":{
-                "user_id":sender_id,
-                "messages":{
-                    "content": messages,
-                    "role":"user"
-                },
+            "conversation": {
+                "user_id": sender_id,
+                "messages": [
+                    {
+                        "content": messages,
+                        "role": "user"
+                    }
+                ],
+                "is_new_user": True  # Fix: thiếu field này
             }
         }, config={"configurable": {"thread_id": sender_id}})
+        
         return await send_message(sender_id, final_response['response']['output'])
     except asyncio.CancelledError:
         logger.warning(f"Đã có tin nhắn mới từ {sender_id}!")
         raise
     except Exception as e:
-        logger.error("Lỗi:", str(e))
+        logger.error(f"Lỗi: {str(e)}")
     finally:
         if sender_id in active_task:
             del active_task[sender_id]

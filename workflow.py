@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Annotated
 import os
@@ -11,10 +12,12 @@ from langchain_core.messages import HumanMessage, SystemMessage
 import redis
 from redisvl.utils.vectorize import CustomTextVectorizer
 from redisvl.extensions.cache.llm import SemanticCache
-from utils.database import get_pg_connection, fetchall, fetch_one, get_redis_client
+from utils.database import get_pg_connection, fetchall, fetch_one, get_redis_client, get_redis_checkpointer
 from typing import Optional, List
 from agent.state import UserEmotion
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
@@ -101,7 +104,7 @@ async def search_with_rag(state: AgentState) -> AgentState:
         response = await llm.ainvoke(messages)
         selected = json.loads(response.content)
         
-        print("✅ STEP 1: LLM SELECTED ANSWER", selected)
+        logger.info(f"✅ STEP 1: LLM SELECTED ANSWER {selected}")
         
         state["rag_results"] = selected["selected_answer"]
         
@@ -109,7 +112,7 @@ async def search_with_rag(state: AgentState) -> AgentState:
     except Exception as e:
         state["rag_results"] = ""
         state["error"] = str(e)
-        print(f"Error In RAG :{str(e)}")
+        logger.error(f"Error In RAG: {str(e)}")
         return state
 async def ask_llm_node(state: AgentState) -> AgentState:
     """Ask ChatGPT directly"""
@@ -120,7 +123,7 @@ async def ask_llm_node(state: AgentState) -> AgentState:
             HumanMessage(content=question)
         ]
         response = await llm.ainvoke(messages)
-        print("✅ STEP 2: ASK GPT\n", response)
+        logger.info(f"✅ STEP 2: ASK GPT\n{response}")
         state["llm_response"] = response.content
         return state
     except Exception as e:
@@ -146,7 +149,7 @@ async def refine_response_node(state: AgentState) -> AgentState:
             HumanMessage(content=f"Câu hỏi: {question}\n\nCâu trả lời cần chỉnh sửa{answer}")
         ]
         response = await llm.ainvoke(messages)
-        print("✅ STEP 3: REFINE BOT RESPONSE\n", response)
+        logger.info(f"✅ STEP 3: REFINE BOT RESPONSE\n{response}")
         state["final_response"] = response.content
         return state
     except Exception as e:
@@ -181,16 +184,15 @@ def workflow():
 
     return workflow.compile()
 from agent.state import State
-from agent.tools import update_cache,route_after_decision,is_urgent,bot_planning, should_rotate_plan, is_information_loaded, response_emergency, guest_risk_assesment,retrieve_risk_assessment,decide_next_step,get_user_information,summary_conv_history, should_get_emotion, get_emotion, generate_response
+from agent.tools import response_and_update,route_after_decision,bot_planning, is_information_loaded, response_emergency, guest_risk_assesment,retrieve_risk_assessment,decide_next_step,get_user_information,summary_conv_history, get_emotion
 from langgraph.checkpoint.memory import MemorySaver
 
 def workflow2():
     workflow2 = StateGraph(State)
 
-    workflow2.add_node("update_short_term_memory", update_cache)
     workflow2.add_node("summary_conv_history", summary_conv_history)
     workflow2.add_node("get_emotion", get_emotion)
-    workflow2.add_node("gen_response", generate_response)
+    workflow2.add_node("gen_response", response_and_update)
     workflow2.add_node("get_user_information", get_user_information)
     workflow2.add_node("decide_next_step", decide_next_step)
     workflow2.add_node("retrieve_risk_assessment", retrieve_risk_assessment)
@@ -218,34 +220,25 @@ def workflow2():
         route_after_decision,
         {
             "response_emergency": "response_emergency",
-            "bot_planning": "bot_planning",
-            "gen_response": "gen_response"
+            "bot_planning": "bot_planning"
         }
     )
-
     workflow2.add_edge("bot_planning", "gen_response")
-    workflow2.add_edge("bot_planning", "update_short_term_memory")
-    workflow2.add_edge("update_short_term_memory", "gen_response")
 
     workflow2.add_edge("response_emergency", END)
     workflow2.add_edge("gen_response", END)
+    return workflow2.compile()
 
-    checkpointer = MemorySaver()
-
-    return workflow2.compile(
-        checkpointer=checkpointer
-    )
-
-app = workflow2()
 async def main():
     """✅ Test workflow - CẦN KHỞI TẠO POOL TRƯỚC"""
-    print("🚀 Starting workflow test...\n")
+    logger.info("🚀 Starting workflow test...\n")
     
     # ✅ QUAN TRỌNG: Khởi tạo pool trước khi dùng
     from utils.database import start_pooling, close_db_pools
     await start_pooling()
     
     try:
+        app = workflow2()
         while True:
             question = input("Nhập câu hỏi: ")
             if question == "end":
@@ -261,7 +254,7 @@ async def main():
             }
             result = await app.ainvoke(input_data, config=config)
             
-            print(f"\n📦 Final Response: {result.get('response', {}).get('output', '')}")
+            logger.info(f"\n📦 Final Response: {result.get('response', {}).get('output', '')}")
             
     finally:
         await close_db_pools()

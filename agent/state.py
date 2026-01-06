@@ -40,7 +40,7 @@ class RiskAssessment(TypedDict):
 class BotPlan:
     solution: str
     tone: str
-    must_not_do: str
+    must_not_do: List[str]
     
 class State(TypedDict):
     conversation: Conversation
