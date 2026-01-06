@@ -1,4 +1,7 @@
 services:
+  api: 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   postgres:
     image: pgvector/pgvector:pg16
     container_name: postgres

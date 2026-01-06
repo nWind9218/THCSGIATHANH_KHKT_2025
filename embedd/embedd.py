@@ -7,6 +7,7 @@ from langchain_ollama import OllamaEmbeddings
 
 load_dotenv()
 
+OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 PG_HOST_AI = "localhost"
 PG_PORT_AI = 5432
 PG_USER = os.getenv("DB_USERNAME")
@@ -39,7 +40,7 @@ try:
     
     # Khởi tạo embedding model
     print(f"\n🤖 Khởi tạo Ollama Embedding Model...")
-    embedding_model = OllamaEmbeddings(model="bge-m3:latest", base_url="http://127.0.0.1:11434"
+    embedding_model = OllamaEmbeddings(model="bge-m3:latest", base_url=OLLAMA_HOST
 )
     
     # Lưu cặp (index, vector) để mapping đúng

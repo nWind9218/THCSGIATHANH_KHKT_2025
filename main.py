@@ -19,6 +19,7 @@ VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")
 GRAPH_API_URL = "https://graph.facebook.com/v21.0/me/messages"
 REDIS_URL = os.getenv("REDIS_URL")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 active_task: Dict[str, asyncio.Task] = {}
 client = Client()
 
@@ -103,7 +104,7 @@ async def receive_message(request: Request):
                         msg = event["message"].get("text")
                         if msg:
                             # logger.info(f"💬 Message from {sender_id}: {msg}")
-                            asyncio.create_task(reset_task(10, sender_id, message=msg))
+                            asyncio.create_task(reset_task(1, sender_id, message=msg))
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"❌ Error: {str(e)}")

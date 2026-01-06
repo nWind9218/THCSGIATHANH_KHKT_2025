@@ -17,6 +17,12 @@ from utils.database import get_pg_connection, fetchall, fetch_one, get_redis_cli
 
 load_dotenv()
 
+REDIS_URL = os.getenv("REDIS_URL")
+PG_HOST_AI = "localhost"
+PG_PORT_AI = 5432
+PG_USER = os.getenv("DB_USERNAME")
+PG_PASS = os.getenv("DB_PASSWORD")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 llm = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0.7,
@@ -24,14 +30,8 @@ llm = ChatOpenAI(
 )
 
 embedd = OllamaEmbeddings(model="bge-m3:latest",
-                          base_url="http://127.0.0.1:11434"
+                          base_url=OLLAMA_HOST
 )
-REDIS_URL = os.getenv("REDIS_URL")
-PG_HOST_AI = "localhost"
-PG_PORT_AI = 5432
-PG_USER = os.getenv("DB_USERNAME")
-PG_PASS = os.getenv("DB_PASSWORD")
-
 def embedding(text):
     return embedd.embed_query(text)
 

@@ -10,7 +10,9 @@ load_dotenv()
 from langchain_ollama import OllamaEmbeddings
 from utils.database import get_pg_connection, fetchall, get_redis_client
 from agent.state import State
-embedd = OllamaEmbeddings(model="bge-m3:latest", base_url="http://127.0.0.1:11434"
+
+OLLAMA_HOST = os.getenv("OLLAMA_HOST")
+embedd = OllamaEmbeddings(model="bge-m3:latest", base_url=OLLAMA_HOST
 )
 import traceback
 
