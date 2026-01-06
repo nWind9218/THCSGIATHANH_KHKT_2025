@@ -104,7 +104,7 @@ async def receive_message(request: Request):
                         msg = event["message"].get("text")
                         if msg:
                             # logger.info(f"💬 Message from {sender_id}: {msg}")
-                            asyncio.create_task(reset_task(1, sender_id, message=msg))
+                            asyncio.create_task(reset_task(0, sender_id, message=msg))
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"❌ Error: {str(e)}")

@@ -24,7 +24,7 @@ PG_USER = os.getenv("DB_USERNAME")
 PG_PASS = os.getenv("DB_PASSWORD")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 llm = ChatOpenAI(
-    model="gpt-4o-mini",
+    model="gpt-4.1-mini",
     temperature=0.7,
     api_key=os.getenv("OPENAI_API_KEY")
 )

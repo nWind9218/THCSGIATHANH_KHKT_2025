@@ -262,7 +262,7 @@ async def get_emotion(state: State):
     """
     from langchain_openai import ChatOpenAI
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         temperature=0.5,
         api_key=os.getenv("OPENAI_API_KEY")
     )
@@ -519,7 +519,7 @@ async def route_after_decision(state: State):
 async def bot_planning(state: State):
     from langchain_openai import ChatOpenAI
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         temperature=0.3,
         api_key=os.getenv("OPENAI_API_KEY")
     )
@@ -687,7 +687,7 @@ async def summary_conv_history(state: State):
     """
     from langchain_openai import ChatOpenAI
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         temperature=0.2, 
         api_key=os.getenv("OPENAI_API_KEY")
     )
@@ -867,7 +867,7 @@ async def generate_response(state: State):
     from langchain_openai import ChatOpenAI
     
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         temperature=0.7,
         api_key=os.getenv("OPENAI_API_KEY")
     )
