@@ -292,13 +292,13 @@ async def get_emotion(state: State):
         - "normal": Casual conversation, venting without danger.
         - "watch": Deep sadness, anger, mentions of hopelessness.
         - "immediate": Explicit self-harm (cutting, suicide), violence, or clear crisis.
-        3 **Problem (CRITICAL)**: 
-           - Extract the specific subject, struggle, or topic the user is talking about.
+        3 **Problem (CRITICAL - MUST BE IN VIETNAMESE)**: 
+           - Extract the specific subject, struggle, or topic the user is talking about in **VIETNAMESE** (Tiếng Việt).
            - Examples of valid problems:
-             * "struggling with math/geometry/literature/...., studying stress" (Academic)
-             * "fight with friends" (Social)
-             * "feeling lonely" (Emotional)
-             * "needs advice on studying" (Request)
+             * "khó khăn trong vấn đề toán học","mất gốc toán hình","cảm thấy áp lực trong học tập","áp lực thi cử", ..v.v (Academic)
+             * "cảm thấy bị bạn bè tẩy chay", "gặp khó khăn trong kết nối với bạn bè", "khó khăn để hòa đồng", "khó khăn trong giao tiếp với phụ huynh", v.v (Social)
+             * "cảm thấy cô đơn", "crush không tích", "cãi nhau với bố mẹ" (Emotional), v.v
+             * "cần lời khuyên trong học tập", "cần sự hướng dẫn để trở nên thành công", v.v (Request)
            - ONLY use "MUST CLARIFY" if the message is purely a greeting (e.g. "Hello") or completely vague (e.g. "I'm sad" without reason).
 
         ### SAFETY RULES
