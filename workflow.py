@@ -221,7 +221,8 @@ def workflow2():
         route_after_decision,
         {
             "response_emergency": "response_emergency",
-            "bot_planning": "bot_planning"
+            "bot_planning": "bot_planning",
+            "gen_response":"gen_response"
         }
     )
     workflow2.add_edge("bot_planning", "gen_response")
@@ -230,6 +231,7 @@ def workflow2():
     workflow2.add_edge("gen_response", END)
     return workflow2.compile()
 
+app = workflow2()
 async def main():
     """✅ Test workflow - CẦN KHỞI TẠO POOL TRƯỚC"""
     logger.info("🚀 Starting workflow test...\n")
@@ -239,7 +241,6 @@ async def main():
     await start_pooling()
     
     try:
-        app = workflow2()
         while True:
             question = input("Nhập câu hỏi: ")
             if question == "end":

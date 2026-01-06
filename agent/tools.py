@@ -295,7 +295,7 @@ async def get_emotion(state: State):
         3 **Problem (CRITICAL - MUST BE IN VIETNAMESE)**: 
            - Extract the specific subject, struggle, or topic the user is talking about in **VIETNAMESE** (Tiếng Việt).
            - Examples of valid problems:
-             * "khó khăn trong vấn đề toán học","mất gốc toán hình","cảm thấy áp lực trong học tập","áp lực thi cử", ..v.v (Academic)
+                                                                                                             * "khó khăn trong vấn đề toán học","mất gốc toán hình","cảm thấy áp lực trong hbọc tập","áp lực thi cử", ..v.v (Academic)
              * "cảm thấy bị bạn bè tẩy chay", "gặp khó khăn trong kết nối với bạn bè", "khó khăn để hòa đồng", "khó khăn trong giao tiếp với phụ huynh", v.v (Social)
              * "cảm thấy cô đơn", "crush không tích", "cãi nhau với bố mẹ" (Emotional), v.v
              * "cần lời khuyên trong học tập", "cần sự hướng dẫn để trở nên thành công", v.v (Request)
@@ -431,7 +431,7 @@ async def retrieve_risk_assessment(state: State):
         "2": "high",
         "3": "critical"
     }
-
+    # ⚠️ KHÔNG save solution ở đây - chỉ save khi đã dùng thật trong generate_response
     return {
         **state,
         "bot_plan": {
@@ -439,16 +439,21 @@ async def retrieve_risk_assessment(state: State):
             "must_not_do": result["must_not_do"],
             "tone": result["tone"]
         },
+        "user_emotion":{
+            **state["user_emotion"],
+            "is_new_problem": False,
+            "crisis_level": crisis_dict.get(str(result["level"]), "low"),
+        },
         "risk": {
             "self_harm": result["self_harm"],
             "violence": result["violence"],
             "urgency": result.get("urgency", "normal")
         },
-        "crisis_level": crisis_dict.get(str(result["level"]), "low"),
         "rag_meta": {
             "ignored": False,
             "similarity": similarity
-        }
+        },
+        "confidence_score": 1
     }
 
 
@@ -509,13 +514,14 @@ async def guest_risk_assesment(state: State):
                 }
             }
     else:
-        return {**state, "crisis_level": "low"}
+        return {**state}
 async def route_after_decision(state: State):
     urgency_res = await is_urgent(state)
     if urgency_res == "response_emergency":
         return "response_emergency"
-    # plan_res = await should_rotate_plan(state)
-    else: return "bot_planning"
+    else: 
+        plan_res = await should_rotate_plan(state)
+        return plan_res
 async def bot_planning(state: State):
     from langchain_openai import ChatOpenAI
     llm = ChatOpenAI(
@@ -617,20 +623,12 @@ async def bot_planning(state: State):
         }
 async def should_rotate_plan(state: State):
     bot_plan = state.get("bot_plan", None)
-    solution = None
-    tone = None
-    must_not_do = None
-    
-    if bot_plan is not None:
-        solution = bot_plan.get("solution")
-        tone = bot_plan.get("tone")
-        must_not_do = bot_plan.get("must_not_do")
     user_id = state["conversation"]["user_id"]
     redis = await get_redis_client()
-
     key = await redis.get(f"summary:{user_id}")
     response = json.loads(key)
-    if solution is None or tone is None or must_not_do is None or response["status"] == "changed":
+    print("✅[SHOULD ROTATE PLAN] RECEIVED",bot_plan)
+    if bot_plan is None: #or response["status"] == "changed":
         return "bot_planning"
     else:
         return "gen_response"
@@ -891,11 +889,18 @@ async def generate_response(state: State):
     conv_summary = await redis.get(f"summary:{user_id}")
     summary_data = json.loads(conv_summary) if conv_summary else {}
     
-    # Get user preferences
-    user_preferences = await redis.get(f"memory:{user_id}:preferences")
-    user_hates = await redis.get(f"memory:{user_id}:hate")
+    
+    # Get RAG solution (full text từ database, không phải strategy name)
     rag_solution = bot_plan.get("solution", "")
     
+    # Get last solution đã dùng (để tránh lặp lại)
+    last_solution_bytes = await redis.get(f"rag:solution:{user_id}")
+    last_solution = last_solution_bytes if last_solution_bytes else None
+    
+    # Nếu solution này đã dùng rồi, bỏ qua (để LLM tự sáng tạo)
+    if last_solution and rag_solution and last_solution.strip() == rag_solution.strip():
+        rag_solution = ""  # Để trống để LLM tự nghĩ
+
     if next_step == "clarify":
         system_instruction = """Bạn là Mimi - trợ lý ảo thân thiện của trường THCS Gia Thanh.
         Nhiệm vụ: Đặt câu hỏi MỞ để hiểu rõ hơn vấn đề em.
@@ -914,9 +919,6 @@ async def generate_response(state: State):
 
     elif next_step == "guide":
         system_instruction = f"""You are Mimi, a supportive, empathetic, and gentle older sister (big sister figure) for a middle school student (10-15 years old).
-    ### SOURCE KNOWLEDGE
-    Nếu có thông tin dưới đây, hãy DÙNG NÓ để đưa ra lời khuyên cụ thể, đừng trả lời chung chung:
-    [Kiến thức chuyên gia]: {rag_solution}
     ### CÁCH TRẢ LỜI
         - Đừng chỉ copy-paste bí kíp. Hãy biến nó thành lời thủ thỉ.
         - Thay vì nói: "Bước 1 là quan sát", hãy nói: "Mẹo nhỏ nè, em thử nghía xem bạn ấy đang cầm món đồ gì hay hay không..."
@@ -939,7 +941,7 @@ async def generate_response(state: State):
     ### INSTRUCTIONS
     1. **Style**: Use natural Vietnamese for Gen Z/Alpha. Use words like "nhỉ", "nè", "ui", "đâu á", "thương ghê". 
     2. **Structure**:
-       - Step 1: Validate feelings (e.g., "Nghe chuyện này Mimi thấy thương em quá...").
+       - Step 1: Validate feelings (e.g., "Nghe chuyện này Mimi thấy thương em quá/...").
        - Step 2: Gentle advice (based on Strategy).
        - Step 3: Check-in (e.g., "Em thấy sao về ý này?").
     3. **Constraints**:
@@ -975,16 +977,14 @@ async def generate_response(state: State):
     """
     
     generation_prompt = f"""{system_instruction}
-
+### SOURCE KNOWLEDGE
+    Nếu có thông tin dưới đây, hãy DÙNG NÓ để đưa ra lời khuyên cụ thể, đừng trả lời chung chung:
+    [Kiến thức chuyên gia]: {rag_solution}
 **NGỮ CẢNH CUỘC TRÒ CHUYỆN:**
     {json.dumps(summary_data, ensure_ascii=False, indent=2) if summary_data else "Cuộc trò chuyện mới"}
 
 **TIN NHẮN CỦA EM:**
     "{user_message}"
-
-**HỒ SƠ EM:**
-- Sở thích: {user_preferences.decode() if user_preferences else "Chưa biết"}
-- Không thích: {user_hates.decode() if user_hates else "Chưa biết"}
 
 ---
 
@@ -994,7 +994,7 @@ async def generate_response(state: State):
 - Phù hợp lứa tuổi 10-16
 - Ngôn ngữ Tiếng Việt tự nhiên
 - Tránh thuật ngữ phức tạp
-- GIỮ NGẮN GỌN (không quá 5 câu)
+- GIỮ NGẮN GỌN NHƯNG PHẢI SÚC TÍCH
 
 FINALLY: RETURN EXACT JSON FORMAT:
 {{
@@ -1006,6 +1006,10 @@ RETURN JSON ONLY."""
         response = await llm.ainvoke(generation_prompt)
         cleaned_content = strip_markdown_json(response.content)
         data = json.loads(cleaned_content)
+        
+        # ✅ Lưu solution vừa dùng để tránh lặp lại lần sau
+        if rag_solution:  # Chỉ save nếu có dùng RAG solution
+            await redis.set(f"rag:solution:{user_id}", rag_solution, ex=5*60)
 
         return {
             **state,

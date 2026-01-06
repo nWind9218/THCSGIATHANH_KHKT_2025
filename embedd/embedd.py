@@ -25,10 +25,10 @@ try:
     
     # Đọc CSV file
     print(f"\n{'='*50}")
-    print("📂 Đang đọc file bot_knowledge.csv...")
+    print("📂 Đang đọc file bot_knowledge.xlx...")
     print(f"{'='*50}")
     
-    df = pd.read_csv('bot_knowledge.csv')
+    df = pd.read_excel('bot_knowledge_.xlsx')
     
     # Hiển thị thông tin
     print(f"✅ Đã đọc {len(df)} dòng từ CSV")
