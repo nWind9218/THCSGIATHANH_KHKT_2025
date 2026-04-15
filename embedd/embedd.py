@@ -2,25 +2,17 @@ import re
 import os
 from dotenv import load_dotenv
 import pandas as pd
-import psycopg2
-from langchain_ollama import OllamaEmbeddings
+import psycopg
+from langchain_openai import OpenAIEmbeddings
 
 load_dotenv()
 
-OLLAMA_HOST = os.getenv("OLLAMA_HOST")
-PG_HOST_AI = "localhost"
-PG_PORT_AI = 5432
-PG_USER = os.getenv("DB_USERNAME")
-PG_PASS = os.getenv("DB_PASSWORD")
+DATABASE_URL = os.getenv("DATABASE_URL")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 
 try:
-    connection = psycopg2.connect(
-        host=PG_HOST_AI,
-        port=PG_PORT_AI,
-        user=PG_USER,
-         password=PG_PASS,
-        database="mydb"
-    )
+    connection = psycopg.connect(DATABASE_URL)
     cursor = connection.cursor()
     
     # Đọc CSV file
@@ -39,9 +31,11 @@ try:
     print(f"📊 Sau khi loại bỏ problem rỗng: {len(df)} dòng")
     
     # Khởi tạo embedding model
-    print(f"\n🤖 Khởi tạo Ollama Embedding Model...")
-    embedding_model = OllamaEmbeddings(model="bge-m3:latest", base_url=OLLAMA_HOST
-)
+    print(f"\n🤖 Khởi tạo OpenAI Embedding Model...")
+    embedding_model = OpenAIEmbeddings(
+        model=OPENAI_EMBEDDING_MODEL,
+        api_key=OPENAI_API_KEY,
+    )
     
     # Lưu cặp (index, vector) để mapping đúng
     successful_embeddings = []
@@ -117,7 +111,7 @@ try:
     print("🎉 Hoàn thành tất cả!")
     print(f"{'='*50}")
 
-except psycopg2.Error as e:
+except psycopg.Error as e:
     print("❌ Lỗi kết nối PostgreSQL:")
     print(e)
 except Exception as e:

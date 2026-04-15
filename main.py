@@ -9,7 +9,6 @@ import asyncio
 from contextlib import asynccontextmanager
 from utils.database import start_pooling, close_db_pools, get_redis_client
 from workflow import workflow2
-from workflow_demo import workflow_demo
 from langsmith import Client, traceable
 # Load environment variables
 load_dotenv()
@@ -39,31 +38,6 @@ logger = logging.getLogger(__name__)
 @app.get("/")
 async def root():
     return {"message":"Hello World"}
-@app.post("/chatme")
-async def chatMe(request: Request):
-    try:
-        body = await request.json()  # Thêm await
-        message = body.get('message')
-        
-        if not message:
-            raise HTTPException(status_code=400, detail="Message is required")
-        
-        # Không gọi workflow_demo() như function, nó đã là workflow object
-        final_response = await workflow_demo().ainvoke({
-            'messages': message,
-            'rag_results': '',
-            'llm_response': '',
-            'final_response': '',
-            'error': ''
-        }, config={"configurable": {"thread_id": "12321312321"}})
-        
-        return JSONResponse(content={
-            "status": "success",
-            "response": final_response['final_response']
-        })
-    except Exception as e:
-        logger.error(f"❌ Error at /chatme: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 @app.get("/chat")
 async def chat(request: Request):
     mode = request.query_params.get("hub.mode")
@@ -201,3 +175,4 @@ async def block_ai_workflow():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=3000)
+    

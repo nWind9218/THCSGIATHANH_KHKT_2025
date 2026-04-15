@@ -5,9 +5,8 @@ from typing import TypedDict, Annotated
 import os
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from langchain_ollama import OllamaEmbeddings
 import json
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.messages import HumanMessage, SystemMessage
 import redis
 from redisvl.utils.vectorize import CustomTextVectorizer
@@ -15,6 +14,7 @@ from redisvl.extensions.cache.llm import SemanticCache
 from utils.database import get_pg_connection, fetchall, fetch_one, get_redis_client, get_redis_checkpointer
 from typing import Optional, List
 from agent.state import UserEmotion
+from SYSTEM_PROMPT.registry import prompt_registry
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -25,9 +25,9 @@ llm = ChatOpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-OLLAMA_HOST = os.getenv("OLLAMA_HOST")
-embedd = OllamaEmbeddings(model="bge-m3:latest",
-                          base_url=OLLAMA_HOST
+embedd = OpenAIEmbeddings(
+    model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+    api_key=os.getenv("OPENAI_API_KEY"),
 )
 REDIS_URL = os.getenv("REDIS_URL")
 PG_HOST_AI = "localhost"
@@ -87,15 +87,12 @@ async def search_with_rag(state: AgentState) -> AgentState:
                 "similarity": float(row[3])
             })
         
-        # ✅ Để LLM chọn câu trả lời tốt nhất
-        selection_prompt = f"""Dựa vào câu hỏi của người dùng, hãy chọn câu trả lời PHÙ HỢP NHẤT từ các đáp án sau:
-
-        Câu hỏi: {question}
-
-        Các đáp án:
-        {json.dumps(formatted_results, ensure_ascii=False, indent=2)}
-
-        Chỉ trả về JSON với format: {{"selected_answer": "câu trả lời được chọn"}}"""
+        # Load RAG selection prompt from registry
+        rag_template = prompt_registry.get_function("rag_selection")
+        selection_prompt = rag_template.format(
+            question=question,
+            formatted_results=json.dumps(formatted_results, ensure_ascii=False, indent=2)
+        )
 
         messages = [
             SystemMessage(content="Bạn là chuyên gia phân tích và lựa chọn thông tin chính xác."),
@@ -119,8 +116,12 @@ async def ask_llm_node(state: AgentState) -> AgentState:
     """Ask ChatGPT directly"""
     try:
         question = state["messages"]
+        
+        # Load agent prompt from registry
+        agent_prompt = prompt_registry.get_agent("mimi_school")
+        
         messages = [
-            SystemMessage(content="Bạn là trợ lý ảo có tên gọi là Mimi, là trí thông minh nhân tạo được tạo ra bởi trường trung học cơ sở Gia Thanh, nhiệm vụ của bạn là giúp đỡ những bạn trẻ thanh thiếu niên từ 10-16 tuổi về các vấn đề liên quan tới học đường."),
+            SystemMessage(content=agent_prompt),
             HumanMessage(content=question)
         ]
         response = await llm.ainvoke(messages)
@@ -138,16 +139,19 @@ async def refine_response_node(state: AgentState) -> AgentState:
         # Use RAG result if available, otherwise use LLM response
         answer = state.get("rag_results") or state.get("llm_response", "")
         
+        # Load response refinement prompt from registry
+        refine_template = prompt_registry.get_function("response_refinement")
+        refine_prompt = refine_template.format(
+            question=question,
+            answer=answer
+        )
+        
+        # Load agent prompt for system context
+        agent_prompt = prompt_registry.get_agent("mimi_school")
+        
         messages = [
-            SystemMessage(content="""Bạn là trợ lý ảo có tên gọi là Mimi, là trí thông minh nhân tạo được tạo ra bởi trường trung học cơ sở Gia Thanh,thông minh chuyên biệt hỗ trợ trẻ em và thanh thiếu niên từ 10-16 tuổi.
-            Hãy điều chỉnh câu trả lời theo yêu cầu sau:
-            - Sử dụng ngôn ngữ thật ngắn gọn, dễ hiểu, giọng điệu nhí nhảnh, phù hợp lứa tuổi
-            - Tránh thuật ngữ phức tạp
-            - Sử dụng câu từ ngắn gọn, xúc tích
-            - Thêm các emoji, để tạo sự hấp dẫn đối với người đọc
-            - Thêm ví dụ minh họa nếu cần
-            - Giữ ngữ điệu thân thiện, khuyến khích"""),
-            HumanMessage(content=f"Câu hỏi: {question}\n\nCâu trả lời cần chỉnh sửa{answer}")
+            SystemMessage(content=agent_prompt + "\n\n" + refine_prompt),
+            HumanMessage(content=f"Câu hỏi: {question}\n\nCâu trả lời cần chỉnh sửa: {answer}")
         ]
         response = await llm.ainvoke(messages)
         logger.info(f"✅ STEP 3: REFINE BOT RESPONSE\n{response}")

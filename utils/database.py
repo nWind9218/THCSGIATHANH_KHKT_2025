@@ -95,8 +95,6 @@ async def get_redis_client():
     if redis_client is None:
         await start_pooling()
     return redis_client
-
-# ✅ asyncpg syntax: $1, $2 thay vì %s
 async def exec_query(query: str, *params):
     """Execute query với parameters"""
     async with pg_pool.acquire() as conn:

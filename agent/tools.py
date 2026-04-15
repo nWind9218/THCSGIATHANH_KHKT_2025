@@ -7,12 +7,14 @@ from email.mime.multipart import MIMEMultipart
 import aiosmtplib
 from dotenv import load_dotenv
 load_dotenv()
-from langchain_ollama import OllamaEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from utils.database import get_pg_connection, fetchall, get_redis_client
 from agent.state import State
+from SYSTEM_PROMPT.registry import prompt_registry
 
-OLLAMA_HOST = os.getenv("OLLAMA_HOST")
-embedd = OllamaEmbeddings(model="bge-m3:latest", base_url=OLLAMA_HOST
+embedd = OpenAIEmbeddings(
+    model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+    api_key=os.getenv("OPENAI_API_KEY"),
 )
 import traceback
 
@@ -276,47 +278,15 @@ async def get_emotion(state: State):
             prev_intense = prev.get("intense")
         except:
             prev_intense = None
-    emotion_prompt = f"""
-       ### TASK
-        Analyze the emotional signal of the LATEST message provided below.
-
-        ### INPUT
-        - Message: "{messages}"
-        - Previous Context Intense: "{prev_intense}"
-
-        ### CLASSIFICATION GUIDELINES
-        1. **Status**: joy, sadness, fear, disgust, anger, surprise, uncertain.
-        - If message is vague (e.g., "hmm", "ok") -> status: "uncertain".
-        - If greeting -> status: "joy".
-        2. **Urgency**:
-        - "normal": Casual conversation, venting without danger.
-        - "watch": Deep sadness, anger, mentions of hopelessness.
-        - "immediate": Explicit self-harm (cutting, suicide), violence, or clear crisis.
-        3 **Problem (CRITICAL - MUST BE IN VIETNAMESE)**: 
-           - Extract the specific subject, struggle, or topic the user is talking about in **VIETNAMESE** (Tiếng Việt).
-           - Examples of valid problems:
-                                                                                                             * "khó khăn trong vấn đề toán học","mất gốc toán hình","cảm thấy áp lực trong hbọc tập","áp lực thi cử", ..v.v (Academic)
-             * "cảm thấy bị bạn bè tẩy chay", "gặp khó khăn trong kết nối với bạn bè", "khó khăn để hòa đồng", "khó khăn trong giao tiếp với phụ huynh", v.v (Social)
-             * "cảm thấy cô đơn", "crush không tích", "cãi nhau với bố mẹ" (Emotional), v.v
-             * "cần lời khuyên trong học tập", "cần sự hướng dẫn để trở nên thành công", v.v (Request)
-           - ONLY use "MUST CLARIFY" if the message is purely a greeting (e.g. "Hello") or completely vague (e.g. "I'm sad" without reason).
-
-        ### SAFETY RULES
-        - Do NOT diagnose mental disorders.
-        - If user mentions "die", "kill", "suicide", "hurt myself" -> Urgency MUST be "immediate".
-        - Urgency cannot be lower than Previous Context Intense (unless topic changed).
-
-        ### OUTPUT JSON
-        {{
-            "status": "...",
-            "problem": "...",
-            "metadata": {{ "trigger": "...", "context": "..." }},
-            "self_harm": true/false,
-            "violence": true/false,
-            "urgency": "normal | watch | immediate",
-            "confidence_score": 0.0 to 1.0
-    }}
-    """
+    
+    # Load emotion extraction prompt from registry
+    emotion_template = prompt_registry.get_function("emotion_extraction")
+    emotion_prompt = emotion_template.format(
+        messages=messages,
+        prev_intense=prev_intense,
+        conv_summary=conv_summary
+    )
+    
     try:
         response = await llm.ainvoke(emotion_prompt)
         cleaned_content = strip_markdown_json(response.content)
@@ -551,52 +521,23 @@ async def bot_planning(state: State):
     # Get user preferences if available
     user_preferences = await redis.get(f"memory:{user_id}:preferences")
     user_hates = await redis.get(f"memory:{user_id}:hates")
-    plan_prompt = f"""
-        You are a compassionate conversation planner for an AI assistant supporting teenagers (10-16 years old).
-        Your task is to create a structured response plan based on the user's emotional state and context.
-
-        ## INPUT DATA:
-
-        **User Message:**
-        "{user_message}"
-
-        **Emotional Analysis:**
-        - Status: {emotion_status}
-        - Problem: {problem}
-        - Crisis Level: {crisis_level}
-        - Confidence Score: {confidence_score}
-        - Trigger: {metadata.get('trigger', 'N/A')}
-        - Duration: {metadata.get('duration', 'N/A')}
-        - Context: {metadata.get('context', 'N/A')}
-
-        **Risk Assessment:**
-        - Urgency: {urgency}
-        - Self-harm risk: {self_harm}
-        - Violence risk: {violence}
-
-        **Conversation Context:**
-        {json.dumps(summary_data, ensure_ascii=False, indent=2) if summary_data else "No previous context"}
-
-        **User Profile:**
-        - Preferences: {user_preferences if user_preferences else "Unknown"}
-        - Dislikes: {user_hates if user_hates else "Unknown"}
-
-        ---
-
-        ## YOUR TASK:
-
-        Create a JSON Conversation plan that includes:
-
-        1. **Solution Strategy**: What approach should the bot take?
-        - Options: "empathize_first", "provide_guidance", "ask_clarifying_questions", "offer_resources", "gentle_redirect", "validate_feelings"
-
-        2. **Tone**: How should the bot communicate?
-        - Options: "warm_supportive", "calm_reassuring", "gentle_curious", "cheerful_encouraging", "serious_concerned", "playful_light", "encouraging_sister", "gentle_protective"
-
-        3. **Must Not Do**: What should the bot absolutely avoid?
-        - Be specific based on the emotional state and risks
-        RETURN JSON ONLY.
-   """
+    
+    # Load bot planning prompt from registry
+    plan_template = prompt_registry.get_function("bot_planning")
+    plan_prompt = plan_template.format(
+        user_message=user_message,
+        emotion_status=emotion_status,
+        problem=problem,
+        crisis_level=crisis_level,
+        confidence_score=confidence_score,
+        metadata=metadata,
+        urgency=urgency,
+        self_harm=self_harm,
+        violence=violence,
+        summary_data=json.dumps(summary_data, ensure_ascii=False, indent=2) if summary_data else "No previous context",
+        user_preferences=user_preferences if user_preferences else "Unknown",
+        user_hates=user_hates if user_hates else "Unknown"
+    )
     try:
         response = await llm.ainvoke(plan_prompt)
         cleaned_content = strip_markdown_json(response.content)

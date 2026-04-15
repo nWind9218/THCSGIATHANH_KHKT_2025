@@ -6,14 +6,6 @@ def merge_last_five(old: List, new: List):
     combined = (old or []) + (new or [])
     # Giữ tất cả messages, không chỉ user
     return combined[-5:]
-class AIParameter(TypedDict):
-    model: str
-    prompt: str
-    frequency_penalty: float
-    max_tokens: int
-    presence_penalty: float
-    temperature: float
-    top_p: float
 class Message(TypedDict): 
     role: Literal['agent', 'staff','user']
     content: str
