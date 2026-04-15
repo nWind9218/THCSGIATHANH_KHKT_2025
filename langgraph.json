@@ -18,7 +18,7 @@
     "python-dotenv"
   ],
   "graphs": {
-    "main_workflow": "./workflow.py:workflow2"
+    "main_workflow": "./workflow.py:workflow"
   },
   "env": ".env",
   "python_version": "3.11"

@@ -4,6 +4,20 @@
 - Python
 - LangGraph
 ## III. Quick start
+### Local MVP chat (workflow mới duy nhất)
+1. Cài dependency:
+	`pip install -r requirements.txt`
+2. Chạy local chat:
+	`python main.py`
+3. Nhập `User ID`, sau đó chat trực tiếp trong terminal.
+4. Gõ `/exit` để thoát.
+
+### Chạy test kịch bản luồng
+1. Cài dev dependency:
+	`pip install -r requirements_dev.txt`
+2. Chạy test:
+	`pytest -q`
+
 ## IV. Standard Basement  
 
 **Một hệ AI cho thanh thiếu niên bắt buộc phải đáp ứng 6 trụ cột sau:**
