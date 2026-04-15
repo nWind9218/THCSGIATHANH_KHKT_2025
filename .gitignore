@@ -6,4 +6,6 @@ __pycache__/
 cloud/
 skills-lock.json
 .agents/
-
+.claue/
+.agent/
+.pytest_cache/

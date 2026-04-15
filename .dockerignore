@@ -1,9 +1,89 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.env
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
 venv/
-.git/
+ENV/
+env/
+.venv
+.venv.bak
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# Testing
+.pytest_cache
+.tox/
+coverage.xml
+*.cover
+
+# Documentation
+docs/_build/
+README.md
+ARCHITECTURE.md
+
+# Project specific
+*.db
+*.sqlite
+redis/
 cloud/
 *.pem
+*.key
+
+# Logs
+*.log
+logs/
+logs.txt
+
+# Frontend
+frontend/
+node_modules/
+dist/
+.next/
+
+# Other
+.venv.bak
+seed_data/
+*.md
+!requirements.txt

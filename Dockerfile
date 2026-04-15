@@ -1,20 +1,15 @@
 # =========================
-# Dockerfile cho bot Python
-# Port mở: 4000
+# Dockerfile cho THCS GIA THANH Bot
+# Port: 8000 (Render)
+# Python: 3.11
 # =========================
 
-# 1. Sử dụng Python 3.11 slim (nhẹ, nhanh)
-FROM python:3.11-slim
+# Multi-stage build for optimization
+FROM python:3.11-slim AS builder
 
-# 2. Biến môi trường để Python chạy mượt hơn
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# 3. Thiết lập thư mục làm việc trong container
 WORKDIR /app
 
-# 4. Cài gói hệ thống cần thiết (nếu có thư viện build từ source)
-# Cài các gói hệ thống cần thiết
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -24,10 +19,45 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# 5. Copy requirements.txt và cài dependencies
+# Copy requirements and install in virtual env
 COPY requirements.txt .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
+
+# Final stage
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    PORT=8000
+
+# Set working directory
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Copy application code
+COPY . .
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # 6. Copy toàn bộ mã nguồn vào container
 COPY . .
