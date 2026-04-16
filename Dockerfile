@@ -1,6 +1,6 @@
 # =========================
 # Dockerfile cho THCS GIA THANH Bot
-# Port: 8000 (Render)
+# Port: Railway PORT env (fallback 8000)
 # Python: 3.11
 # =========================
 
@@ -57,7 +57,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
 
 # 6. Copy toàn bộ mã nguồn vào container
 COPY . .
