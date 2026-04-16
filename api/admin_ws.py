@@ -9,6 +9,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import redis.asyncio as aioredis
 
 from utils.database import get_redis_client
+from api.cors_config import get_cors_settings, is_origin_allowed
 from memory import set_takeover_flag, publish_admin_alert
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ router = APIRouter()
 # Keep track of active teacher connections
 active_teachers: dict[str, WebSocket] = {}  # teacher_id -> WebSocket
 teacher_subscriptions: dict[str, set[str]] = {}  # teacher_id -> set of subscribed user_ids
+cors_settings = get_cors_settings()
 
 
 @router.websocket("/admin/{teacher_id}")
@@ -34,6 +36,12 @@ async def websocket_admin_endpoint(websocket: WebSocket, teacher_id: str):
        - query:{user_id} - get student info
     """
     try:
+        origin = websocket.headers.get("origin")
+        if not is_origin_allowed(origin, cors_settings):
+            logger.warning(f"❌ Blocked WS origin for admin endpoint: {origin}")
+            await websocket.close(code=1008, reason="Origin not allowed")
+            return
+
         await websocket.accept()
         active_teachers[teacher_id] = websocket
         teacher_subscriptions[teacher_id] = set()

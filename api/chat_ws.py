@@ -9,6 +9,7 @@ from langchain_core.messages import HumanMessage
 
 from graph.workflow import build_counseling_graph
 from graph.state import CounselingState
+from api.cors_config import get_cors_settings, is_origin_allowed
 from memory import load_history, load_topic, publish_admin_alert
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ router = APIRouter()
 
 # Keep track of active student connections
 active_connections: dict[str, WebSocket] = {}
+cors_settings = get_cors_settings()
 
 
 @router.websocket("/chat/{user_id}")
@@ -32,6 +34,12 @@ async def websocket_chat_endpoint(websocket: WebSocket, user_id: str):
     6. Publish to admin observers
     """
     try:
+        origin = websocket.headers.get("origin")
+        if not is_origin_allowed(origin, cors_settings):
+            logger.warning(f"❌ Blocked WS origin for student endpoint: {origin}")
+            await websocket.close(code=1008, reason="Origin not allowed")
+            return
+
         await websocket.accept()
         active_connections[user_id] = websocket
         logger.info(f"✅ Student connected: {user_id}")

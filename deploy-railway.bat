@@ -69,6 +69,11 @@ echo    - DATABASE_URL (Supabase Postgres)
 echo    - REDIS_URL (Upstash Redis, rediss://)
 echo    - OPENAI_API_KEY
 echo    - ALLOWED_ORIGINS
+echo    - ALLOWED_METHODS
+echo    - ALLOWED_HEADERS
+echo    - ALLOWED_CREDENTIALS
+echo    - CORS_MAX_AGE
+echo    - WS_REQUIRE_ORIGIN
 echo 5. Wait for service to become healthy
 echo.
 

@@ -5,10 +5,12 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
 from utils.database import start_pooling, close_db_pools, check_postgres_health
+from api.cors_config import get_cors_settings
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -44,6 +46,19 @@ app = FastAPI(
     description="Real-time teen counseling chatbot with teacher supervision",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+# Configure CORS from environment variables
+cors_settings = get_cors_settings()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_settings["allow_origins"],
+    allow_origin_regex=cors_settings["allow_origin_regex"],
+    allow_credentials=cors_settings["allow_credentials"],
+    allow_methods=cors_settings["allow_methods"],
+    allow_headers=cors_settings["allow_headers"],
+    expose_headers=cors_settings["expose_headers"],
+    max_age=cors_settings["max_age"],
 )
 
 
