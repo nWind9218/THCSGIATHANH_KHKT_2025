@@ -14,7 +14,7 @@ from fastapi import APIRouter, Request, Response, HTTPException, BackgroundTasks
 
 from graph.state import CounselingState
 from graph.workflow import build_counseling_graph
-from memory import load_history, load_topic
+from memory import load_history, load_topic, set_takeover_flag
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -23,6 +23,11 @@ FACEBOOK_GRAPH_API_VERSION = os.getenv("FACEBOOK_GRAPH_API_VERSION", "v20.0")
 FACEBOOK_VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "")
 FACEBOOK_PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN", "")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "")
+
+# List of authorized Facebook PSIDs for admin commands
+ADMIN_FACEBOOK_PSIDS = [
+    x.strip() for x in os.getenv("ADMIN_FACEBOOK_PSIDS", "").split(",") if x.strip()
+]
 
 
 def _verify_signature(raw_body: bytes, signature_header: str | None) -> bool:
@@ -131,6 +136,35 @@ async def _process_message(psid: str, text: str) -> str:
 async def handle_facebook_event(sender: str, message_text: str):
     """Asynchronous handler for Facebook events to avoid webhook timeouts."""
     try:
+        # Check for discovery commands
+        clean_text = message_text.strip().lower()
+        
+        if clean_text == "#whoami":
+            await _send_messenger_message(sender, f"ID Facebook (PSID) của bạn là:\n{sender}")
+            return
+
+        # Check for #resume command from authorized admins
+        if clean_text.startswith("#resume"):
+            if sender in ADMIN_FACEBOOK_PSIDS:
+                parts = message_text.split()
+                if len(parts) >= 2:
+                    target_psid = parts[1].strip()
+                    await set_takeover_flag(target_psid, False)
+                    
+                    # Notify admin
+                    await _send_messenger_message(sender, f"✅ Đã kích hoạt lại Bot cho học sinh {target_psid}.")
+                    
+                    # Notify student
+                    resume_msg = "Mimi đã quay trở lại rồi đây! Mình tiếp tục câu chuyện nhé?"
+                    await _send_messenger_message(target_psid, resume_msg)
+                    return
+                else:
+                    await _send_messenger_message(sender, "Cú pháp không đúng. Vui lòng dùng: #resume [PSID]")
+                    return
+            else:
+                # If sender is not an admin, we just treat it as a normal message.
+                logger.warning(f"Unauthorized #resume attempt from {sender}")
+
         response_text = await _process_message(sender, message_text)
         if response_text:
             await _send_messenger_message(sender, response_text)

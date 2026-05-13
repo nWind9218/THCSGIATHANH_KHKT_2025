@@ -84,9 +84,12 @@ async def handoff_human_node(state: CounselingState) -> dict:
     user_text = latest_user_message(state.get("messages", []))
 
     comfort_text = (
-        "Minh rat lo cho ban khi nghe dieu nay. Ban khong don doc dau nhe. "
-        "Neu ban can duoc giup do ngay, hay goi 1800 599 920 (mien phi, 24/7). "
-        "Minh dang nho nguoi lon ho tro ban ngay bay gio."
+        "Mình rất lo cho bạn khi nghe điều này. Bạn không đơn độc đâu nhé. "
+        "Nếu bạn cần được giúp đỡ ngay, hãy gọi cho các cô để được hỗ trợ trực tiếp:\n"
+        "📞 Cô Thúy: 0962186108\n"
+        "📞 Cô Trâm: 0915266338\n"
+        "Hoặc gọi Tổng đài Quốc gia 111 (miễn phí, 24/7). "
+        "Mình đang nhờ thầy cô hỗ trợ bạn ngay bây giờ."
     )
 
     summary = f"Emergency signal from {user_id}"

@@ -109,44 +109,108 @@ async def log_emergency(user_id: str, summary: str) -> None:
 
 async def send_emergency_email(user_id: str, summary: str, raw_message: str) -> bool:
     """Send emergency notification email to admin."""
-    smtp_user = os.getenv("SMTP_USERNAME", "").strip()
+    # Try both common names for SMTP user
+    smtp_user = (os.getenv("SMTP_USERNAME") or os.getenv("SMTP_USER") or "").strip()
     smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
     recipients = os.getenv("EMERGENCY_EMAIL_RECIPIENTS", "").strip()
+    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    smtp_port = os.getenv("SMTP_PORT", "587")
+
+    logger.info(f"Attempting to send emergency email for {user_id}")
+    logger.debug(f"SMTP Config: host={smtp_host}, port={smtp_port}, user={smtp_user}, pass={'SET' if smtp_password else 'MISSING'}, recipients={recipients}")
 
     if not smtp_user or not smtp_password or not recipients:
-        logger.debug("Email not configured, skipping emergency email")
-        return True
+        logger.warning(
+            f"Email NOT sent: Configuration missing for {user_id}. "
+            f"SMTP_USER: {'set' if smtp_user else 'MISSING'}, "
+            f"SMTP_PASSWORD: {'set' if smtp_password else 'MISSING'}, "
+            f"RECIPIENTS: {'set' if recipients else 'MISSING'}"
+        )
+        return False
 
     target_list = [x.strip() for x in recipients.split(",") if x.strip()]
     if not target_list:
+        logger.warning(f"Email NOT sent for {user_id}: Recipients list is empty after parsing.")
         return True
 
     try:
         message = MIMEMultipart("alternative")
-        message["Subject"] = "[Mimi] Emergency handoff required"
+        # Tiêu đề khẩn cấp, viết hoa và có biểu tượng để tránh bị coi là rác
+        message["Subject"] = f"🔴 [KHẨN CẤP] HỌC SINH CẦN TRỢ GIÚP - ID: {user_id}"
         message["From"] = smtp_user
         message["To"] = ", ".join(target_list)
 
-        body = (
-            f"User: {user_id}\n"
-            f"Summary: {summary}\n"
-            f"Last message: {raw_message}\n"
-            f"Time: {datetime.now(timezone.utc).isoformat()}"
+        # Nội dung văn bản thuần (Fallback)
+        text_body = (
+            f"⚠️ CẢNH BÁO KHẨN CẤP ⚠️\n\n"
+            f"User ID: {user_id}\n"
+            f"Nội dung: {raw_message}\n"
+            f"Thời gian: {datetime.now(timezone.utc).isoformat()}\n\n"
+            f"Lệnh kích hoạt lại Bot: #resume {user_id}"
         )
-        message.attach(MIMEText(body, "plain", "utf-8"))
 
+        # Nội dung HTML (Rich Format)
+        html_body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; border: 2px solid #e74c3c; border-radius: 10px; overflow: hidden;">
+                <div style="background-color: #e74c3c; color: white; padding: 20px; text-align: center;">
+                    <h1 style="margin: 0;">⚠️ CẢNH BÁO KHẨN CẤP</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Chào thầy/cô, hệ thống Mimi vừa phát hiện một tình huống khẩn cấp cần sự can thiệp của con người.</p>
+                    
+                    <div style="background-color: #f9f9f9; border-left: 5px solid #e74c3c; padding: 15px; margin: 20px 0;">
+                        <strong>Thông tin học sinh:</strong><br>
+                        • <b>User ID (PSID):</b> <code style="background: #eee; padding: 2px 5px;">{user_id}</code><br>
+                        • <b>Thời gian:</b> {datetime.now(timezone.utc).strftime('%H:%M:%S %d/%m/%Y')} (UTC)
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <strong>Nội dung tin nhắn cuối của học sinh:</strong><br>
+                        <blockquote style="font-style: italic; color: #555; border-left: 3px solid #ccc; padding-left: 15px; margin-left: 0;">
+                            "{raw_message}"
+                        </blockquote>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+                    <div style="background-color: #e8f4fd; border-radius: 5px; padding: 15px;">
+                        <h3 style="margin-top: 0; color: #2980b9;">🛠 Hướng dẫn xử lý</h3>
+                        <p>1. Thầy/cô vui lòng kiểm tra ngay hộp thư Fanpage để hỗ trợ học sinh.</p>
+                        <p>2. Khi đã hỗ trợ xong và muốn <b>Bot quay lại hoạt động</b>, hãy nhắn tin cho Fanpage cú pháp sau:</p>
+                        <div style="text-align: center; margin: 15px 0;">
+                            <code style="display: inline-block; background-color: #2c3e50; color: #ecf0f1; padding: 10px 20px; border-radius: 5px; font-size: 1.2em; font-weight: bold;">
+                                #resume {user_id}
+                            </code>
+                        </div>
+                    </div>
+                </div>
+                <div style="background-color: #f4f4f4; color: #888; padding: 10px; text-align: center; font-size: 0.8em;">
+                    Đây là email tự động từ hệ thống Mimi Counseling Bot. Vui lòng không trả lời email này.
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        message.attach(MIMEText(text_body, "plain", "utf-8"))
+        message.attach(MIMEText(html_body, "html", "utf-8"))
+
+        logger.info(f"Connecting to SMTP server {smtp_host}:{smtp_port}...")
         await aiosmtplib.send(
             message,
-            hostname=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-            port=int(os.getenv("SMTP_PORT", "587")),
+            hostname=smtp_host,
+            port=int(smtp_port),
             username=smtp_user,
             password=smtp_password,
             start_tls=True,
+            timeout=15,
         )
-        logger.info(f"Emergency email sent for {user_id}")
+        logger.info(f"Emergency email SUCCESS for {user_id}")
         return True
     except Exception as e:
-        logger.error(f"Failed to send emergency email: {e}")
+        logger.error(f"Failed to send emergency email for {user_id}: {type(e).__name__}: {e}")
         return False
 
 
