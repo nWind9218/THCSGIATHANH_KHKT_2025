@@ -1,21 +1,28 @@
 """Supabase PostgreSQL client for long-term memory and knowledge base operations."""
 
-import asyncio
 import json
 import logging
 import os
-import socket
-import time
 from datetime import datetime, timezone
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
-import aiosmtplib
+import httpx
 
 from utils.embeddings import embed_text, vector_literal
 from utils.database import exec_query, fetchall, get_pg_connection
 
 logger = logging.getLogger(__name__)
+
+
+def _is_render_env() -> bool:
+    return bool(os.getenv("RENDER"))
+
+
+def _render_context() -> dict[str, str]:
+    return {
+        "service": os.getenv("RENDER_SERVICE_NAME", ""),
+        "instance": os.getenv("RENDER_INSTANCE_ID", ""),
+        "commit": os.getenv("RENDER_GIT_COMMIT", ""),
+    }
 
 
 def _mask_email(email: str) -> str:
@@ -30,56 +37,17 @@ def _mask_email(email: str) -> str:
     return f"{masked_local}@{domain}"
 
 
-async def _probe_smtp_outbound(host: str, port: int, timeout_seconds: float = 5.0) -> None:
-    """Run DNS and raw TCP probe before SMTP auth/send for outbound diagnostics."""
-    started_at = time.perf_counter()
-    try:
-        addr_infos = await asyncio.to_thread(socket.getaddrinfo, host, port, type=socket.SOCK_STREAM)
-        resolved = sorted({addr[4][0] for addr in addr_infos if addr and len(addr) > 4 and addr[4]})
-        logger.info(
-            "[SMTP_DIAG] DNS resolve success host=%s port=%s resolved_ips=%s",
-            host,
-            port,
-            resolved,
-        )
-    except Exception as exc:
-        logger.error(
-            "[SMTP_DIAG] DNS resolve FAILED host=%s port=%s error=%s: %s",
-            host,
-            port,
-            type(exc).__name__,
-            exc,
-        )
-        raise
+def _mask_api_key(api_key: str) -> str:
+    """Mask API key in logs while still allowing quick validation."""
+    if not api_key:
+        return "<empty>"
+    if len(api_key) <= 8:
+        return "*" * len(api_key)
+    return f"{api_key[:4]}***{api_key[-4:]}"
 
-    writer = None
-    try:
-        connect_started = time.perf_counter()
-        reader, writer = await asyncio.wait_for(asyncio.open_connection(host, port), timeout=timeout_seconds)
-        _ = reader
-        connect_ms = int((time.perf_counter() - connect_started) * 1000)
-        total_ms = int((time.perf_counter() - started_at) * 1000)
-        logger.info(
-            "[SMTP_DIAG] TCP connect success host=%s port=%s connect_ms=%s total_probe_ms=%s",
-            host,
-            port,
-            connect_ms,
-            total_ms,
-        )
-    except Exception as exc:
-        logger.error(
-            "[SMTP_DIAG] TCP connect FAILED host=%s port=%s timeout_s=%s error=%s: %s",
-            host,
-            port,
-            timeout_seconds,
-            type(exc).__name__,
-            exc,
-        )
-        raise
-    finally:
-        if writer is not None:
-            writer.close()
-            await writer.wait_closed()
+
+def _mask_email_list(emails: list[str]) -> list[str]:
+    return [_mask_email(email) for email in emails]
 
 
 async def search_psychology_kb(query: str, top_k: int = 3) -> str:
@@ -175,30 +143,28 @@ async def log_emergency(user_id: str, summary: str) -> None:
 
 async def send_emergency_email(user_id: str, summary: str, raw_message: str) -> bool:
     """Send emergency notification email to admin."""
-    # Try both common names for SMTP user
-    smtp_user = (os.getenv("SMTP_USERNAME") or os.getenv("SMTP_USER") or "").strip()
-    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+    resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
+    resend_from_email = os.getenv("RESEND_FROM_EMAIL", "").strip()
+    resend_base_url = os.getenv("RESEND_API_BASE_URL", "https://api.resend.com").strip().rstrip("/")
+    resend_timeout = os.getenv("RESEND_REQUEST_TIMEOUT", "15").strip()
     recipients = os.getenv("EMERGENCY_EMAIL_RECIPIENTS", "").strip()
-    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    smtp_port = os.getenv("SMTP_PORT", "587")
-    smtp_diag_enabled = os.getenv("SMTP_OUTBOUND_DIAG", "true").strip().lower() in {"1", "true", "yes", "on"}
+    resend_diag_enabled = os.getenv("RESEND_DIAG", "true").strip().lower() in {"1", "true", "yes", "on"}
 
     logger.info(f"Attempting to send emergency email for {user_id}")
     logger.info(
-        "[SMTP_DIAG] Config host=%s port=%s user=%s password=%s recipients_count=%s diag_enabled=%s",
-        smtp_host,
-        smtp_port,
-        _mask_email(smtp_user),
-        "SET" if smtp_password else "MISSING",
+        "[RESEND_DIAG] Config base_url=%s from_email=%s api_key=%s recipients_count=%s diag_enabled=%s",
+        resend_base_url,
+        _mask_email(resend_from_email),
+        _mask_api_key(resend_api_key),
         len([x for x in recipients.split(",") if x.strip()]),
-        smtp_diag_enabled,
+        resend_diag_enabled,
     )
 
-    if not smtp_user or not smtp_password or not recipients:
+    if not resend_api_key or not resend_from_email or not recipients:
         logger.warning(
             f"Email NOT sent: Configuration missing for {user_id}. "
-            f"SMTP_USER: {'set' if smtp_user else 'MISSING'}, "
-            f"SMTP_PASSWORD: {'set' if smtp_password else 'MISSING'}, "
+            f"RESEND_API_KEY: {'set' if resend_api_key else 'MISSING'}, "
+            f"RESEND_FROM_EMAIL: {'set' if resend_from_email else 'MISSING'}, "
             f"RECIPIENTS: {'set' if recipients else 'MISSING'}"
         )
         return False
@@ -208,21 +174,23 @@ async def send_emergency_email(user_id: str, summary: str, raw_message: str) -> 
         logger.warning(f"Email NOT sent for {user_id}: Recipients list is empty after parsing.")
         return True
 
+    logger.info(
+        "[RESEND_DIAG] Parsed recipients user_id=%s recipients=%s",
+        user_id,
+        _mask_email_list(target_list),
+    )
+
+    if _is_render_env():
+        logger.info("[RENDER_DIAG] Resend send on Render context=%s", _render_context())
+
     try:
-        smtp_port_num = int(smtp_port)
+        resend_timeout_num = float(resend_timeout)
     except ValueError:
-        logger.error("[SMTP_DIAG] Invalid SMTP_PORT value: %s", smtp_port)
+        logger.error("[RESEND_DIAG] Invalid RESEND_REQUEST_TIMEOUT value: %s", resend_timeout)
         return False
 
     try:
-        if smtp_diag_enabled:
-            await _probe_smtp_outbound(smtp_host, smtp_port_num)
-
-        message = MIMEMultipart("alternative")
-        # Tiêu đề khẩn cấp, viết hoa và có biểu tượng để tránh bị coi là rác
-        message["Subject"] = f"🔴 [KHẨN CẤP] HỌC SINH CẦN TRỢ GIÚP - ID: {user_id}"
-        message["From"] = smtp_user
-        message["To"] = ", ".join(target_list)
+        subject = f"🔴 [KHẨN CẤP] HỌC SINH CẦN TRỢ GIÚP - ID: {user_id}"
 
         # Nội dung văn bản thuần (Fallback)
         text_body = (
@@ -277,30 +245,103 @@ async def send_emergency_email(user_id: str, summary: str, raw_message: str) -> 
         </body>
         </html>
         """
-        
-        message.attach(MIMEText(text_body, "plain", "utf-8"))
-        message.attach(MIMEText(html_body, "html", "utf-8"))
 
-        logger.info("[SMTP_DIAG] Starting SMTP send host=%s port=%s start_tls=%s timeout=%s", smtp_host, smtp_port_num, True, 15)
-        send_response = await aiosmtplib.send(
-            message,
-            hostname=smtp_host,
-            port=smtp_port_num,
-            username=smtp_user,
-            password=smtp_password,
-            start_tls=True,
-            timeout=15,
-        )
-        logger.info("[SMTP_DIAG] SMTP send completed host=%s port=%s", smtp_host, smtp_port_num)
-        logger.debug("[SMTP_DIAG] SMTP provider response: %s", send_response)
-        logger.info(f"Emergency email SUCCESS for {user_id}")
-        return True
+        endpoint = f"{resend_base_url}/emails"
+        payload = {
+            "from": resend_from_email,
+            "to": target_list,
+            "subject": subject,
+            "text": text_body,
+            "html": html_body,
+        }
+        headers = {
+            "Authorization": f"Bearer {resend_api_key}",
+            "Content-Type": "application/json",
+        }
+
+        if resend_diag_enabled:
+            logger.info(
+                "[RESEND_DIAG] Starting API send endpoint=%s timeout_s=%s recipients=%s",
+                endpoint,
+                resend_timeout_num,
+                len(target_list),
+            )
+
+        async with httpx.AsyncClient(timeout=resend_timeout_num) as client:
+            response = await client.post(endpoint, json=payload, headers=headers)
+
+            if response.status_code in {200, 201, 202}:
+                response_json = response.json() if response.content else {}
+                logger.info(
+                    "[RESEND_DIAG] API send success status=%s email_id=%s mode=batch",
+                    response.status_code,
+                    response_json.get("id"),
+                )
+                logger.info(f"Emergency email SUCCESS for {user_id}")
+                return True
+
+            logger.error(
+                "[RESEND_DIAG] API send FAILED status=%s body=%s mode=batch",
+                response.status_code,
+                response.text[:500],
+            )
+
+            if len(target_list) == 1:
+                return False
+
+            logger.warning(
+                "[RESEND_DIAG] Retrying as per-recipient sends user_id=%s recipients=%s",
+                user_id,
+                _mask_email_list(target_list),
+            )
+
+            success_recipients: list[str] = []
+            failed_recipients: list[str] = []
+
+            for recipient in target_list:
+                single_payload = dict(payload)
+                single_payload["to"] = [recipient]
+                try:
+                    single_response = await client.post(endpoint, json=single_payload, headers=headers)
+                    if single_response.status_code in {200, 201, 202}:
+                        success_recipients.append(recipient)
+                        logger.info(
+                            "[RESEND_DIAG] Per-recipient send success recipient=%s status=%s",
+                            _mask_email(recipient),
+                            single_response.status_code,
+                        )
+                    else:
+                        failed_recipients.append(recipient)
+                        logger.error(
+                            "[RESEND_DIAG] Per-recipient send failed recipient=%s status=%s body=%s",
+                            _mask_email(recipient),
+                            single_response.status_code,
+                            single_response.text[:300],
+                        )
+                except Exception as per_recipient_error:
+                    failed_recipients.append(recipient)
+                    logger.error(
+                        "[RESEND_DIAG] Per-recipient send exception recipient=%s error=%s: %s",
+                        _mask_email(recipient),
+                        type(per_recipient_error).__name__,
+                        per_recipient_error,
+                    )
+
+            logger.info(
+                "[RESEND_DIAG] Per-recipient retry result success=%s failed=%s",
+                _mask_email_list(success_recipients),
+                _mask_email_list(failed_recipients),
+            )
+
+            if success_recipients:
+                logger.info("Emergency email PARTIAL SUCCESS for %s", user_id)
+                return True
+            return False
     except Exception as e:
         logger.error(
-            "[SMTP_DIAG] Failed to send emergency email for %s host=%s port=%s error=%s: %s",
+            "[RESEND_DIAG] Failed to send emergency email for %s endpoint=%s error=%s: %s",
             user_id,
-            smtp_host,
-            smtp_port,
+            f"{resend_base_url}/emails",
             type(e).__name__,
             e,
         )

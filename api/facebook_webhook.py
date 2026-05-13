@@ -7,6 +7,7 @@ import hmac
 import json
 import logging
 import os
+import uuid
 from typing import Any
 
 import httpx
@@ -28,6 +29,21 @@ FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "")
 ADMIN_FACEBOOK_PSIDS = [
     x.strip() for x in os.getenv("ADMIN_FACEBOOK_PSIDS", "").split(",") if x.strip()
 ]
+
+
+def _render_context() -> dict[str, str]:
+    """Collect Render runtime metadata for production diagnostics."""
+    return {
+        "render": os.getenv("RENDER", ""),
+        "service": os.getenv("RENDER_SERVICE_NAME", ""),
+        "instance": os.getenv("RENDER_INSTANCE_ID", ""),
+        "commit": os.getenv("RENDER_GIT_COMMIT", ""),
+        "external_url": os.getenv("RENDER_EXTERNAL_URL", ""),
+    }
+
+
+def _is_render_env() -> bool:
+    return bool(os.getenv("RENDER"))
 
 
 def _verify_signature(raw_body: bytes, signature_header: str | None) -> bool:
@@ -117,6 +133,16 @@ async def _process_message(psid: str, text: str) -> str:
     }
 
     result = await graph.ainvoke(state)
+
+    if result.get("is_emergency") or result.get("human_takeover"):
+        logger.warning(
+            "[RENDER_DIAG] Facebook emergency/takeover state psid=%s is_emergency=%s human_takeover=%s render=%s service=%s",
+            psid,
+            bool(result.get("is_emergency")),
+            bool(result.get("human_takeover")),
+            _render_context().get("render"),
+            _render_context().get("service"),
+        )
     
     # Check if human takeover is active
     if result.get("human_takeover") and not result.get("is_emergency"):
@@ -136,6 +162,15 @@ async def _process_message(psid: str, text: str) -> str:
 async def handle_facebook_event(sender: str, message_text: str):
     """Asynchronous handler for Facebook events to avoid webhook timeouts."""
     try:
+        if _is_render_env():
+            logger.info(
+                "[RENDER_DIAG] Processing Facebook event sender=%s text_len=%s service=%s instance=%s",
+                sender,
+                len(message_text or ""),
+                _render_context().get("service"),
+                _render_context().get("instance"),
+            )
+
         # Check for discovery commands
         clean_text = message_text.strip().lower()
         
@@ -169,7 +204,11 @@ async def handle_facebook_event(sender: str, message_text: str):
         if response_text:
             await _send_messenger_message(sender, response_text)
     except Exception:
-        logger.exception("Failed to process Messenger event for %s", sender)
+        logger.exception(
+            "Failed to process Messenger event for %s render_ctx=%s",
+            sender,
+            _render_context(),
+        )
         # Optional: Send a fallback only if it's not a takeover situation
         # For now, we rely on logging for debugging background tasks.
 
@@ -181,8 +220,21 @@ async def verify_webhook(request: Request):
     challenge = request.query_params.get("hub.challenge")
 
     if mode == "subscribe" and token and token == FACEBOOK_VERIFY_TOKEN:
+        if _is_render_env():
+            logger.info(
+                "[RENDER_DIAG] Facebook webhook verification success service=%s external_url=%s",
+                _render_context().get("service"),
+                _render_context().get("external_url"),
+            )
         return Response(content=challenge or "", media_type="text/plain")
 
+    if _is_render_env():
+        logger.warning(
+            "[RENDER_DIAG] Facebook webhook verification failed mode=%s token_present=%s service=%s",
+            mode,
+            bool(token),
+            _render_context().get("service"),
+        )
     raise HTTPException(status_code=403, detail="Verification failed")
 
 
@@ -190,14 +242,40 @@ async def verify_webhook(request: Request):
 async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
     raw_body = await request.body()
     signature = request.headers.get("x-hub-signature-256")
+    request_id = (
+        request.headers.get("x-request-id")
+        or request.headers.get("x-render-request-id")
+        or uuid.uuid4().hex[:12]
+    )
+
+    if _is_render_env():
+        logger.info(
+            "[RENDER_DIAG] Facebook webhook received request_id=%s body_bytes=%s signature_present=%s",
+            request_id,
+            len(raw_body),
+            bool(signature),
+        )
 
     if not _verify_signature(raw_body, signature):
+        logger.warning(
+            "[RENDER_DIAG] Invalid Facebook signature request_id=%s service=%s",
+            request_id,
+            _render_context().get("service"),
+        )
         raise HTTPException(status_code=403, detail="Invalid signature")
 
     payload = json.loads(raw_body.decode("utf-8"))
 
     if payload.get("object") != "page":
+        logger.info("[RENDER_DIAG] Ignored Facebook payload object=%s request_id=%s", payload.get("object"), request_id)
         return {"status": "ignored"}
+
+    if _is_render_env():
+        logger.info(
+            "[RENDER_DIAG] Facebook payload accepted request_id=%s entries=%s",
+            request_id,
+            len(payload.get("entry", [])),
+        )
 
     for entry in payload.get("entry", []):
         for event in entry.get("messaging", []):
@@ -221,5 +299,12 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
 
             # Offload processing to background task to respond to Facebook immediately (within 20s)
             background_tasks.add_task(handle_facebook_event, sender, message_text)
+            if _is_render_env():
+                logger.info(
+                    "[RENDER_DIAG] Enqueued Facebook event request_id=%s sender=%s text_len=%s",
+                    request_id,
+                    sender,
+                    len(message_text),
+                )
 
     return {"status": "ok"}

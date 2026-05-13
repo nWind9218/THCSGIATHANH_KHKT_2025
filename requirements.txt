@@ -7,7 +7,7 @@ redisvl
 langgraph
 langgraph-checkpoint-redis
 langchain-openai
-aiosmtplib
+resend
 langsmith
 python-dotenv
 typing-extensions

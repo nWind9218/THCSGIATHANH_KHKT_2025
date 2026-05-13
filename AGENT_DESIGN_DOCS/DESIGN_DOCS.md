@@ -135,7 +135,7 @@ Thực hiện 3 bước:
 """
 Tool: notify_human_admin
 pythondef notify_human_admin(user_id: str, summary: str) -> bool:
-    # 1. Gửi email (SendGrid hoặc SMTP)
+    # 1. Gửi email qua Resend API
     # 2. Push lên Redis channel: admin:alerts → giáo viên đang online nhận ngay
     # 3. Ghi log vào Supabase bảng emergency_logs
     pass
