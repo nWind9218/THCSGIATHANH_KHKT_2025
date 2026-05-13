@@ -1,19 +1,19 @@
-"""Clarification question prompt for gathering missing information."""
+"""Clarification question prompt for natural Vietnamese dialogue."""
 
 import json
 
-
 def get_clarification_prompt(scratchpad: list[str], user_text: str) -> str:
     """
-    Generate a single, open-ended clarification question.
-    Rules:
-    - Exactly 1 question per response
-    - Open-ended, not leading
-    - Friendly tone, not clinical
+    Generate a single, warm clarification question in Vietnamese.
     """
     return (
-        "Dat 1 cau hoi mo duy nhat de bo sung thong tin con thieu. "
-        "Giong dieu than thien, khong dan dat, khong giang giai dai dong.\n"
-        f"Scratchpad: {json.dumps(scratchpad, ensure_ascii=False)}\n"
-        f"Latest: {user_text}"
+        "Dựa vào phân tích (scratchpad) và tin nhắn mới nhất, hãy đặt MỘT câu hỏi để học sinh chia sẻ thêm.\n\n"
+        "QUY TẮC:\n"
+        "- Chỉ 01 câu hỏi duy nhất.\n"
+        "- Không giảng giải, không khuyên bảo ở bước này.\n"
+        "- Tông giọng: Quan tâm, không giống đang thẩm vấn. Ưu tiên câu hỏi mở (Điều gì..., Như thế nào..., Từ khi nào...).\n"
+        "- Xưng hô: Mimi - bạn.\n\n"
+        f" Scratchpad: {json.dumps(scratchpad, ensure_ascii=False)}\n"
+        f"Tin nhắn cuối: {user_text}\n"
+        "Câu hỏi của Mimi:"
     )

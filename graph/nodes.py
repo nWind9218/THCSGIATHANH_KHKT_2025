@@ -131,10 +131,11 @@ async def simple_response_node(state: CounselingState) -> dict:
 
 
 async def info_gap_assessor_node(state: CounselingState) -> dict:
-    user_text = latest_user_message(state.get("messages", []))
+    history = state.get("messages", [])
+    user_text = latest_user_message(history)
     llm = get_llm()
 
-    prompt = get_info_gap_assessment_prompt(user_text)
+    prompt = get_info_gap_assessment_prompt(user_text, history)
     response = await llm.ainvoke([HumanMessage(content=prompt)])
     parsed = json.loads((response.content or "{}").strip("` \n"))
 

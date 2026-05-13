@@ -2,15 +2,26 @@
 
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
-from utils.database import start_pooling, close_db_pools, check_postgres_health
-from api.cors_config import get_cors_settings
+try:
+    from utils.database import start_pooling, close_db_pools, check_postgres_health
+    from api.cors_config import get_cors_settings
+except ModuleNotFoundError:
+    # Support direct execution from the api folder: python main.py
+    project_root = Path(__file__).resolve().parents[1]
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
+    from utils.database import start_pooling, close_db_pools, check_postgres_health
+    from api.cors_config import get_cors_settings
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -90,12 +101,14 @@ async def root():
     }
 
 
-# WebSocket endpoints imported from chat_ws and admin_ws
+# WebSocket and webhook endpoints imported from submodules
 from api.chat_ws import router as chat_router
 from api.admin_ws import router as admin_router
+from api.facebook_webhook import router as facebook_router
 
 app.include_router(chat_router, prefix="/ws", tags=["WebSocket"])
 app.include_router(admin_router, prefix="/ws/admin", tags=["Admin WebSocket"])
+app.include_router(facebook_router, tags=["Facebook Webhook"])
 
 
 if __name__ == "__main__":

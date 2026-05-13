@@ -1,13 +1,20 @@
-"""Save memory and gating prompts for long-term memory persistence."""
-
+"""Save memory and gating prompts for Vietnamese context."""
 
 def get_memory_gate_prompt(user_text: str) -> str:
     """
-    Determine if this message contains info worth storing in long-term memory.
-    Returns: JSON with {"should_store": true|false, "memory": "..."}
+    Identify durable information to store in long-term memory.
+    Focus: Family context, recurring issues, personality traits, specific interests.
     """
     return (
-        "Kiem tra user message co thong tin ben vung ve hoan canh/tinh cach/van de lap lai hay khong. "
-        "Tra JSON {\"should_store\": true|false, \"memory\": \"...\"}.\n"
-        f"Message: {user_text}"
+        "Bạn là trợ lý quản lý trí nhớ cho chatbot 'Mimi'.\n"
+        "Nhiệm vụ: Chắt lọc những thông tin quan trọng về học sinh từ tin nhắn mới nhất để ghi nhớ lâu dài.\n\n"
+        "THÔNG TIN CẦN LƯU:\n"
+        "- Hoàn cảnh gia đình, tên bạn bè/người thân.\n"
+        "- Những vấn đề lặp đi lặp lại (VD: luôn sợ bị điểm kém, hay cãi nhau với mẹ).\n"
+        "- Sở thích, thế mạnh hoặc điểm yếu của học sinh.\n"
+        "- Các sự kiện quan trọng vừa xảy ra.\n\n"
+        "YÊU CẦU: Trả về duy nhất JSON format:\n"
+        "{\"should_store\": true|false, \"memory\": \"Tóm tắt thông tin cần nhớ bằng tiếng Việt\"}\n\n"
+        f"Tin nhắn: \"{user_text}\"\n"
+        "Kết quả JSON:"
     )

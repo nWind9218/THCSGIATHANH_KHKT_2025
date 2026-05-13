@@ -119,14 +119,17 @@ async def close_db_pools():
     
     if pg_pool:
         await pg_pool.close()
+        pg_pool = None
         logger.info("✅ PostgreSQL pool closed")
     
     if redis_client:
         await redis_client.close()
+        redis_client = None
         logger.info("✅ Redis pool closed")
 
     if redis_checkpoint_client:
         await redis_checkpoint_client.close()
+        redis_checkpoint_client = None
         logger.info("✅ Redis checkpoint pool closed")
 
 
