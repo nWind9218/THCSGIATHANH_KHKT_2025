@@ -167,6 +167,38 @@ async def deep_reasoning_node(state: CounselingState) -> dict:
     student_knowledge = await search_student_knowledge_kb(user_text, top_k=3)
     user_memory = await search_user_memory_kb(user_id=user_id, query=user_text, top_k=3)
 
+    # Escalation pattern detection
+    escalation_patterns = [
+        "escalate to emergency services",
+        "escalate to human intervention",
+        "escalate case",
+        "escalate to authorities",
+        "escalate to trusted adult",
+        "escalate to emergency help",
+        "escalate to emergency",
+        "escalate to human",
+        "escalate",
+    ]
+    escalation_reason = None
+    human_takeover = False
+    # Parse student_knowledge for should_do field(s)
+    import re
+    for chunk in (student_knowledge or "").split("---"):
+        m = re.search(r"should_do:\s*(.*)", chunk, re.IGNORECASE)
+        if m:
+            should_do = m.group(1).lower()
+            for pat in escalation_patterns:
+                if pat in should_do:
+                    human_takeover = True
+                    # escalation_reason: include should_do + user_intent if possible
+                    intent_match = re.search(r"intent:\s*(.*)", chunk, re.IGNORECASE)
+                    escalation_reason = f"should_do: {should_do}"
+                    if intent_match:
+                        escalation_reason += f" | intent: {intent_match.group(1)}"
+                    break
+        if human_takeover:
+            break
+
     llm = get_llm()
     messages = [
         SystemMessage(content=get_deep_reasoning_system_prompt()),
@@ -181,12 +213,16 @@ async def deep_reasoning_node(state: CounselingState) -> dict:
     ]
     response = await llm.ainvoke(messages)
 
-    return {
+    result = {
         "kb_guidelines": kb_guidelines,
         "student_knowledge": student_knowledge,
         "user_memory": user_memory,
         "response_text": response.content,
     }
+    if human_takeover:
+        result["human_takeover"] = True
+        result["escalation_reason"] = escalation_reason or "escalation detected from should_do"
+    return result
 
 
 async def save_memory_node(state: CounselingState) -> dict:
