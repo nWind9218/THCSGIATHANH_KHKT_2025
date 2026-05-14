@@ -15,6 +15,7 @@ from memory import (
     save_history,
     save_topic,
     search_psychology_kb,
+    search_student_knowledge_kb,
     search_user_memory_kb,
     set_takeover_flag,
     update_user_longterm_style,
@@ -163,19 +164,26 @@ async def deep_reasoning_node(state: CounselingState) -> dict:
     user_text = latest_user_message(state.get("messages", []))
 
     kb_guidelines = await search_psychology_kb(user_text, top_k=3)
+    student_knowledge = await search_student_knowledge_kb(user_text, top_k=3)
     user_memory = await search_user_memory_kb(user_id=user_id, query=user_text, top_k=3)
 
     llm = get_llm()
     messages = [
         SystemMessage(content=get_deep_reasoning_system_prompt()),
         HumanMessage(
-            content=get_deep_reasoning_user_prompt(user_text, kb_guidelines, user_memory)
+            content=get_deep_reasoning_user_prompt(
+                user_text,
+                kb_guidelines,
+                user_memory,
+                student_knowledge,
+            )
         ),
     ]
     response = await llm.ainvoke(messages)
 
     return {
         "kb_guidelines": kb_guidelines,
+        "student_knowledge": student_knowledge,
         "user_memory": user_memory,
         "response_text": response.content,
     }

@@ -12,6 +12,7 @@ from .redis_client import (
 
 from .supabase_client import (
     search_psychology_kb,
+    search_student_knowledge_kb,
     search_user_memory_kb,
     upsert_user_memory_chunk,
     log_emergency,
@@ -32,6 +33,7 @@ __all__ = [
     "publish_admin_alert",
     # Supabase operations
     "search_psychology_kb",
+    "search_student_knowledge_kb",
     "search_user_memory_kb",
     "upsert_user_memory_chunk",
     "log_emergency",

@@ -108,6 +108,46 @@ async def search_user_memory_kb(user_id: str, query: str, top_k: int = 3) -> str
     return "\n\n".join(chunks)
 
 
+async def search_student_knowledge_kb(query: str, top_k: int = 3) -> str:
+    """Search student counseling response knowledge by user intent."""
+    if not query:
+        return ""
+
+    await get_pg_connection()
+    embedding = await embed_text(query)
+    try:
+        rows = await fetchall(
+            """
+            SELECT user_intent, response_mode, should_do, should_not_do, sample_responses,
+                   1 - (embedding <=> $1::vector) AS similarity
+            FROM student_knowledge
+            ORDER BY embedding <=> $1::vector
+            LIMIT $2
+            """,
+            vector_literal(embedding),
+            top_k,
+        )
+    except Exception as exc:
+        logger.warning("student_knowledge lookup unavailable: %s", exc)
+        return ""
+    if not rows:
+        return ""
+
+    chunks: list[str] = []
+    for row in rows:
+        row_dict = dict(row) if not isinstance(row, dict) else row
+        chunks.append(
+            (
+                f"intent: {row_dict.get('user_intent', '')}\n"
+                f"response_mode: {row_dict.get('response_mode', '')}\n"
+                f"should_do: {row_dict.get('should_do', '')}\n"
+                f"should_not_do: {row_dict.get('should_not_do', '')}\n"
+                f"sample_responses: {row_dict.get('sample_responses', '')}"
+            ).strip()
+        )
+    return "\n\n---\n\n".join(chunks)
+
+
 async def upsert_user_memory_chunk(user_id: str, content: str) -> None:
     """Add or update long-term memory chunk for user."""
     if not user_id or not content:

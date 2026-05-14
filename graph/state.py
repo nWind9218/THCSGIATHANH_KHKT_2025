@@ -18,6 +18,7 @@ class CounselingState(TypedDict, total=False):
     info_gap_status: Literal["missing", "sufficient"]
 
     kb_guidelines: str
+    student_knowledge: str
     user_memory: str
 
     reasoning_scratchpad: list[str]
