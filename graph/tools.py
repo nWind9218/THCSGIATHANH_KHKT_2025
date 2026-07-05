@@ -37,7 +37,7 @@ def get_llm() -> ChatOpenAI:
     global _llm
     if _llm is None:
         _llm = ChatOpenAI(
-            model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4.1-mini"),
+            model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini"),
             temperature=0.2,
             api_key=os.getenv("OPENAI_API_KEY"),
         )
