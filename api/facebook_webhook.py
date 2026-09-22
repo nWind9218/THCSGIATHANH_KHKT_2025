@@ -24,6 +24,8 @@ FACEBOOK_GRAPH_API_VERSION = os.getenv("FACEBOOK_GRAPH_API_VERSION", "v20.0")
 FACEBOOK_VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "")
 FACEBOOK_PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN", "")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "")
+E2E_PROBE_PSID = "codex_e2e_probe"
+E2E_PROBE_HEADER = "x-mimi-e2e-probe"
 
 # List of authorized Facebook PSIDs for admin commands
 ADMIN_FACEBOOK_PSIDS = [
@@ -98,7 +100,7 @@ async def _send_messenger_message(psid: str, text: str) -> None:
         raise RuntimeError("Missing PAGE_ACCESS_TOKEN for Messenger replies")
 
     url = f"https://graph.facebook.com/{FACEBOOK_GRAPH_API_VERSION}/me/messages"
-    params = {"access_token": FACEBOOK_PAGE_ACCESS_TOKEN}
+    headers = {"Authorization": f"Bearer {FACEBOOK_PAGE_ACCESS_TOKEN}"}
 
     async with httpx.AsyncClient(timeout=15.0) as client:
         for chunk in _chunk_text(text):
@@ -107,15 +109,23 @@ async def _send_messenger_message(psid: str, text: str) -> None:
                 "message": {"text": chunk},
                 "messaging_type": "RESPONSE",
             }
-            response = await client.post(url, params=params, json=payload)
+            response = await client.post(url, headers=headers, json=payload)
             if not response.is_success:
+                try:
+                    error = response.json().get("error", {})
+                except (ValueError, AttributeError):
+                    error = {}
                 logger.error(
-                    "Facebook API error %s for psid=%s: %s",
+                    "Facebook API error status=%s code=%s type=%s psid=%s message=%s",
                     response.status_code,
+                    error.get("code", ""),
+                    error.get("type", ""),
                     psid,
-                    response.text,
+                    error.get("message", "Unknown Facebook API error"),
                 )
-                response.raise_for_status()
+                raise RuntimeError(
+                    f"Messenger delivery failed with status {response.status_code}"
+                ) from None
 
 
 async def _process_message(psid: str, text: str) -> str:
@@ -160,7 +170,11 @@ async def _process_message(psid: str, text: str) -> str:
     return response_text
 
 
-async def handle_facebook_event(sender: str, message_text: str):
+async def handle_facebook_event(
+    sender: str,
+    message_text: str,
+    suppress_delivery: bool = False,
+):
     """Asynchronous handler for Facebook events to avoid webhook timeouts."""
     try:
         if _is_production_env():
@@ -203,7 +217,13 @@ async def handle_facebook_event(sender: str, message_text: str):
 
         response_text = await _process_message(sender, message_text)
         if response_text:
-            await _send_messenger_message(sender, response_text)
+            if suppress_delivery:
+                logger.info(
+                    "[RUNTIME_DIAG] E2E probe completed sender=%s delivery_suppressed=true",
+                    sender,
+                )
+            else:
+                await _send_messenger_message(sender, response_text)
     except Exception:
         logger.exception(
             "Failed to process Messenger event for %s runtime_ctx=%s",
@@ -243,6 +263,7 @@ async def verify_webhook(request: Request):
 async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
     raw_body = await request.body()
     signature = request.headers.get("x-hub-signature-256")
+    probe_requested = request.headers.get(E2E_PROBE_HEADER) == "1"
     request_id = (
         request.headers.get("x-request-id")
         or request.headers.get("x-render-request-id")
@@ -298,8 +319,14 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
             if not message_text:
                 continue
 
+            suppress_delivery = probe_requested and sender == E2E_PROBE_PSID
             # Offload processing to background task to respond to Facebook immediately (within 20s)
-            background_tasks.add_task(handle_facebook_event, sender, message_text)
+            background_tasks.add_task(
+                handle_facebook_event,
+                sender,
+                message_text,
+                suppress_delivery,
+            )
             if _is_production_env():
                 logger.info(
                     "[RUNTIME_DIAG] Enqueued Facebook event request_id=%s sender=%s text_len=%s",

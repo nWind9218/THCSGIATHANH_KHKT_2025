@@ -1,8 +1,9 @@
 """Probe the deployed Messenger webhook without contacting a real user.
 
 The probe submits a correctly signed webhook event with a deliberately invalid,
-non-numeric PSID, then observes the configured Redis history key to confirm that
-the deployed background task completed the counseling graph.
+non-numeric PSID and requests delivery suppression. It then observes the
+configured Redis history key to confirm that the deployed background task
+completed the counseling graph without contacting a real Messenger user.
 """
 
 from __future__ import annotations
@@ -67,6 +68,7 @@ async def main() -> int:
                 "content-type": "application/json",
                 "x-hub-signature-256": f"sha256={signature}",
                 "x-request-id": request_id,
+                "x-mimi-e2e-probe": "1",
             },
         )
     print(
