@@ -2,7 +2,9 @@ fastapi
 uvicorn
 httpx
 asyncpg
-redis
+# 8.1.0 has an async RESP3 reconnect regression when an idle socket is closed.
+# Keep this pinned until the upstream fix in redis-py#4260 is released.
+redis==8.0.1
 redisvl
 langgraph
 langgraph-checkpoint-redis

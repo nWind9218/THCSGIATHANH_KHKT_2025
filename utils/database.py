@@ -1,5 +1,7 @@
 import asyncpg
 import redis.asyncio as aioredis
+from redis.asyncio.retry import Retry
+from redis.backoff import ExponentialBackoff
 import os
 import asyncio
 import logging
@@ -20,6 +22,11 @@ pg_pool: asyncpg.Pool = None
 redis_client: aioredis.Redis = None
 redis_checkpoint_client = None
 _lock = asyncio.Lock()
+
+
+def _redis_retry() -> Retry:
+    """Retry transient connection failures without replaying a whole graph run."""
+    return Retry(ExponentialBackoff(cap=0.5, base=0.05), retries=2)
 
 
 def resolve_postgres_url() -> str:
@@ -52,26 +59,23 @@ async def start_pooling():
     """Khởi tạo connection pools"""
     global pg_pool, redis_client, redis_checkpoint_client
     async with _lock: # Chỉ cho phép một task được chạy trong một thời điểm
-        if pg_pool is not None:
-            logger.warning("⚠️ Pool đã được cài đặt!")
-            return
-
         postgres_url = resolve_postgres_url()
         redis_url = resolve_redis_url()
 
-        pg_pool = await asyncpg.create_pool(
-            postgres_url,
-            min_size=5,
-            max_size=20,
-            command_timeout=60,
-            timeout=20,
-            max_inactive_connection_lifetime=60,
-            statement_cache_size=0,
-            server_settings={
-                'jit': 'off',
-                'application_name': 'mimi_langgraph'
-            }
-        )
+        if pg_pool is None:
+            pg_pool = await asyncpg.create_pool(
+                postgres_url,
+                min_size=5,
+                max_size=20,
+                command_timeout=60,
+                timeout=20,
+                max_inactive_connection_lifetime=60,
+                statement_cache_size=0,
+                server_settings={
+                    'jit': 'off',
+                    'application_name': 'mimi_langgraph'
+                }
+            )
         if redis_client is None:
             redis_client = aioredis.from_url(
                 redis_url,
@@ -79,14 +83,21 @@ async def start_pooling():
                 decode_responses=True,
                 max_connections=20,
                 socket_connect_timeout=5,
+                socket_timeout=10,
                 socket_keepalive=True,
-                health_check_interval=30
+                health_check_interval=30,
+                retry=_redis_retry(),
             )
         if redis_checkpoint_client is None:
             redis_checkpoint_client = aioredis.from_url(
                 redis_url,
                 decode_responses=False, # Để LangGraph tự xử lý binary dữ liệu
-                max_connections=10
+                max_connections=10,
+                socket_connect_timeout=5,
+                socket_timeout=10,
+                socket_keepalive=True,
+                health_check_interval=30,
+                retry=_redis_retry(),
             )
         # Fail fast with explicit health checks for Supabase Postgres and local Redis.
         async with pg_pool.acquire() as conn:
@@ -101,7 +112,15 @@ async def get_redis_checkpointer():
     """
     # 1. Tạo client thô (Binary) - KHÔNG decode_responses
     redis_url = resolve_redis_url()
-    storage_client = aioredis.from_url(redis_url, decode_responses=False)
+    storage_client = aioredis.from_url(
+        redis_url,
+        decode_responses=False,
+        socket_connect_timeout=5,
+        socket_timeout=10,
+        socket_keepalive=True,
+        health_check_interval=30,
+        retry=_redis_retry(),
+    )
 
     # 2. Khởi tạo Saver mà không gọi __init__ tiêu chuẩn để tránh parse URL lại
     saver = AsyncRedisSaver.__new__(AsyncRedisSaver)

@@ -3,6 +3,7 @@
 import logging
 import os
 import sys
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -12,7 +13,12 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
 try:
-    from utils.database import start_pooling, close_db_pools, check_postgres_health
+    from utils.database import (
+        start_pooling,
+        close_db_pools,
+        check_postgres_health,
+        check_redis_health,
+    )
     from api.cors_config import get_cors_settings
 except ModuleNotFoundError:
     # Support direct execution from the api folder: python main.py
@@ -20,7 +26,12 @@ except ModuleNotFoundError:
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
 
-    from utils.database import start_pooling, close_db_pools, check_postgres_health
+    from utils.database import (
+        start_pooling,
+        close_db_pools,
+        check_postgres_health,
+        check_redis_health,
+    )
     from api.cors_config import get_cors_settings
 
 load_dotenv()
@@ -75,12 +86,16 @@ app.add_middleware(
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Check API and database health."""
+    """Check all stateful services required to process a message."""
     try:
-        health = await check_postgres_health()
+        database_health, redis_health = await asyncio.gather(
+            check_postgres_health(),
+            check_redis_health(),
+        )
         return {
             "status": "healthy",
-            "database": health,
+            "database": database_health,
+            "redis": redis_health,
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
