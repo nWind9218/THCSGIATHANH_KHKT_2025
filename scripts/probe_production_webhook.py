@@ -70,7 +70,7 @@ async def main() -> int:
                 "x-request-id": request_id,
                 "x-mimi-e2e-probe": "1",
             },
-        )
+    )
     print(
         json.dumps(
             {
@@ -84,6 +84,11 @@ async def main() -> int:
         flush=True,
     )
     response.raise_for_status()
+    acknowledgement = response.json()
+    if acknowledgement.get("probe_delivery_suppressed") is not True:
+        raise RuntimeError(
+            "Deployed webhook did not confirm E2E delivery suppression"
+        )
 
     redis_client = redis.from_url(
         redis_url,

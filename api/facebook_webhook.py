@@ -299,6 +299,7 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
             len(payload.get("entry", [])),
         )
 
+    suppressed_deliveries = 0
     for entry in payload.get("entry", []):
         for event in entry.get("messaging", []):
             sender = event.get("sender", {}).get("id")
@@ -320,6 +321,8 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
                 continue
 
             suppress_delivery = probe_requested and sender == E2E_PROBE_PSID
+            if suppress_delivery:
+                suppressed_deliveries += 1
             # Offload processing to background task to respond to Facebook immediately (within 20s)
             background_tasks.add_task(
                 handle_facebook_event,
@@ -335,4 +338,7 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
                     len(message_text),
                 )
 
-    return {"status": "ok"}
+    result = {"status": "ok"}
+    if probe_requested:
+        result["probe_delivery_suppressed"] = suppressed_deliveries > 0
+    return result

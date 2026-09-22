@@ -124,7 +124,10 @@ async def test_probe_suppresses_messenger_delivery(monkeypatch):
 
     result = await webhook.receive_webhook(request, background_tasks)
 
-    assert result == {"status": "ok"}
+    assert result == {
+        "status": "ok",
+        "probe_delivery_suppressed": True,
+    }
     assert len(background_tasks.tasks) == 1
     assert background_tasks.tasks[0].args == (
         webhook.E2E_PROBE_PSID,
