@@ -35,12 +35,14 @@ uncertain: không đủ rõ để loại trừ nguy cơ. Không xem yêu cầu b
 Đây là phân loại quan sát được, không xuất suy luận nội bộ."""
 
 ASSESSMENT = """Dựa vào lịch sử và thông tin đã biết, chỉ trả JSON đầy đủ các trường:
-{"known": {"tên_thông_tin": "giá trị"}, "missing_fields": ["tên_thông_tin"],
+{"known": [{"key": "tên_thông_tin", "value": "giá trị"}], "missing_fields": ["tên_thông_tin"],
  "next_question_focus": "tên_thông_tin hoặc chuỗi rỗng", "need": "listen"|"comfort"|"clarify"|"advice"|"explain",
  "intent": "simple"|"support"|"closing"|"out_of_scope", "topic": "chủ đề",
  "core_issue": "vấn đề chính", "safety_hint": "safe"|"urgent"|"uncertain",
  "user_role": "unknown"|"student"|"parent"}.
-known chỉ chứa dữ kiện đã được người dùng nói, dùng cùng khóa khi họ sửa thông tin;
+known là danh sách cặp key/value đều là chuỗi, không dùng object động, số, boolean,
+null, list hoặc object làm value; nếu không có dữ kiện dùng []. Mỗi key chỉ xuất hiện
+một lần; chỉ chứa dữ kiện đã được người dùng nói, dùng cùng khóa khi họ sửa thông tin;
 không hỏi điều đã có trong known. Giữ role unknown nếu chưa tự khai báo, chỉ parent
 khi người dùng nói rõ họ là phụ huynh hoặc đang nói về con mình. Không suy đoán danh tính
 hoặc quyền truy cập. Khi đổi chủ đề cập nhật core_issue/topic, không ghép chuyện cũ

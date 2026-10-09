@@ -9,7 +9,9 @@ from time import perf_counter
 from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
+
+from .contracts import ContractError, normalize_assessment, parse_decision
 
 from .prompts import ASSESSMENT, LISTEN_MODE, PERSONA, SAFETY
 from .store import SessionStore
@@ -32,6 +34,25 @@ class Assessment(BaseModel):
     core_issue: str
     safety_hint: Literal["safe", "urgent", "uncertain"]
     user_role: Literal["unknown", "student", "parent"]
+
+
+class StoredIdentity(BaseModel):
+    model_config = ConfigDict(strict=True)
+    known: dict[str, str]
+    user_role: Literal["unknown", "student", "parent"]
+    handoff_status: Literal["none", "pending", "accepted"]
+    notification_sent: bool
+
+
+def decision_error(stage: str, exc: Exception) -> list[str]:
+    """Safe field/type diagnostics; no model payload, validation inputs or fact keys."""
+    if isinstance(exc, ValidationError):
+        fields = set(Assessment.model_fields) | set(Safety.model_fields) | set(StoredIdentity.model_fields)
+        return [f"{stage}_validation:{error['loc'][0] if error['loc'] and error['loc'][0] in fields else 'payload'}:{error['type']}"
+                for error in exc.errors(include_input=False, include_context=False)][:8]
+    if isinstance(exc, ContractError):
+        return [f"{stage}_validation:{exc.field}:{exc.code}"]
+    return [f"{stage}_error_type:{type(exc).__name__}"]
 
 
 class Turn(TypedDict, total=False):
@@ -60,6 +81,13 @@ def canonical_session(raw: dict | list) -> dict:
     session.setdefault("user_role", "unknown")
     session.setdefault("handoff_status", "none")
     session.setdefault("notification_sent", False)
+    if not isinstance(raw, (dict, list)):
+        raise ContractError("invalid_session", "payload")
+    normalized = normalize_assessment({"known": session["known"]})
+    StoredIdentity.model_validate({**session, "known": normalized["known"]})
+    # Stored facts are always a dict; wire lists belong only to model transport.
+    if not isinstance(session["known"], dict):
+        raise ContractError("stored_facts_must_be_dict")
     return session
 
 
@@ -96,10 +124,11 @@ class CounselingEngine:
 
     async def _safety(self, state: Turn) -> dict:
         try:
-            parsed = Safety.model_validate_json(await self._complete(state, "safety", SAFETY))
+            parsed = Safety.model_validate(parse_decision(await self._complete(state, "safety", SAFETY)))
             risk = parsed.risk
-        except Exception:
+        except Exception as exc:
             state["diagnostics"].append("safety_unavailable_or_invalid")
+            state["diagnostics"].extend(decision_error("safety", exc))
             risk = "uncertain"
         return {"safety": risk, "diagnostics": state["diagnostics"],
                 "timings": state["timings"], "usage": state["usage"], "model_calls": state["model_calls"]}
@@ -108,9 +137,11 @@ class CounselingEngine:
         previous = state["session"]
         context = json.dumps({k: previous.get(k) for k in ("known", "topic", "core_issue", "need", "user_role")}, ensure_ascii=False)
         try:
-            item = Assessment.model_validate_json(await self._complete(state, "assessment", ASSESSMENT + "\nĐã biết: " + context)).model_dump()
-        except Exception:
+            payload = parse_decision(await self._complete(state, "assessment", ASSESSMENT + "\nĐã biết: " + context))
+            item = Assessment.model_validate(normalize_assessment(payload)).model_dump()
+        except Exception as exc:
             state["diagnostics"].append("assessment_unavailable_or_invalid")
+            state["diagnostics"].extend(decision_error("assessment", exc))
             return {"safety": "uncertain", "diagnostics": state["diagnostics"]}
         session = deepcopy(previous)
         session["known"].update(item["known"])
@@ -206,13 +237,13 @@ class CounselingEngine:
                     if isinstance(raw, dict) and raw.get("handoff_status") == "accepted":
                         recovered["handoff_status"] = "accepted"
                     raw = recovered
-            except Exception:
+                session = canonical_session(raw)
+            except Exception as exc:
                 # A failed read may hide a human takeover. Do not overwrite unknown state.
                 fallback = "Mimi đang gặp trục trặc khi đọc cuộc trò chuyện. Bạn hãy thử lại sau một chút; nếu đang không an toàn, hãy nhờ người đáng tin cậy ở gần hỗ trợ ngay."
                 return {"response": fallback, "response_text": fallback,
-                        "messages": [], "assessment": {}, "handoff_status": "unknown", "diagnostics": ["session_load_failed"],
+                        "messages": [], "assessment": {}, "handoff_status": "unknown", "diagnostics": ["session_load_failed", *decision_error("session", exc)],
                         "timings": {"total": perf_counter() - started}, "usage": {}, "model_calls": []}
-            session = canonical_session(raw)
             session["messages"].append({"role": "user", "content": text.strip()})
             session["messages"] = session["messages"][-20:]
             state = Turn(user_id=user_id, session=session, diagnostics=diagnostics, timings={}, usage={}, model_calls=[], assessment={}, sources={})

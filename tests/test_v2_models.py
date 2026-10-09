@@ -113,9 +113,9 @@ async def test_provider_error_does_not_leak_credentials_or_payload():
     fake, create = client(error=failure)
     with pytest.raises(ModelError) as error:
         await OpenAIModel(client=fake).complete([{ "role": "user", "content": "Hello"}])
-    assert error.value.code == "provider_error"
+    assert error.value.code == "rate_limit"
     assert error.value.status == 429
-    assert str(error.value) == "provider_error"
+    assert str(error.value) == "rate_limit"
     assert error.value.__suppress_context__
     assert create.call_count == 1
 
@@ -193,9 +193,9 @@ async def test_observer_meters_returned_usage_before_output_validation_once(api,
     model = OpenAIModel(ModelConfig(api=api), client=fake, usage_observer=observations.append)
     if code:
         with pytest.raises(ModelError, match=code):
-            await model.complete([{ "role": "user", "content": "private"}])
+            await model.complete([{ "role": "user", "content": "private"}], purpose="assessment")
     else:
-        await model.complete([{ "role": "user", "content": "private"}])
+        await model.complete([{ "role": "user", "content": "private"}], purpose="assessment")
     assert len(observations) == 1
     assert observations[0]["usage"]["total_tokens"] == 9
     assert observations[0]["model"] == "gpt-5-mini-2025-08-07"
@@ -212,3 +212,64 @@ async def test_observer_failure_diagnostic_without_changing_answer(caplog):
     assert answer.text == "Chào bạn."
     assert "model_usage_observer_failed" in caplog.text
     assert "sk-secret" not in caplog.text and "private" not in caplog.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("api", ["responses", "chat_completions"])
+@pytest.mark.parametrize("purpose", ["safety", "assessment"])
+async def test_strict_schema_payload_keeps_verbosity(api, purpose):
+    from mimi_v2.contracts import schema_for_purpose
+    fake, create = client(response() if api == "responses" else chat_response())
+    await OpenAIModel(ModelConfig(api=api, verbosity="low"), client=fake).complete(
+        [{"role": "user", "content": "synthetic"}], purpose=purpose)
+    kwargs = create.call_args.kwargs
+    schema = schema_for_purpose(purpose)
+    assert schema["strict"] is True
+    if api == "responses":
+        assert kwargs["text"]["verbosity"] == "low"
+        assert kwargs["text"]["format"] == {"type": "json_schema", **schema}
+    else:
+        assert kwargs["verbosity"] == "low"
+        assert kwargs["response_format"] == {"type": "json_schema", "json_schema": schema}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("api", ["responses", "chat_completions"])
+@pytest.mark.parametrize("purpose", ["legacy_safety", "legacy_assessment", "legacy_info_gap", "reply"])
+async def test_legacy_baseline_purposes_have_no_provider_schema(api, purpose):
+    fake, create = client(response() if api == "responses" else chat_response())
+    await OpenAIModel(ModelConfig(api=api), client=fake).complete(
+        [{"role": "user", "content": "synthetic"}], purpose=purpose)
+    kwargs = create.call_args.kwargs
+    assert "response_format" not in kwargs
+    assert "format" not in kwargs.get("text", {})
+
+
+@pytest.mark.asyncio
+async def test_unknown_structured_capability_never_silently_downgrades():
+    fake, create = client(response())
+    with pytest.raises(ModelError, match="unsupported_structured_output"):
+        await OpenAIModel(ModelConfig(model="unknown"), client=fake).complete(
+            [{"role": "user", "content": "synthetic"}], purpose="assessment")
+    create.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider_code,status,expected", [
+    ("insufficient_quota", 429, "insufficient_quota"),
+    ("rate_limit_exceeded", 429, "rate_limit"),
+    (None, 429, "rate_limit"),
+    ("invalid_api_key", 401, "authentication"),
+    ("sk-secret private", 400, "provider_error"),
+    (None, 500, "provider_error"),
+])
+async def test_provider_error_code_allowlist(provider_code, status, expected):
+    failure = RuntimeError("sk-secret private provider body")
+    failure.code = provider_code
+    failure.status_code = status
+    fake, _ = client(error=failure)
+    with pytest.raises(ModelError) as error:
+        await OpenAIModel(client=fake).complete([{ "role": "user", "content": "Hello"}])
+    assert error.value.code == expected
+    assert error.value.status == status
+    assert "sk-secret" not in repr(error.value)

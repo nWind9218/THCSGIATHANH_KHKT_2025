@@ -5,6 +5,7 @@ import asyncio
 import math
 import os
 import logging
+import re
 from dataclasses import asdict, dataclass
 from typing import Any, Mapping
 
@@ -39,6 +40,20 @@ def _capabilities(model: str) -> tuple[set[str], bool]:
     if model.startswith(("o3", "o4-mini")):
         return {"low", "medium", "high"}, False
     return set(), False
+
+
+def _supports_structured_output(model: str) -> bool:
+    # Explicitly supported general-purpose families, never assume an unknown
+    # model supports strict schemas or quietly downgrade to ordinary JSON mode.
+    if re.fullmatch(r"gpt-5(?:\.[124])?(?:-(?:mini|nano|pro))?(?:-\d{4}-\d{2}-\d{2})?", model):
+        return True
+    if re.fullmatch(r"gpt-4\.1(?:-(?:mini|nano))?(?:-\d{4}-\d{2}-\d{2})?", model):
+        return True
+    if model in {"gpt-4o", "gpt-4o-mini"} or model.startswith("gpt-4o-mini-"):
+        return True
+    if re.fullmatch(r"gpt-4o-\d{4}-\d{2}-\d{2}", model):
+        return model[-10:] >= "2024-08-06"
+    return False
 
 
 @dataclass(frozen=True)
@@ -175,6 +190,14 @@ class OpenAIModel:
             if not isinstance(message, dict) or message.get("role") not in {"system", "developer", "user", "assistant"} or not isinstance(message.get("content"), str):
                 raise ModelError("unsupported_input")
             clean.append({"role": message["role"], "content": message["content"]})
+        schema = None
+        if purpose in {"safety", "assessment"}:
+            if not _supports_structured_output(self.config.model):
+                raise ModelError("unsupported_structured_output")
+            from .contracts import schema_for_purpose
+            schema = schema_for_purpose(purpose)
+            if not schema:
+                raise ModelError("missing_output_schema")
         client = self._client
         owned = client is None
         try:
@@ -193,6 +216,8 @@ class OpenAIModel:
                     kwargs["reasoning"] = {"effort": self.config.reasoning_effort}
                 if self.config.verbosity:
                     kwargs["text"] = {"verbosity": self.config.verbosity}
+                if schema:
+                    kwargs.setdefault("text", {})["format"] = {"type": "json_schema", **schema}
                 call = client.responses.create(**kwargs)
             else:
                 kwargs.update(messages=clean, max_completion_tokens=self.config.max_output_tokens)
@@ -200,6 +225,8 @@ class OpenAIModel:
                     kwargs["reasoning_effort"] = self.config.reasoning_effort
                 if self.config.verbosity:
                     kwargs["verbosity"] = self.config.verbosity
+                if schema:
+                    kwargs["response_format"] = {"type": "json_schema", "json_schema": schema}
                 call = client.chat.completions.create(**kwargs)
             raw = _dict(await asyncio.wait_for(call, timeout=self.config.timeout))
             self._observe_usage(raw)
@@ -237,7 +264,19 @@ class OpenAIModel:
             raise ModelError("timeout") from None
         except Exception as exc:
             status = getattr(exc, "status_code", None)
-            code = "timeout" if type(exc).__name__ == "APITimeoutError" else "provider_error"
+            provider_code = getattr(exc, "code", None)
+            if provider_code == "insufficient_quota":
+                code = "insufficient_quota"
+            elif provider_code in {"rate_limit_exceeded", "rate_limit"} or status == 429:
+                code = "rate_limit"
+            elif provider_code in {"invalid_api_key", "invalid_authentication", "authentication_error"} or status == 401:
+                code = "authentication"
+            elif type(exc).__name__ == "APITimeoutError":
+                code = "timeout"
+            elif type(exc).__name__ == "APIConnectionError" or isinstance(exc, ConnectionError):
+                code = "network_error"
+            else:
+                code = "provider_error"
             raise ModelError(code, status=status) from None
         finally:
             if owned and client is not None:

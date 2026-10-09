@@ -212,3 +212,74 @@ async def test_history_window_and_store_deep_copy():
     assert result["messages"][-2]["content"] == "latest"
     result["messages"].clear()
     assert len((await store.load("a"))["messages"]) == 20
+
+
+@pytest.mark.asyncio
+async def test_wire_known_list_normalizes_to_public_and_stored_dict():
+    model = FakeModel([assessment(known=[{"key": "grade", "value": "9"}, {"key": "need", "value": "lắng nghe"}])])
+    store = InMemoryStore()
+    result = await CounselingEngine(model, store).respond("a", "Em lớp 9")
+    assert result["assessment"]["known"] == {"grade": "9", "need": "lắng nghe"}
+    assert (await store.load("a"))["known"] == result["assessment"]["known"]
+    assert not result["diagnostics"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("facts,code", [
+    ([{"key": "secret-fact", "value": "private-text"}, {"key": "secret-fact", "value": "changed"}], "duplicate_fact_key"),
+    ([{"key": "grade", "value": 9}], "invalid_fact_value"),
+    ([{"key": "grade", "value": "9", "other": "private-text"}], "invalid_fact_entry"),
+    ([{"key": "", "value": "private-text"}], "invalid_fact_key"),
+    ({"grade": {"nested": "private-text"}}, "string_type"),
+])
+async def test_wire_errors_remain_uncertain_and_private(facts, code):
+    result = await CounselingEngine(FakeModel([assessment(known=facts)]), InMemoryStore()).respond("a", "test")
+    assert result["handoff_status"] == "pending"
+    assert "assessment_unavailable_or_invalid" in result["diagnostics"]
+    assert any(code in entry for entry in result["diagnostics"])
+    assert "secret-fact" not in str(result["diagnostics"])
+    assert "private-text" not in str(result["diagnostics"])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("known", [[], {"grade": 9}, {"grade": True}, {"": "private"}])
+async def test_corrupt_stored_known_fails_without_overwriting(known):
+    store = InMemoryStore()
+    await store.save("a", {"known": known, "messages": [{"role": "user", "content": "old"}]})
+    model = FakeModel()
+    result = await CounselingEngine(model, store).respond("a", "new")
+    assert result["handoff_status"] == "unknown"
+    assert "session_load_failed" in result["diagnostics"]
+    assert model.calls == []
+    assert (await store.load("a"))["known"] == known
+
+
+def test_provider_schema_all_objects_closed_and_required():
+    from mimi_v2.contracts import schema_for_purpose
+    def verify(schema):
+        if schema.get("type") == "object":
+            assert schema["additionalProperties"] is False
+            assert set(schema["required"]) == set(schema["properties"])
+            for item in schema["properties"].values():
+                verify(item)
+        if schema.get("type") == "array":
+            verify(schema["items"])
+    for purpose in ("safety", "assessment"):
+        format = schema_for_purpose(purpose)
+        assert format["strict"] is True
+        verify(format["schema"])
+    assert schema_for_purpose("legacy_assessment") is None
+    assert schema_for_purpose("reply") is None
+    schema_for_purpose("assessment")["schema"]["properties"].clear()
+    assert "known" in schema_for_purpose("assessment")["schema"]["properties"]
+
+
+@pytest.mark.asyncio
+async def test_duplicate_json_property_is_not_silently_last_value_wins():
+    class DuplicateSafety(FakeModel):
+        async def complete(self, messages, purpose):
+            return SimpleNamespace(text='{"risk":"urgent","risk":"safe","reason":"private-text"}', usage={}, metadata={})
+    result = await CounselingEngine(DuplicateSafety(), InMemoryStore()).respond("a", "test")
+    assert result["handoff_status"] == "pending"
+    assert "safety_validation:payload:duplicate_json_property" in result["diagnostics"]
+    assert "private-text" not in str(result["diagnostics"])

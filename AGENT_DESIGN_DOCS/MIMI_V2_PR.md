@@ -18,18 +18,23 @@ Facebook messages/email or connect to production Redis/Postgres.
 
 ## Evidence and acceptance
 
-119 offline unit/regression tests passed including the live pilot metering tests. Both model
+159 offline unit/regression tests passed including durable batch and metering tests. Both model
 API paths passed synthetic credential probes. Gradio rendered conversation,
 pending/accepted/resume and fault behavior was inspected in the browser.
 Full 1,000-case offline comparison exercised 8,800 turns; fixture scores are not
 model-quality evidence. The authorized balanced 20-category pilot completed:
 583 provider responses, observed usage cost $0.20937555.
-See `AGENT_DESIGN_DOCS/MIMI_V2_PILOT20_RESULTS.md`. Six v2 assessment errors remain
-and block quality acceptance. Account invoice/credit deduction is not verified.
+See `AGENT_DESIGN_DOCS/MIMI_V2_PILOT20_RESULTS.md`. Strict Structured Outputs now
+protect safety/assessment contracts; all six previously failing assessment
+contexts validated in a live preflight ($0.00402225 estimated observed usage).
+This establishes schema validity, not behavioral quality. Account invoice/credit
+deduction is not verified. The user authorized the full 1,000-case live comparison;
+the durable runner checkpoints every turn and preserves partial work across
+errors, crashes and quota exhaustion. See `AGENT_DESIGN_DOCS/MIMI_V2_BATCH_EVAL.md`.
 
 ## Remaining gates
 
-Draft only: behavioral review, cost decision for full live evaluation, and explicit
+Draft only: completion/review of the authorized full live evaluation and explicit
 rollout approval are still required. No claim that Responses is faster solely
 from adapter migration. Holdout is synthetic and not an independent clinical
 benchmark. Source/usage provenance and named review criteria are retained.
