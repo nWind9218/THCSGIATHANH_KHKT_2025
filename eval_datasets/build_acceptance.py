@@ -31,6 +31,13 @@ def make_turn(user, review, expect=None, **controls):
     return {"user": user, "expect": expect or {}, "review": [scope] + list(review), **controls}
 
 
+def catalog_source_hash(path):
+    # Git may check the same catalog out as LF or CRLF. Keep provenance stable
+    # across worktrees without changing any content or materialized cases.
+    source = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(source).hexdigest()
+
+
 def build_dataset():
     categories = SCHOOL + IDENTITY + SAFETY + CONTEXT
     if len(categories) != 20 or len({c["id"] for c in categories}) != 20:
@@ -121,7 +128,7 @@ def build_dataset():
         "generation": "200 authored scenarios, each with five distinct state/intent obstacles; no random name swaps",
         "split_policy": "All variants of one base scenario stay in the same split (600 development, 200 regression, 200 holdout).",
         "limitations": "Constructed scripted conversations, not prevalence estimates or an independent psychological benchmark. Human review required. Faults remain infrastructure errors, not quality passes.",
-        "source_hashes": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in ROOT.glob("catalog_*.py")},
+        "source_hashes": {p.name: catalog_source_hash(p) for p in ROOT.glob("catalog_*.py")},
     }, "cases": cases}
     validate_dataset(data)
     if len(cases) != 1000 or len({digest(c["turns"]) for c in cases}) != 1000:

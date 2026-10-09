@@ -73,7 +73,11 @@ def normalize_assessment(payload: dict) -> dict:
             if not isinstance(value, str):
                 raise ContractError("invalid_fact_value")
             if key in normalized:
-                raise ContractError("duplicate_fact_key")
+                if normalized[key] != value:
+                    raise ContractError("duplicate_fact_key")
+                # Exact duplicates contain no conflicting information. Collapse
+                # losslessly; never resolve competing values by list order.
+                continue
             normalized[key] = value
         result["known"] = normalized
     elif isinstance(facts, dict):

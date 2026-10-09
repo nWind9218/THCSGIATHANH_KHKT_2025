@@ -9,8 +9,14 @@ are not imported. The existing authorized key is loaded through the model-only
 environment whitelist.
 
 ```powershell
-.\.venv\Scripts\python.exe -u -m mimi_v2.batch_eval --live --output eval_results/full_1000 --concurrency 8
+.\.venv\Scripts\python.exe -u -m mimi_v2.batch_eval --live --output eval_results/full_1000 --concurrency 8 --request-cap 3000
 ```
+
+An explicit `--request-cap` is required for live runs and resumes. It is a total
+provider-attempt limit for this job, including retries and previously persisted
+attempts, not a number of conversations or user turns. A shared durable
+reservation occurs before dispatch, so concurrency cannot overrun the cap.
+The example's 3000 is only an example allowance, not authorization to run.
 
 Concurrency can be 1–16. Eight means at most eight isolated conversations run
 at once; baseline and v2 execute sequentially within each case. Infrastructure
@@ -36,7 +42,7 @@ on resume. Store state and recovery buffers are restored so subsequent turns
 can refer to earlier messages.
 
 ```powershell
-.\.venv\Scripts\python.exe -u -m mimi_v2.batch_eval --live --resume --output eval_results/full_1000 --concurrency 8
+.\.venv\Scripts\python.exe -u -m mimi_v2.batch_eval --live --resume --output eval_results/full_1000 --concurrency 8 --request-cap 3000
 ```
 
 An OS-held lock plus PID/creation-time verification rejects a duplicate launch
@@ -44,6 +50,14 @@ or resume while the original process is live. Resume rejects changed source,
 dataset or model configuration. Do not edit model, core, prompts, contracts,
 baseline or runner source during the job. Documentation/test edits do not change
 the runtime hash set. Completed jobs can be resumed safely and make no new requests.
+
+If the stored attempt count already reaches or exceeds the explicit cap, resume
+makes no new provider calls. A larger total cap requires a newly authorized
+allowance. Budget exhaustion is `waiting_budget`, distinct from quota failures.
+Future attempt records carry durable sequence and local reservation/dispatch
+timestamps; they are not provider receipt timestamps. Old records are not given
+invented sequence or timestamps. Frozen source checks remain enforced: this
+hardening checkout cannot resume the older job by bypassing its source identity.
 
 ## Crashes and quota
 

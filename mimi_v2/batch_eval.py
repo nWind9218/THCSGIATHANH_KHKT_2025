@@ -120,7 +120,10 @@ class Circuit:
 
 
 class Journal:
-    def __init__(self, output: Path):
+    def __init__(self, output: Path, request_cap: int | None = None):
+        if request_cap is not None and (type(request_cap) is not int or request_cap < 0):
+            raise ValueError("Request cap must be a nonnegative integer")
+        self.request_cap = request_cap
         self.directory = output / "attempts"
         self.directory.mkdir(parents=True, exist_ok=True)
         self.ledger = UsageLedger(output / "usage.jsonl")
@@ -143,6 +146,37 @@ class Journal:
             os.fsync(handle.fileno())
         os.replace(temporary, self.ledger.path)
         self.seen = set(self.events)
+        # Do not fabricate sequence or timestamps for historical records. Only
+        # future reservations have proven dispatch order. A legacy prefix is
+        # counted conservatively against the budget, but its order is unknown.
+        recorded = [e["request_sequence"] for e in self.events.values() if "request_sequence" in e]
+        if any(type(n) is not int or n <= 0 for n in recorded) or len(set(recorded)) != len(recorded):
+            raise ValueError("Invalid or duplicate persisted request sequence")
+        self.sequence = max([len(self.events), *recorded])
+
+    def reserve(self, event, circuit):
+        """Synchronous reservation: no coroutine can interleave check and write.
+
+        RunLock excludes another process; all providers share this one Journal.
+        Reservations count even if the request later fails or is interrupted.
+        """
+        if self.request_cap is not None and len(self.events) >= self.request_cap:
+            circuit.reason = "request_budget"
+            raise JobPause(circuit.reason)
+        self.sequence += 1
+        event.update(request_sequence=self.sequence,
+                     request_reserved_at_utc=datetime.now(timezone.utc).isoformat())
+        try:
+            self.save(event)
+        except OSError:
+            circuit.reason = "checkpoint_unavailable"
+            raise
+
+    def budget(self):
+        return {"request_cap": self.request_cap, "reserved_attempts": len(self.events),
+                "remaining_attempts": None if self.request_cap is None else max(0, self.request_cap - len(self.events)),
+                "historical_order_unknown_attempts": sum("request_sequence" not in e or "request_started_at_utc" not in e for e in self.events.values()),
+                "timestamp_semantics": "Local durable reservation/dispatch time, not provider receipt or completion time."}
 
     def save(self, event):
         self.events[event["attempt_id"]] = deepcopy(event)
@@ -191,10 +225,12 @@ class DurableModel:
             event = {**self.labels, "turn": self.turn, "purpose": purpose, "attempt_id": uuid.uuid4().hex,
                      "retry": retry, "phase": "inflight", "provider_response": False, "usage": {},
                      "model": self.config.model, "config": self.config.public_config()}
+            self.journal.reserve(event, self.circuit)
             self.current = event
-            self.journal.save(event)
             error = None
             try:
+                event["request_started_at_utc"] = datetime.now(timezone.utc).isoformat()
+                self.journal.save(event)
                 reply = await self.provider.complete(messages, purpose=purpose)
             except Exception as exc:
                 error = exc
@@ -239,7 +275,8 @@ def checkpoint_state(engine, user_id):
 
 
 def waiting_phase(reason):
-    return {"insufficient_quota": "waiting_quota", "authentication": "waiting_credential"}.get(reason, "waiting_infrastructure")
+    return {"insufficient_quota": "waiting_quota", "authentication": "waiting_credential",
+            "request_budget": "waiting_budget"}.get(reason, "waiting_infrastructure")
 
 
 def hydrate(engine, user_id, state):
@@ -266,10 +303,14 @@ def unknown_turn(case, checkpoint, append_input=True):
     checkpoint.update(next_turn=index + 1, phase="ready")
 
 
-async def run_batch(dataset: dict, output: Path, *, key=None, resume=False, concurrency=8, engine_factory=None):
+async def run_batch(dataset: dict, output: Path, *, key=None, resume=False, concurrency=8, engine_factory=None, request_cap=None):
     validate_dataset(dataset)
     if type(concurrency) is not int or not 1 <= concurrency <= 16:
         raise ValueError("Concurrency must be 1..16")
+    if request_cap is not None and (type(request_cap) is not int or request_cap < 0):
+        raise ValueError("Request cap must be a nonnegative integer")
+    if engine_factory is None and request_cap is None:
+        raise ValueError("Live batch requires an explicit total request cap, including resume")
     if engine_factory is None and (len(dataset["cases"]) != 1000 or not key):
         raise ValueError("Live batch requires authorized key and exactly 1000 cases")
     output.mkdir(parents=True, exist_ok=True)
@@ -289,10 +330,21 @@ async def run_batch(dataset: dict, output: Path, *, key=None, resume=False, conc
             if resume:
                 raise ValueError("No existing manifest to resume")
             manifest = {"job_id": uuid.uuid4().hex, "created_at": datetime.now(timezone.utc).isoformat(),
-                        "identity": identity, "case_count": len(dataset["cases"]), "configurations": configs}
+                        "identity": identity, "case_count": len(dataset["cases"]), "configurations": configs,
+                        "request_tracking": {"version": 1, "initial_request_cap": request_cap,
+                                             "order": "durable sequence at reservation before local provider dispatch"}}
             atomic_json(manifest_path, manifest)
             atomic_json(output / "dataset.json", dataset)
-        journal, circuit = Journal(output), Circuit()
+        journal, circuit = Journal(output, request_cap=request_cap), Circuit()
+        if request_cap is not None and len(journal.events) >= request_cap:
+            circuit.reason = "request_budget"
+        # A changed explicit cap is an execution allowance, not a changed model
+        # or dataset. The frozen identity check above still applies in full.
+        with (output / "budget_runs.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps({"recorded_at_utc": datetime.now(timezone.utc).isoformat(),
+                                     "resume": resume, **journal.budget()}) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
         semaphore = asyncio.Semaphore(concurrency)
         finished_pairs = 0
 
@@ -401,7 +453,8 @@ async def run_batch(dataset: dict, output: Path, *, key=None, resume=False, conc
         job = {**manifest, "schema_version": 1, "dataset_name": dataset.get("name"), "dataset_hash": identity["dataset_hash"],
                "dataset_provenance": dataset.get("provenance", {}), "results": records, "summary": dict(counts),
                "expected_turns": expected, "processed_turns": completed_turns, "cost_summary": journal.cost(),
-               "acceptance": "pending_human_review", "state": "needs_input" if circuit.reason else "incomplete" if counts["unprocessed"] else "complete",
+               "request_budget": journal.budget(),
+               "acceptance": "pending_human_review", "state": "needs_input" if circuit.reason and counts["unprocessed"] else "incomplete" if counts["unprocessed"] else "complete",
                "pause_reason": circuit.reason}
         atomic_json(output / "report.json", job)
         atomic_json(output / "cost_summary.json", job["cost_summary"])
@@ -417,12 +470,17 @@ def main():
     parser.add_argument("--concurrency", type=int, default=8)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--live", action="store_true")
+    parser.add_argument("--request-cap", type=int, required=True,
+                        help="Explicit total provider-attempt cap across this job and all resumes (includes retries)")
     args = parser.parse_args()
+    if args.request_cap < 0:
+        parser.error("--request-cap must be nonnegative")
     if not args.live:
         parser.error("Full paid batch requires explicit --live")
     from mimi_v2.simulator import load_local_model_environment
     key = load_local_model_environment().get("OPENAI_API_KEY")
-    job = asyncio.run(run_batch(load_dataset(args.dataset), Path(args.output), key=key, resume=args.resume, concurrency=args.concurrency))
+    job = asyncio.run(run_batch(load_dataset(args.dataset), Path(args.output), key=key, resume=args.resume,
+                               concurrency=args.concurrency, request_cap=args.request_cap))
     if job["state"] != "complete":
         raise SystemExit(2)
 

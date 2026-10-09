@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from .contracts import ContractError, normalize_assessment, parse_decision
 
-from .prompts import ASSESSMENT, LISTEN_MODE, PERSONA, SAFETY
+from .prompts import ASSESSMENT, LISTEN_CLOSING_CONFLICT, LISTEN_MODE, PERSONA, SAFETY
 from .store import SessionStore
 
 
@@ -173,11 +173,18 @@ class CounselingEngine:
         return {"sources": sources, "diagnostics": state["diagnostics"], "timings": state["timings"]}
 
     async def _reply(self, state: Turn) -> dict:
-        if state["assessment"]["intent"] == "closing":
+        closing = state["assessment"]["intent"] == "closing"
+        listening = state["assessment"]["need"] == "listen"
+        if closing and not listening:
             return {"response": "Cảm ơn bạn đã chia sẻ. Khi cần, bạn có thể quay lại trò chuyện cùng Mimi."}
         context = json.dumps({"assessment": state["assessment"], "reference_material": state.get("sources", {}),
                               "handoff_status": state["session"]["handoff_status"]}, ensure_ascii=False)
-        mode = LISTEN_MODE if state["assessment"]["need"] == "listen" else ""
+        mode = LISTEN_MODE if listening else ""
+        if closing and listening:
+            # Neither label alone proves the user's intention. Let the reply
+            # consume the actual context rather than forcing a canned goodbye.
+            # This is routing/payload hardening, not a semantic quality guarantee.
+            mode += "\n" + LISTEN_CLOSING_CONFLICT
         try:
             response = (await self._complete(state, "reply", PERSONA + "\nNgữ cảnh hỗ trợ: " + context + "\n" + mode)).strip()
             if not response:

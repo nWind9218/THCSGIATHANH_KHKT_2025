@@ -1,8 +1,18 @@
 from collections import Counter
 from pathlib import Path
 
-from eval_datasets.build_acceptance import build_dataset, coverage, VARIANTS
+from eval_datasets.build_acceptance import build_dataset, catalog_source_hash, coverage, VARIANTS
 from mimi_v2.datasets import load_dataset, digest
+
+
+def test_catalog_provenance_is_stable_across_git_line_endings(tmp_path):
+    lf, crlf = tmp_path / "lf.py", tmp_path / "crlf.py"
+    source = 'name = "học sinh"\nvalue = 1\n'.encode("utf-8")
+    lf.write_bytes(source)
+    crlf.write_bytes(source.replace(b"\n", b"\r\n"))
+    assert catalog_source_hash(lf) == catalog_source_hash(crlf)
+    crlf.write_bytes(source.replace(b"1", b"2"))
+    assert catalog_source_hash(lf) != catalog_source_hash(crlf)
 
 
 def test_materialized_thousand_cases_are_reproducible_and_distinct():

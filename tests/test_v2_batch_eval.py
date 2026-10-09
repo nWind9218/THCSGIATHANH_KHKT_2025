@@ -1,6 +1,9 @@
 import asyncio
 import json
 import os
+import subprocess
+import sys
+from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -237,4 +240,111 @@ def test_concurrent_quota_does_not_consume_untouched_case_turns(tmp_path):
         assert result["processed_turns"] == 2
         untouched = [r for r in result["results"] if r["case_id"] in {"case-2", "case-3"}]
         assert all(r["next_turn"] == 0 and r["turns"] == [] and r["phase"] == "waiting_quota" for r in untouched)
+    asyncio.run(scenario())
+
+
+def test_total_budget_three_with_four_concurrent_cases_retries_and_resume(tmp_path):
+    providers = []
+    async def no_backoff(_delay):
+        pass
+    def factory(cfg, case, journal, circuit):
+        provider = FakeProvider(["rate_limit", "network_error"] if not providers else [])
+        providers.append(provider)
+        model = DurableModel(provider, journal, circuit, {"engine": cfg["engine"], "case_id": case["id"]}, sleeper=no_backoff)
+        return CounselingEngine(model, FaultStore())
+    job = asyncio.run(run_batch(dataset(4), tmp_path, engine_factory=factory, concurrency=4, request_cap=3))
+    assert sum(p.calls for p in providers) == 3
+    assert job["pause_reason"] == "request_budget"
+    assert all(r["phase"] == "waiting_budget" for r in job["results"])
+    assert job["request_budget"]["reserved_attempts"] == 3
+    assert job["request_budget"]["remaining_attempts"] == 0
+    assert job["summary"].get("pass", 0) == 0
+    assert job["processed_turns"] == 1  # The partial model chain is honest error.
+    ledger = [json.loads(p.read_text()) for p in (tmp_path / "attempts").glob("*.json")]
+    ordered = sorted(ledger, key=lambda e: e["request_sequence"])
+    assert [e["request_sequence"] for e in ordered] == [1, 2, 3]
+    assert [e["retry"] for e in ordered] == [0, 1, 2]
+    assert [e.get("error") for e in ordered[:2]] == ["rate_limit", "network_error"]
+    timestamps = [datetime.fromisoformat(e["request_started_at_utc"]) for e in ordered]
+    assert timestamps == sorted(timestamps)
+    assert all(datetime.fromisoformat(e["request_reserved_at_utc"]) <= datetime.fromisoformat(e["request_started_at_utc"]) for e in ordered)
+    for cap in (3, 2, 0):
+        resumed = asyncio.run(run_batch(dataset(4), tmp_path, resume=True, engine_factory=factory, concurrency=4, request_cap=cap))
+        assert sum(p.calls for p in providers) == 3
+        assert resumed["request_budget"]["reserved_attempts"] == 3
+        assert resumed["request_budget"]["remaining_attempts"] == 0
+    extended = asyncio.run(run_batch(dataset(4), tmp_path, resume=True, engine_factory=factory, concurrency=4, request_cap=4))
+    assert sum(p.calls for p in providers) == 4
+    assert extended["request_budget"]["reserved_attempts"] == 4
+    assert Journal(tmp_path, request_cap=4).sequence == 4
+
+
+def test_live_cap_required_before_credentials_and_old_identity_not_loosened(tmp_path):
+    result = subprocess.run([sys.executable, "-m", "mimi_v2.batch_eval", "--live", "--resume"], capture_output=True, text=True)
+    assert result.returncode == 2 and "--request-cap" in result.stderr
+    with pytest.raises(ValueError, match="explicit total request cap"):
+        asyncio.run(run_batch(dataset(), tmp_path / "missing-cap", key="fake-do-not-use"))
+    calls = []
+    factory = lambda cfg, case, journal, circuit: FakeEngine(calls, cfg["engine"])
+    asyncio.run(run_batch(dataset(), tmp_path / "old-job", engine_factory=factory))
+    path = tmp_path / "old-job" / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["identity"]["source_hashes"]["batch_eval.py"] = "old-frozen-source"
+    atomic_json(path, manifest)
+    with pytest.raises(ValueError, match="Frozen dataset/config/source mismatch"):
+        asyncio.run(run_batch(dataset(), path.parent, resume=True, engine_factory=factory, request_cap=3))
+    assert len(calls) == 4
+
+
+def test_historical_order_is_never_fabricated(tmp_path):
+    journal = Journal(tmp_path)
+    journal.save({"attempt_id": "old-unordered", "engine": "v2", "case_id": "one", "turn": 0,
+                  "phase": "complete", "provider_response": False, "usage": {}, "error": "timeout"})
+    recovered = Journal(tmp_path, request_cap=1)
+    assert "request_sequence" not in recovered.events["old-unordered"]
+    assert "request_started_at_utc" not in recovered.events["old-unordered"]
+    assert recovered.budget()["historical_order_unknown_attempts"] == 1
+    circuit = Circuit()
+    with pytest.raises(JobPause):
+        recovered.reserve({"attempt_id": "blocked"}, circuit)
+    assert len(recovered.events) == 1 and circuit.reason == "request_budget"
+
+
+def test_budget_reservation_with_genuinely_overlapping_provider_attempts(tmp_path):
+    async def scenario():
+        tracker = {"calls": 0, "inflight": 0, "maximum_overlap": 0, "case_ids": []}
+        class YieldingProvider(FakeProvider):
+            def __init__(self, case_id):
+                super().__init__()
+                self.case_id = case_id
+            async def complete(self, messages, purpose="reply"):
+                tracker["calls"] += 1
+                tracker["case_ids"].append(self.case_id)
+                tracker["inflight"] += 1
+                tracker["maximum_overlap"] = max(tracker["maximum_overlap"], tracker["inflight"])
+                try:
+                    # A real scheduling point: another case can reserve/start
+                    # while this HTTP-like attempt has not returned yet.
+                    await asyncio.sleep(0)
+                    return await super().complete(messages, purpose)
+                finally:
+                    tracker["inflight"] -= 1
+        def factory(cfg, case, journal, circuit):
+            provider = YieldingProvider(case["id"])
+            model = DurableModel(provider, journal, circuit, {"engine": cfg["engine"], "case_id": case["id"]})
+            return CounselingEngine(model, FaultStore())
+        job = await run_batch(dataset(4), tmp_path, engine_factory=factory, concurrency=4, request_cap=3)
+        assert tracker["calls"] == 3
+        assert tracker["maximum_overlap"] >= 2
+        assert len(set(tracker["case_ids"])) == 3
+        assert "case-3" not in tracker["case_ids"]
+        assert job["pause_reason"] == "request_budget"
+        events = [json.loads(p.read_text()) for p in (tmp_path / "attempts").glob("*.json")]
+        assert sorted(e["request_sequence"] for e in events) == [1, 2, 3]
+        untouched = [r for r in job["results"] if r["case_id"] == "case-3"]
+        assert all(r["phase"] == "waiting_budget" and r["turns"] == [] for r in untouched)
+        resumed = await run_batch(dataset(4), tmp_path, resume=True, engine_factory=factory, concurrency=4, request_cap=3)
+        assert tracker["calls"] == 3
+        assert resumed["request_budget"]["reserved_attempts"] == 3
+        assert resumed["request_budget"]["remaining_attempts"] == 0
     asyncio.run(scenario())
