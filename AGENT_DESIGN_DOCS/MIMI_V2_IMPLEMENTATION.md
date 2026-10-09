@@ -112,6 +112,12 @@ Read-only review of the first 11 completed v2 conversations found:
   an explicit temporal correction in `vn-v2-0002` index 2, and listen-only
   reflection in `vn-v2-0003` indices 2–3. These are observations, not aggregate
   superiority or safety claims.
+- Strict schema still permits repeated `known` array keys: `vn-v2-0032` index 2
+  and `vn-v2-0057` index 4 are rejected with
+  `assessment_validation:known:duplicate_fact_key`. Keep them as runtime errors;
+  the six-context preflight did not prove general assessment reliability.
+  Consider uniqueness guidance and explicit regression coverage after this run,
+  without silently choosing between conflicting facts.
 
 This early sample covers academic cases only; parent/student discrimination and
 the remaining categories are not yet verified. Do not tune prompts, alter
