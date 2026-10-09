@@ -34,6 +34,13 @@ errors, crashes and quota exhaustion. See `AGENT_DESIGN_DOCS/MIMI_V2_BATCH_EVAL.
 
 ## Remaining gates
 
+The live batch is now **paused on user instruction**, with 8,232 request attempts
+and 2,285 completed turns preserved. A requested 3,000-request prefix has been
+summarized separately; the job had already exceeded that request count when the
+stop instruction arrived. See `AGENT_DESIGN_DOCS/MIMI_V2_REQUEST3000_RESULTS.md`.
+No automatic resume. Semantic failures remain; do not equate automatic checks
+with counseling acceptance.
+
 Draft only: completion/review of the authorized full live evaluation and explicit
 rollout approval are still required. No claim that Responses is faster solely
 from adapter migration. Holdout is synthetic and not an independent clinical
