@@ -123,3 +123,24 @@ This early sample covers academic cases only; parent/student discrimination and
 the remaining categories are not yet verified. Do not tune prompts, alter
 rubrics, merge or rollout from this incomplete sample. Preserve the frozen run
 and report its failures before any post-eval correction and targeted re-evaluation.
+
+### Additional read-only sample — fact fidelity
+
+Six completed v2 cases from bullying, family expectations and friendship
+(`0051/0052`, `0101/0102`, `0151/0152`, all with prefix `vn-v2-`) were reviewed:
+
+- `vn-v2-0151` index 2 records a desire for three ready-made phrases in `known`
+  although the assistant merely offered them and the user never accepted.
+  Assistant proposals must not become user facts without user evidence.
+- `vn-v2-0051` index 1 asserts current safety and a close-friend relationship
+  not confirmed by the user. A safe routing label cannot prove situational safety.
+- `vn-v2-0102` index 2 retains an old older-cousin achievement key alongside
+  the corrected same-age younger-cousin information. Output uses the correction
+  correctly, but stale memory remains a review risk.
+- Corrected facts and continuations do work in `0052` index 2, `0102` indices
+  2–3 and `0152` indices 2–3. The sample did not repeat known class/corrected
+  details; this is not a guarantee across the full dataset.
+
+No ratings or acceptance status were changed. This sample contains no explicit
+parent role; parent boundaries remain unverified. Preserve current results and
+add grounded-fact/correction regression coverage after the frozen run completes.
