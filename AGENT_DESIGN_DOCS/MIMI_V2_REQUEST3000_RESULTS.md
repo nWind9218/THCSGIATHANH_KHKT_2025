@@ -89,3 +89,11 @@ Only after explicit user authorization:
 Do not modify frozen `mimi_v2` runtime source before resuming this job.
 `scripts/summarize_eval_checkpoint.py` is offline-only and sits outside that
 runtime hash set. Runtime hashes were verified unchanged before recovery.
+
+### Offline checkpoint integrity audit
+
+After recovery: 523 checkpoint files (515 complete, 8 ready), containing 2,293
+turn entries = 2,285 completed + 8 explicit incomplete errors. Every file's turn
+indices are contiguous, unique and agree with `next_turn`; no violations found.
+Runtime and legacy source hashes still match the frozen manifest. No provider
+calls were made for this audit, and the stopped process remains absent.
