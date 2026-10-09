@@ -68,3 +68,29 @@ và lỗi model/đọc phiên/cảnh báo có trace thực, không lấy lời b
 Suite unit/hồi quy mở rộng: **108 passed**. Full offline comparison kiểm tra wiring,
 không phải nghiệm thu trí thông minh. Không còn blocker thiếu file dataset;
 nghiệm thu hành vi còn cần chạy model thật và review theo tiêu chí đã đề xuất.
+
+## Trạng thái hiện tại — full live eval đã được duyệt
+
+Các biên nhận phía trên là lịch sử, không phải trạng thái GitHub hiện tại.
+GitHub đã đăng nhập, nhánh `codex/mimi-v2` đã push và draft PR #3 đã tạo:
+https://github.com/nWind9218/THCSGIATHANH_KHKT_2025/pull/3.
+Không merge, deploy hoặc bật Facebook v2.
+
+- Pilot cân bằng 20 nhóm đã hoàn tất: 583 request, USD ước tính từ usage
+  `0.20937555`. Chưa đối soát invoice hoặc số dư tài khoản.
+- Safety/assessment đã dùng strict Structured Outputs, known wire-array được
+  chuẩn hóa về dictionary trong state. Preflight sáu assessment từng lỗi đều
+  hợp lệ; chi phí usage ước tính `0.00402225`. Không coi đây là nghiệm thu tư vấn.
+- Suite unit/hồi quy đạt 159 test; batch suite cuối đạt 10 test, bao gồm quota
+  đồng thời, checkpoint/resume, factory failure và không replay lượt đã xong.
+- Người dùng cho phép chạy toàn bộ 1.000 case baseline/v2, tổng 8.800 lượt.
+  Job `191d033deed0430d83d45cbceaaa07ca` khởi chạy lúc
+  `2026-10-09T05:20:58Z`, concurrency 8, source tại commit `17e8f95`.
+  Kết quả local được lưu dần tại `eval_results/full_1000`; manifest khóa hash
+  dataset/config/source. Xem `MIMI_V2_BATCH_EVAL.md` để resume.
+- Lỗi từng case không dừng các case độc lập. Quota/credential/persistence mở
+  circuit bảo vệ, giữ kết quả và lượt chưa chạy để resume; không coi lỗi hoặc
+  unprocessed là pass. Không tự mua credits hoặc replay request không chắc đã
+  được tính phí. Mã runtime không thay đổi trong khi job đang chạy.
+- Full live report và qualitative review còn đang chờ; chưa có bằng chứng đủ
+  để kết luận v2 thông minh hơn, nhanh hơn hoặc đạt tiêu chuẩn triển khai.
