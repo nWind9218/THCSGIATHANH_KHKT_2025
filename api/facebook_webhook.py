@@ -129,6 +129,10 @@ async def _send_messenger_message(psid: str, text: str) -> None:
 
 
 async def _process_message(psid: str, text: str) -> str:
+    if os.getenv("MIMI_ENGINE", "legacy").strip().lower() == "v2":
+        from mimi_v2.production import get_production_engine
+        result = await get_production_engine().respond(psid, text)
+        return (result.get("response_text") or "").strip()
     # We pass only the new message. load_memory_node will load history from Redis 
     # and merge it, avoiding the duplication bug.
     messages = [{"role": "user", "content": text}]
@@ -194,12 +198,30 @@ async def handle_facebook_event(
             return
 
         # Check for #resume command from authorized admins
+        if clean_text.split()[:1] == ["#accept"] and os.getenv("MIMI_ENGINE", "legacy").strip().lower() == "v2":
+            if sender in ADMIN_FACEBOOK_PSIDS:
+                parts = message_text.split()
+                if len(parts) == 2:
+                    from mimi_v2.production import get_production_engine
+                    try:
+                        await get_production_engine().store.acknowledge(parts[1])
+                    except ValueError:
+                        await _send_messenger_message(sender, "Cuộc hội thoại này chưa có yêu cầu tiếp nhận đang chờ.")
+                        return
+                    await _send_messenger_message(sender, "Đã ghi nhận thầy/cô tiếp nhận cuộc hội thoại.")
+                    return
+                await _send_messenger_message(sender, "Cú pháp: #accept [PSID]")
+                return
         if clean_text.startswith("#resume"):
             if sender in ADMIN_FACEBOOK_PSIDS:
                 parts = message_text.split()
                 if len(parts) >= 2:
                     target_psid = parts[1].strip()
-                    await set_takeover_flag(target_psid, False)
+                    if os.getenv("MIMI_ENGINE", "legacy").strip().lower() == "v2":
+                        from mimi_v2.production import get_production_engine
+                        await get_production_engine().store.resume(target_psid)
+                    else:
+                        await set_takeover_flag(target_psid, False)
                     
                     # Notify admin
                     await _send_messenger_message(sender, f"✅ Đã kích hoạt lại Bot cho học sinh {target_psid}.")

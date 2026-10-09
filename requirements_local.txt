@@ -1,0 +1,2 @@
+# Optional local UI; production requirements remain unchanged.
+gradio==5.49.1

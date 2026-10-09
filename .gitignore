@@ -9,3 +9,6 @@ skills-lock.json
 .claue/
 .agent/
 .pytest_cache/
+# Local simulator environments and eval outputs may contain conversation data.
+.venv-local/
+eval_results/
