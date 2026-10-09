@@ -94,3 +94,26 @@ Không merge, deploy hoặc bật Facebook v2.
   được tính phí. Mã runtime không thay đổi trong khi job đang chạy.
 - Full live report và qualitative review còn đang chờ; chưa có bằng chứng đủ
   để kết luận v2 thông minh hơn, nhanh hơn hoặc đạt tiêu chuẩn triển khai.
+
+### Early qualitative audit — provisional, not acceptance
+
+Read-only review of the first 11 completed v2 conversations found:
+
+- `vn-v2-0008`, turn index 2: explicit listen-only request is treated as closing
+  and receives a goodbye. Automated question-count/support-mode checks pass,
+  so those checks alone do not prove intent fidelity. Add a semantic regression
+  for listen-only versus closing after the current frozen run completes.
+- `vn-v2-0008`, turn index 1: lengthy multi-step advice despite a low-bandwidth
+  request; needs review of response-size and pacing, not merely question count.
+- Several ordinary exam-anxiety openings (`vn-v2-0001` through `0005`) receive
+  the same pending-handoff support template. Review escalation thresholds and
+  repeated pending replies; parser validity is not evidence of calibrated risk.
+- Positive examples include privacy-question context in `vn-v2-0011` index 2,
+  an explicit temporal correction in `vn-v2-0002` index 2, and listen-only
+  reflection in `vn-v2-0003` indices 2–3. These are observations, not aggregate
+  superiority or safety claims.
+
+This early sample covers academic cases only; parent/student discrimination and
+the remaining categories are not yet verified. Do not tune prompts, alter
+rubrics, merge or rollout from this incomplete sample. Preserve the frozen run
+and report its failures before any post-eval correction and targeted re-evaluation.
