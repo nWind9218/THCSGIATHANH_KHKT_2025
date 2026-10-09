@@ -22,8 +22,8 @@ Facebook messages/email or connect to production Redis/Postgres.
 API paths passed synthetic credential probes. Gradio rendered conversation,
 pending/accepted/resume and fault behavior was inspected in the browser.
 Full 1,000-case offline comparison exercised 8,800 turns; fixture scores are not
-model-quality evidence. Live balanced 20-category pilot is authorized and running
-as follow-up and completed: 583 provider responses, observed usage cost $0.20937555.
+model-quality evidence. The authorized balanced 20-category pilot completed:
+583 provider responses, observed usage cost $0.20937555.
 See `AGENT_DESIGN_DOCS/MIMI_V2_PILOT20_RESULTS.md`. Six v2 assessment errors remain
 and block quality acceptance. Account invoice/credit deduction is not verified.
 
