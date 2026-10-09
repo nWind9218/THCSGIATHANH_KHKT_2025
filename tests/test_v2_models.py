@@ -174,3 +174,41 @@ async def test_missing_key_no_request(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     with pytest.raises(ModelError, match="missing_credential"):
         await OpenAIModel().complete([{ "role": "user", "content": "Hello"}])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("api,raw,code", [
+    ("responses", response(), None),
+    ("responses", response(status="incomplete"), "incomplete_output"),
+    ("responses", response(output=[{"type": "message", "role": "assistant", "content": [{"type": "refusal", "refusal": "sk-secret"}]}]), "refusal"),
+    ("chat_completions", chat_response(), None),
+    ("chat_completions", chat_response(finish_reason="length"), "incomplete_output"),
+    ("chat_completions", chat_response(refusal="sk-secret"), "refusal"),
+])
+async def test_observer_meters_returned_usage_before_output_validation_once(api, raw, code):
+    observations = []
+    raw.update(model="gpt-5-mini-2025-08-07", id="sk-secret", prompt="private")
+    raw["usage"]["secret"] = "sk-secret"
+    fake, _ = client(raw)
+    model = OpenAIModel(ModelConfig(api=api), client=fake, usage_observer=observations.append)
+    if code:
+        with pytest.raises(ModelError, match=code):
+            await model.complete([{ "role": "user", "content": "private"}])
+    else:
+        await model.complete([{ "role": "user", "content": "private"}])
+    assert len(observations) == 1
+    assert observations[0]["usage"]["total_tokens"] == 9
+    assert observations[0]["model"] == "gpt-5-mini-2025-08-07"
+    assert set(observations[0]) == {"usage", "model", "status", "config"}
+    assert "sk-secret" not in repr(observations) and "private" not in repr(observations)
+
+
+@pytest.mark.asyncio
+async def test_observer_failure_diagnostic_without_changing_answer(caplog):
+    def broken(observation):
+        raise RuntimeError("sk-secret private")
+    fake, _ = client(response())
+    answer = await OpenAIModel(client=fake, usage_observer=broken).complete([{ "role": "user", "content": "Hello"}])
+    assert answer.text == "Chào bạn."
+    assert "model_usage_observer_failed" in caplog.text
+    assert "sk-secret" not in caplog.text and "private" not in caplog.text

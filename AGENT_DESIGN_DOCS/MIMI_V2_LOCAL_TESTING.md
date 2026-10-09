@@ -131,3 +131,25 @@ history, topic, takeover or v2 metadata. Existing accepted takeover remains
 silent in legacy through its original flag. Pending v2 review is not an accepted
 takeover and must still be followed up by the human operator during rollback.
 No actual production environment variables have been changed by these docs.
+
+## Bounded live pilot and usage accounting
+
+The user authorized one pilot: one development conversation per category, twenty
+cases total, each run through baseline and v2 with the same model configuration.
+
+```powershell
+python -m mimi_v2.pilot
+python -m mimi_v2.pilot --live --output eval_results/live_pilot_20
+```
+
+Without `--live`, selection/configuration is printed without provider requests.
+The live job saves per-response usage to `usage.jsonl`, per-case checkpoints,
+`progress.json`, the final conversation report and `cost_summary.json`.
+No automatic retry/restart of an output directory already marked started; inspect
+the original process and ledger first to avoid paying for duplicate runs.
+Cached input is charged at its own published rate; reasoning is already included
+in output token counts and is not added a second time. Returned usage is captured
+even when output validation fails. Failed requests without usage remain unknown.
+The reported USD is calculated from observed usage, not a confirmed invoice;
+actual credit balance, discounts and account-specific charges require Platform
+billing access. Do not run the full 1,000 cases without a separate cost decision.

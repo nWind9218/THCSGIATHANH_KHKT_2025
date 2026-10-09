@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import math
 import os
+import logging
 from dataclasses import asdict, dataclass
 from typing import Any, Mapping
 
@@ -136,10 +137,35 @@ def _usage(value: Any) -> dict:
 
 
 class OpenAIModel:
-    def __init__(self, config: ModelConfig | None = None, api_key: str | None = None, client: Any = None):
+    def __init__(self, config: ModelConfig | None = None, api_key: str | None = None, client: Any = None,
+                 usage_observer: Any = None):
         self.config = config or ModelConfig.from_env()
         self._api_key = api_key
         self._client = client
+        self._usage_observer = usage_observer
+
+    def _observe_usage(self, raw: dict) -> None:
+        if self._usage_observer is None:
+            return
+        try:
+            usage = _usage(raw.get("usage"))
+            status = raw.get("status")
+            if self.config.api == "chat_completions":
+                choices = raw.get("choices")
+                status = "completed" if isinstance(choices, list) and len(choices) == 1 and _dict(choices[0]).get("finish_reason") == "stop" else "incomplete"
+            if status not in {"completed", "failed", "incomplete", "cancelled", "queued", "in_progress"}:
+                status = "unknown"
+            # Configured model is public; returned model can include a provider
+            # snapshot suffix. Never forward arbitrary provider text fields.
+            model = raw.get("model")
+            if not isinstance(model, str) or not model.startswith(self.config.model) or len(model) > 128 or not all(c.isascii() and (c.isalnum() or c in "-._") for c in model):
+                model = self.config.model
+            self._usage_observer({"usage": usage, "model": model, "status": status,
+                                  "config": self.config.public_config()})
+        except Exception:
+            # Observer outages must not turn a valid provider answer into an
+            # invalid answer; collectors can mark this safe diagnostic incomplete.
+            logging.getLogger(__name__).warning("model_usage_observer_failed")
 
     async def complete(self, messages: list[dict], purpose: str = "reply") -> ModelReply:
         if not isinstance(messages, list) or not messages:
@@ -176,6 +202,7 @@ class OpenAIModel:
                     kwargs["verbosity"] = self.config.verbosity
                 call = client.chat.completions.create(**kwargs)
             raw = _dict(await asyncio.wait_for(call, timeout=self.config.timeout))
+            self._observe_usage(raw)
             if self.config.api == "responses":
                 if raw.get("status") != "completed":
                     raise ModelError("incomplete_output")
