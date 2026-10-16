@@ -186,5 +186,8 @@ def get_production_engine():
         # Opt-in: MIMI_V2_ROUTING=adaptive picks model/effort per flow (see models.RoutedModel).
         adaptive = os.environ.get("MIMI_V2_ROUTING", "").strip().lower() == "adaptive"
         model = RoutedModel.from_env() if adaptive else OpenAIModel(config)
+        warm = getattr(model, "warm", None)
+        if warm:
+            warm()  # build the shared HTTP client at startup, not on a student's turn
         _engine = CounselingEngine(model, ProductionStore())
     return _engine

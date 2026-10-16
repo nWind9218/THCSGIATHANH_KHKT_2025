@@ -9,6 +9,8 @@ import re
 from dataclasses import asdict, dataclass, replace
 from typing import Any, Mapping
 
+import openai  # imported once at module load: the first import costs ~1.6s of blocking CPU
+
 
 class ModelError(Exception):
     """Public errors never contain provider bodies, prompts or credentials."""
@@ -177,14 +179,76 @@ def _usage(value: Any) -> dict:
     return result
 
 
+class ClientPool:
+    """One long-lived AsyncOpenAI per (event loop, base_url, key), shared by every model route.
+
+    Building an AsyncOpenAI costs ~440ms of synchronous CPU, so it must never happen per call
+    on the event loop. The key is never logged or exposed, and a key is only ever paired with
+    the base_url that resolve_endpoint() chose for it.
+    """
+
+    def __init__(self):
+        self._clients: dict[tuple, Any] = {}
+
+    def get(self, base_url: str, key: str, timeout: float):
+        try:
+            loop_id = id(asyncio.get_running_loop())
+        except RuntimeError:
+            loop_id = 0
+        cache_key = (loop_id, base_url, key)
+        client = self._clients.get(cache_key)
+        if client is None and loop_id:
+            # Adopt the client warmed at startup (outside any loop) on first use in a loop.
+            client = self._clients.pop((0, base_url, key), None)
+            if client is not None:
+                self._clients[cache_key] = client
+        if client is None:
+            # timeout here is only a default; every request passes its own timeout.
+            client = openai.AsyncOpenAI(api_key=key, base_url=base_url, max_retries=0, timeout=timeout)
+            self._clients[cache_key] = client
+        return client
+
+    async def aclose(self) -> None:
+        clients, self._clients = list(self._clients.values()), {}
+        for client in clients:
+            try:
+                await client.close()
+            except Exception:
+                pass
+
+
 class OpenAIModel:
     def __init__(self, config: ModelConfig | None = None, api_key: str | None = None, client: Any = None,
-                 usage_observer: Any = None, base_url: str | None = None):
+                 usage_observer: Any = None, base_url: str | None = None, pool: ClientPool | None = None):
         self.config = config or ModelConfig.from_env()
         self._api_key = api_key
         self._base_url = base_url
         self._client = client
+        self._pool = pool or ClientPool()
         self._usage_observer = usage_observer
+
+    def _owned_client(self):
+        # Explicit allowlisted endpoint: ambient proxy/base-url variables
+        # cannot redirect student content or credentials elsewhere.
+        if self._base_url:
+            base_url, env_key = resolve_endpoint({"MIMI_V2_BASE_URL": self._base_url, "MIMI_V2_API_KEY": self._api_key or "", "OPENAI_API_KEY": self._api_key or ""})
+        else:
+            base_url, env_key = resolve_endpoint()
+        key = env_key if base_url != OPENAI_BASE_URL else (self._api_key or env_key)
+        if not key:
+            raise ModelError("missing_credential")
+        return self._pool.get(base_url, key, self.config.timeout)
+
+    def warm(self) -> None:
+        """Build the shared client now (startup), not on a student's turn. No-op without credentials."""
+        if self._client is None:
+            try:
+                self._owned_client()
+            except ModelError:
+                pass
+
+    async def aclose(self) -> None:
+        await self._pool.aclose()
 
     def _observe_usage(self, raw: dict) -> None:
         if self._usage_observer is None:
@@ -228,18 +292,10 @@ class OpenAIModel:
         client = self._client
         owned = client is None
         try:
+            extra = {}
             if owned:
-                from openai import AsyncOpenAI
-                # Explicit allowlisted endpoint: ambient proxy/base-url variables
-                # cannot redirect student content or credentials elsewhere.
-                if self._base_url:
-                    base_url, env_key = resolve_endpoint({"MIMI_V2_BASE_URL": self._base_url, "MIMI_V2_API_KEY": self._api_key or "", "OPENAI_API_KEY": self._api_key or ""})
-                else:
-                    base_url, env_key = resolve_endpoint()
-                key = env_key if base_url != OPENAI_BASE_URL else (self._api_key or env_key)
-                if not key:
-                    raise ModelError("missing_credential")
-                client = AsyncOpenAI(api_key=key, base_url=base_url, max_retries=0, timeout=self.config.timeout)
+                client = self._owned_client()
+                extra["timeout"] = self.config.timeout  # per-request; the client is shared
             kwargs = {"model": self.config.model, "store": False}
             if self.config.api == "responses":
                 kwargs.update(input=clean, max_output_tokens=self.config.max_output_tokens)
@@ -249,7 +305,7 @@ class OpenAIModel:
                     kwargs["text"] = {"verbosity": self.config.verbosity}
                 if schema:
                     kwargs.setdefault("text", {})["format"] = {"type": "json_schema", **schema}
-                call = client.responses.create(**kwargs)
+                call = client.responses.create(**kwargs, **extra)
             else:
                 kwargs.update(messages=clean, max_completion_tokens=self.config.max_output_tokens)
                 if self.config.reasoning_effort:
@@ -258,7 +314,7 @@ class OpenAIModel:
                     kwargs["verbosity"] = self.config.verbosity
                 if schema:
                     kwargs["response_format"] = {"type": "json_schema", "json_schema": schema}
-                call = client.chat.completions.create(**kwargs)
+                call = client.chat.completions.create(**kwargs, **extra)
             raw = _dict(await asyncio.wait_for(call, timeout=self.config.timeout))
             self._observe_usage(raw)
             if self.config.api == "responses":
@@ -309,12 +365,6 @@ class OpenAIModel:
             else:
                 code = "provider_error"
             raise ModelError(code, status=status) from None
-        finally:
-            if owned and client is not None:
-                try:
-                    await client.close()
-                except Exception:
-                    pass
 
 
 # Per-flow defaults measured on OpenAI: gpt-5.4-mini was both faster and at least as
@@ -338,7 +388,8 @@ class RoutedModel:
         self.config = base or ModelConfig.from_env()
         self._routes = dict(ROUTE_DEFAULTS if routes is None else routes)
         self._fallback = fallback
-        self._kwargs = dict(api_key=api_key, client=client, usage_observer=usage_observer, base_url=base_url)
+        self._pool = ClientPool()  # shared by every route and the fallback
+        self._kwargs = dict(api_key=api_key, client=client, usage_observer=usage_observer, base_url=base_url, pool=self._pool)
         self._cache: dict[tuple, OpenAIModel] = {}
         for purpose in self._routes:
             self._config_for(purpose, None, False)  # fail at startup, not on a student's turn
@@ -370,6 +421,12 @@ class RoutedModel:
         if key not in self._cache:
             self._cache[key] = OpenAIModel(config, **self._kwargs)
         return self._cache[key]
+
+    def warm(self) -> None:
+        self._model_for(self._config_for("reply", None, False)).warm()
+
+    async def aclose(self) -> None:
+        await self._pool.aclose()
 
     async def complete(self, messages: list[dict], purpose: str = "reply", effort: str | None = None,
                        fallback: bool = False) -> ModelReply:

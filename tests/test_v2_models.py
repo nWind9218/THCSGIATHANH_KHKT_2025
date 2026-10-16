@@ -164,8 +164,11 @@ async def test_sdk_dump_supported_and_client_close_errors_redacted(monkeypatch):
     fake.close = AsyncMock(side_effect=RuntimeError("sk-secret"))
     factory = lambda **kwargs: fake
     monkeypatch.setattr(openai, "AsyncOpenAI", factory)
-    reply = await OpenAIModel(api_key="fake-test-key").complete([{ "role": "user", "content": "Hello"}])
+    model = OpenAIModel(api_key="fake-test-key")
+    reply = await model.complete([{ "role": "user", "content": "Hello"}])
     assert reply.text == "Chào bạn."
+    fake.close.assert_not_awaited()  # the shared client outlives individual calls
+    await model.aclose()  # close errors are swallowed, never leaked
     fake.close.assert_awaited_once()
 
 
