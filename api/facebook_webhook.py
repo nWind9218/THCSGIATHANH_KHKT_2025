@@ -23,6 +23,8 @@ FACEBOOK_PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN", "")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "")
 E2E_PROBE_PSID = "codex_e2e_probe"
 E2E_PROBE_HEADER = "x-mimi-e2e-probe"
+RESUME_MESSAGE = "Mimi đã quay trở lại rồi đây! Mình tiếp tục câu chuyện nhé?"
+_HANDOFF_STATUSES = {"none", "pending", "accepted"}
 
 # List of authorized Facebook PSIDs for admin commands
 ADMIN_FACEBOOK_PSIDS = [
@@ -125,10 +127,36 @@ async def _send_messenger_message(psid: str, text: str) -> None:
                 ) from None
 
 
+send_messenger_text = _send_messenger_message  # public alias used by the teacher console API
+
+
+class _Reply(str):
+    """Reply text that also carries the engine's handoff status for the console mirror."""
+    handoff_status: str | None = None
+
+
 async def _process_message(psid: str, text: str) -> str:
     from mimi_v2.production import get_production_engine
     result = await get_production_engine().respond(psid, text)
-    return (result.get("response_text") or "").strip()
+    reply = _Reply((result.get("response_text") or "").strip())
+    reply.handoff_status = result.get("handoff_status")
+    return reply
+
+
+async def _console(op: str, psid: str, *args, **kwargs) -> None:
+    """Teacher console side effects must never change bot behaviour: log and move on."""
+    if psid == E2E_PROBE_PSID:
+        return
+    try:
+        from mimi_v2.console_log import get_console_log
+        await getattr(get_console_log(), op)(psid, *args, **kwargs)
+    except Exception as exc:
+        logger.warning("Teacher console %s failed: %r", op, exc)
+
+
+async def _log_page_inbox_echo(recipient: str, text: str) -> None:
+    """A human replied from Facebook Page Inbox: show it in the console as a teacher message."""
+    await _console("append", recipient, "teacher", text, author="Facebook Page Inbox")
 
 
 async def handle_facebook_event(
@@ -166,6 +194,8 @@ async def handle_facebook_event(
                     except ValueError:
                         await _send_messenger_message(sender, "Cuộc hội thoại này chưa có yêu cầu tiếp nhận đang chờ.")
                         return
+                    await _console("set_status", parts[1], "accepted")
+                    await _console("append", parts[1], "system", "Đã tiếp nhận qua Messenger")
                     await _send_messenger_message(sender, "Đã ghi nhận thầy/cô tiếp nhận cuộc hội thoại.")
                     return
                 await _send_messenger_message(sender, "Cú pháp: #accept [PSID]")
@@ -177,13 +207,14 @@ async def handle_facebook_event(
                     target_psid = parts[1].strip()
                     from mimi_v2.production import get_production_engine
                     await get_production_engine().store.resume(target_psid)
-                    
+                    await _console("set_status", target_psid, "none")
+                    await _console("append", target_psid, "system", "Đã trả lại cho Mimi qua Messenger")
+
                     # Notify admin
                     await _send_messenger_message(sender, f"✅ Đã kích hoạt lại Bot cho học sinh {target_psid}.")
                     
                     # Notify student
-                    resume_msg = "Mimi đã quay trở lại rồi đây! Mình tiếp tục câu chuyện nhé?"
-                    await _send_messenger_message(target_psid, resume_msg)
+                    await _send_messenger_message(target_psid, RESUME_MESSAGE)
                     return
                 else:
                     await _send_messenger_message(sender, "Cú pháp không đúng. Vui lòng dùng: #resume [PSID]")
@@ -192,9 +223,11 @@ async def handle_facebook_event(
                 # If sender is not an admin, we just treat it as a normal message.
                 logger.warning(f"Unauthorized #resume attempt from {sender}")
 
+        await _console("append", sender, "student", message_text)
         handling_started = time.monotonic()
         response_text = await _process_message(sender, message_text)
         engine_done = time.monotonic()
+        handoff_status = getattr(response_text, "handoff_status", None)
         if response_text:
             if suppress_delivery:
                 logger.info(
@@ -202,7 +235,15 @@ async def handle_facebook_event(
                     sender,
                 )
             else:
-                await _send_messenger_message(sender, response_text)
+                delivered = False
+                try:
+                    await _send_messenger_message(sender, response_text)
+                    delivered = True
+                finally:
+                    await _console("append", sender, "mimi", str(response_text),
+                                   status="sent" if delivered else "failed")
+        if handoff_status in _HANDOFF_STATUSES:
+            await _console("set_status", sender, handoff_status)
         # Latency only; no ids or message text. engine_s includes lock, storage and model calls.
         done = time.monotonic()
         logger.info("[LATENCY] %s", json.dumps({
@@ -298,6 +339,15 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
             message_text = ""
             message = event.get("message") or {}
             postback = event.get("postback") or {}
+
+            if message.get("is_echo"):
+                # Our own outgoing messages (or a human's Page Inbox reply) are never student input.
+                app_id = os.getenv("FACEBOOK_APP_ID", "").strip()
+                echo_app = str(message.get("app_id") or "")
+                recipient = (event.get("recipient") or {}).get("id")
+                if app_id and echo_app and echo_app != app_id and recipient and message.get("text"):
+                    background_tasks.add_task(_log_page_inbox_echo, recipient, message["text"].strip())
+                continue
 
             if message.get("text"):
                 message_text = message.get("text", "").strip()
