@@ -1,0 +1,46 @@
+{
+  "verified_at_utc": "2026-10-16T19:54:50.930168+00:00",
+  "python": "3.13.3",
+  "base_commit": "48cc1f2994cc1891bd47d1d2d347f99a16d7d204",
+  "branch": "codex/mimi-persona-eval-v02",
+  "source_manifest_sha256": "e8e5db107eae99591a4670a7b3ff6b2f544c911b9d9932c4cdd6eb62ae308b88",
+  "unit_tests": {
+    "tests": 108,
+    "failures_and_errors": 0,
+    "result": "PASS",
+    "command": ".\\.venv-local\\Scripts\\python.exe -m pytest -q tests/eval_v02 --junitxml=mimi_eval/reports/pytest-final.xml"
+  },
+  "replay_summary": {
+    "cases": 64,
+    "verdict_counts": {
+      "PASS": 28,
+      "FAIL": 21,
+      "NEEDS_REVIEW": 12,
+      "INVALID": 3
+    },
+    "technical_failures": 1,
+    "quality_failures": 9,
+    "need_compliance_failures": 9,
+    "invalid_observations": 2,
+    "scripted_expectation_mismatches": 0,
+    "human_gold_status": "UNREVIEWED",
+    "semantic_agreement": "NOT_EVALUATED",
+    "false_pass_rate": "NOT_EVALUATED",
+    "safety_calibration": "NOT_EVALUATED",
+    "medium_high_comparison": "NOT_EVALUATED",
+    "provider_calls": 0,
+    "production_readiness": "NOT_EVALUATED"
+  },
+  "pip_check": "PASS_NO_BROKEN_REQUIREMENTS",
+  "network_deny_tests": "PASS",
+  "production_runtime_exercised": false,
+  "provider_calls": 0,
+  "database_calls": 0,
+  "production_credentials_loaded": false,
+  "semantic_metrics": "NOT_EVALUATED",
+  "artifact_hashes": {
+    "mimi_eval/specs/source-manifest-v0.2.json": "e8e5db107eae99591a4670a7b3ff6b2f544c911b9d9932c4cdd6eb62ae308b88",
+    "mimi_eval/reports/offline-v0.2/offline-report.json": "ecca183da63be3c26c066364594a89459a374e9027e8357759bd6e93582e2e8c",
+    "mimi_eval/reports/pytest-final.xml": "7135ac0a1b74584a757fc652658c2c9738db9a6e57063f2ad1c844657a0ac85f"
+  }
+}

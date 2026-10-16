@@ -1,0 +1,656 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "mimi-judge-v0.2"
+      ]
+    },
+    "rubric_version": {
+      "type": "string",
+      "enum": [
+        "mimi-persona-v0.2"
+      ]
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "observed_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "reflect",
+              "offer_support",
+              "clarify",
+              "advise",
+              "safety_intervention"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message_id": {
+                  "type": "string"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "student",
+                    "assistant",
+                    "tool"
+                  ]
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "start": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "message_id",
+                "source_sha256",
+                "role",
+                "quote",
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "type",
+          "evidence_refs",
+          "rationale"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "labels": {
+      "type": "object",
+      "properties": {
+        "explicit_listen_only": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false",
+            "unknown"
+          ]
+        },
+        "explicit_no_questions": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false",
+            "unknown"
+          ]
+        },
+        "advice_requested": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false",
+            "unknown"
+          ]
+        },
+        "unsolicited_advice": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false",
+            "unknown"
+          ]
+        },
+        "response_mode_match": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "explicit_listen_only",
+        "explicit_no_questions",
+        "advice_requested",
+        "unsolicited_advice",
+        "response_mode_match"
+      ],
+      "additionalProperties": false
+    },
+    "label_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "enum": [
+              "explicit_listen_only",
+              "explicit_no_questions",
+              "advice_requested",
+              "unsolicited_advice",
+              "response_mode_match"
+            ]
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "literal",
+              "complete_prefix",
+              "insufficient_context"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message_id": {
+                  "type": "string"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "student",
+                    "assistant",
+                    "tool"
+                  ]
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "start": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "message_id",
+                "source_sha256",
+                "role",
+                "quote",
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "label",
+          "basis",
+          "evidence_refs",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "dimensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4",
+              "Q5",
+              "Q6"
+            ]
+          },
+          "applicable": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              null
+            ]
+          },
+          "certainty": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "unknown"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message_id": {
+                  "type": "string"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "student",
+                    "assistant",
+                    "tool"
+                  ]
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "start": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "message_id",
+                "source_sha256",
+                "role",
+                "quote",
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "code",
+          "applicable",
+          "score",
+          "certainty",
+          "evidence_refs",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "safety_assessment": {
+      "type": "object",
+      "properties": {
+        "intervention_necessary": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "message_id": {
+                "type": "string"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "assistant",
+                  "tool"
+                ]
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "message_id",
+              "source_sha256",
+              "role",
+              "quote",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "intervention_necessary",
+        "evidence_refs",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "claims_human_ack": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "message_id": {
+                "type": "string"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "assistant",
+                  "tool"
+                ]
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "message_id",
+              "source_sha256",
+              "role",
+              "quote",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "value",
+        "evidence_refs",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "violation_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "NEED_COMPLIANCE",
+              "HONESTY",
+              "PRIVACY",
+              "SAFETY_CRITICAL"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message_id": {
+                  "type": "string"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "student",
+                    "assistant",
+                    "tool"
+                  ]
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "start": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "message_id",
+                "source_sha256",
+                "role",
+                "quote",
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "explanation": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "rule_id",
+          "category",
+          "evidence_refs",
+          "explanation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "missing_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "lane": {
+            "type": "string",
+            "enum": [
+              "response_quality",
+              "router_policy",
+              "system_actions"
+            ]
+          },
+          "dimensions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "material": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "code",
+          "lane",
+          "dimensions",
+          "material",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "review_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "lane": {
+            "type": "string",
+            "enum": [
+              "response_quality",
+              "router_policy",
+              "system_actions"
+            ]
+          },
+          "dimensions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "material": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "code",
+          "lane",
+          "dimensions",
+          "material",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "rubric_version",
+    "case_id",
+    "input_sha256",
+    "observed_actions",
+    "labels",
+    "label_evidence",
+    "dimensions",
+    "safety_assessment",
+    "claims_human_ack",
+    "violation_candidates",
+    "missing_evidence",
+    "review_flags"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,457 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "mimi-input-v0.2"
+      ]
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rubric_version": {
+      "type": "string",
+      "enum": [
+        "mimi-persona-v0.2"
+      ]
+    },
+    "policy_version": {
+      "type": "string",
+      "enum": [
+        "mimi-offline-policy-v0.2"
+      ]
+    },
+    "evaluation_scope": {
+      "type": "string",
+      "enum": [
+        "scoped_q2_q3",
+        "full_rubric",
+        "accepted_silence"
+      ]
+    },
+    "required_dimensions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "transcript": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "assistant",
+              "tool"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "message_id",
+          "role",
+          "text",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "candidate_response": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "student",
+            "assistant",
+            "tool"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "message_id",
+        "role",
+        "text",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "retrieval_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "assistant",
+              "tool"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "message_id",
+          "role",
+          "text",
+          "sha256"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "memory_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "assistant",
+              "tool"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "message_id",
+          "role",
+          "text",
+          "sha256"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tool_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "request_sent",
+              "human_ack",
+              "pending"
+            ]
+          },
+          "actor_kind": {
+            "type": "string",
+            "enum": [
+              "human",
+              "system"
+            ]
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "event_id",
+          "type",
+          "actor_kind",
+          "actor_id",
+          "timestamp",
+          "verified"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "completeness": {
+      "type": "object",
+      "properties": {
+        "history_complete_for_need_state": {
+          "type": "boolean"
+        },
+        "tool_trace_complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "history_complete_for_need_state",
+        "tool_trace_complete"
+      ],
+      "additionalProperties": false
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "frozen",
+            "technical_failure"
+          ]
+        },
+        "error_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "error_code"
+      ],
+      "additionalProperties": false
+    },
+    "router_check": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actual": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "required",
+        "expected",
+        "actual"
+      ],
+      "additionalProperties": false
+    },
+    "safety_exception": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_claimed",
+            "unknown",
+            "reviewed_fixture"
+          ]
+        },
+        "rule_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "risk_evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "message_id": {
+                "type": "string"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "assistant",
+                  "tool"
+                ]
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "message_id",
+              "source_sha256",
+              "role",
+              "quote",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "intervention_evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "message_id": {
+                "type": "string"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "assistant",
+                  "tool"
+                ]
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "message_id",
+              "source_sha256",
+              "role",
+              "quote",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "proportionate": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "preserves_autonomy": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "rule_id",
+        "policy_version",
+        "reviewer",
+        "risk_evidence",
+        "intervention_evidence",
+        "proportionate",
+        "preserves_autonomy"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "case_id",
+    "rubric_version",
+    "policy_version",
+    "evaluation_scope",
+    "required_dimensions",
+    "transcript",
+    "candidate_response",
+    "retrieval_evidence",
+    "memory_evidence",
+    "tool_events",
+    "completeness",
+    "runtime",
+    "router_check",
+    "safety_exception"
+  ],
+  "additionalProperties": false
+}
