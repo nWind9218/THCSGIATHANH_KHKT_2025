@@ -26,6 +26,7 @@ class EventBus:
     def __init__(self, maxsize: int = 100):
         self._maxsize = maxsize
         self._queues: set[asyncio.Queue] = set()
+        self.typing: set[str] = set()      # psids Mimi is composing a reply for (for clients that just connected)
 
     def subscribe(self) -> asyncio.Queue:
         queue: asyncio.Queue = asyncio.Queue(maxsize=self._maxsize)
@@ -36,6 +37,8 @@ class EventBus:
         self._queues.discard(queue)
 
     def publish(self, event: dict) -> None:
+        if event.get("type") == "typing" and event.get("psid"):
+            (self.typing.add if event.get("active") else self.typing.discard)(event["psid"])
         for queue in list(self._queues):
             try:
                 queue.put_nowait(dict(event))
@@ -106,6 +109,10 @@ class ConsoleLog:
             await pipe.execute()
         self.bus.publish({"type": "message", "psid": psid})
         return entry
+
+    def set_typing(self, psid: str, active: bool) -> None:
+        """Ephemeral 'Mimi is replying' flag: bus only, nothing stored, no text."""
+        self.bus.publish({"type": "typing", "psid": psid, "active": bool(active)})
 
     @bounded(IO_TIMEOUT)
     async def history(self, psid: str, limit: int = 200) -> list[dict]:

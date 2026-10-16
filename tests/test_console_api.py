@@ -625,3 +625,66 @@ def test_demo_app_end_to_end(env):
         assert client.post("/demo/student", json={"psid": psid, "text": "Con đây"}).status_code == 200
         assert client.post(url(f"/{psid}/accept"), headers=CSRF).status_code == 200
         assert client.post(url(f"/{psid}/messages"), headers=CSRF, json={"text": "Thầy đây"}).status_code == 200
+
+
+# --- typing indicator + fast detail ---------------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_event_stream_forwards_typing_as_a_flag_without_text():
+    bus, request = FakeBus(), FakeRequest()
+    stream = console.event_stream(request, bus, heartbeat=30, poll=0.01)
+    await next_frame(stream)
+    bus.publish({"type": "typing", "psid": "abc", "active": True, "text": "secret"})
+    assert await next_frame(stream) == 'event: typing\ndata: {"psid":"abc","active":true}\n\n'
+    bus.publish({"type": "typing", "psid": "abc", "active": False})
+    assert await next_frame(stream) == 'event: typing\ndata: {"psid":"abc","active":false}\n\n'
+    await stream.aclose()
+
+
+@pytest.mark.asyncio
+async def test_event_stream_replays_conversations_already_typing_after_hello():
+    from mimi_v2.console_log import EventBus
+    bus = EventBus()
+    bus.publish({"type": "typing", "psid": "b", "active": True})
+    bus.publish({"type": "typing", "psid": "a", "active": True})
+    stream = console.event_stream(FakeRequest(), bus, heartbeat=30, poll=0.01)
+    assert await next_frame(stream) == "event: hello\ndata: {}\n\n"
+    assert await next_frame(stream) == 'event: typing\ndata: {"psid":"a","active":true}\n\n'
+    assert await next_frame(stream) == 'event: typing\ndata: {"psid":"b","active":true}\n\n'
+    await stream.aclose()
+
+
+def test_detail_reads_run_concurrently_and_skip_mark_read_when_nothing_unread(api):
+    calls = []
+    original = api.log.mark_read
+
+    async def mark_read(psid):
+        calls.append(psid)
+        await original(psid)
+    api.log.mark_read = mark_read
+    assert api.client.get(url(f"/{PSID}")).json()["conversation"]["unread"] == 0
+    assert calls == [PSID]                      # seeded with unread=2
+    api.client.get(url(f"/{PSID}"))
+    assert calls == [PSID]                      # already read: no extra Redis writes on every poll
+
+
+@pytest.mark.asyncio
+async def test_detail_overlaps_meta_history_and_store_reads():
+    log, store = FakeLog(), FakeStore()
+    log.seed(PSID, "none")
+    inflight, peak = 0, 0
+
+    def slow(fn):
+        async def wrapper(*args, **kwargs):
+            nonlocal inflight, peak
+            inflight += 1
+            peak = max(peak, inflight)
+            await asyncio.sleep(0.02)
+            try:
+                return await fn(*args, **kwargs)
+            finally:
+                inflight -= 1
+        return wrapper
+    log.get_meta, log.history, store.load = slow(log.get_meta), slow(log.history), slow(store.load)
+    result = await console.conversation_detail(user=USERNAME, psid=PSID, log=log, store=store)
+    assert peak == 3 and result["conversation"]["psid"] == PSID and len(result["messages"]) == 1

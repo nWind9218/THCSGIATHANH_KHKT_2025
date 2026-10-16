@@ -152,6 +152,14 @@ PSID path param must match `^[A-Za-z0-9_-]{1,64}$` → else 404.
 - Headers: `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `X-Accel-Buffering: no`.
 - First: `event: hello\ndata: {}\n\n`. Then each bus event as `event: conversation\ndata: {"psid","type"}\n\n`;
   bus `{"type": "resync"}` → `event: resync\ndata: {}\n\n`. Heartbeat `: ping\n\n` every 20 s.
+- Typing flag: bus `{"type": "typing", "psid", "active"}` (published by the webhook around the engine call and
+  cleared after Mimi's entries are logged) -> `event: typing\ndata: {"psid","active"}\n\n`. A boolean only, never
+  text. After `hello`, one `typing` frame (`active: true`) is replayed per conversation Mimi is still replying to.
+  The UI shows "Mimi đang trả lời…" in the open thread and in the list without refetching; it self-clears after 90 s.
+- **Deployment: run exactly 1 Railway replica.** `EventBus` is in-process, so with more than one replica an event
+  published by the replica that handled the webhook never reaches consoles connected to another replica. The
+  browser's 5 s fallback refetch keeps such a setup correct but not instant. (Move the bus to Redis pub/sub before
+  scaling out.)
 - Unsubscribe from the bus on disconnect (`finally`).
 
 ### `scripts/console_demo.py`
@@ -184,9 +192,9 @@ Designed for teachers who are not technical: large clear buttons, no codes or co
     system centered small grey; failed messages red "Gửi lỗi". Auto-scroll when already near bottom.
   - Composer: textarea + "Gửi" (Enter sends, Shift+Enter newline), counter /4000; disabled with
     a plain-language reason unless `can_reply`. Keep the draft on refresh of the same conversation.
-- **Real-time**: `EventSource("/console/api/events")`. On `conversation`: debounce 300 ms, refetch list,
-  refetch detail if that psid is open. On `hello` after a reconnect or `resync`: refetch everything.
-  Fallback: refetch list (+ open detail) every 15 s regardless. Any 401 → login screen.
+- **Real-time**: `EventSource("/console/api/events")`. On `conversation`: debounce 100 ms, refetch list (always),
+  refetch detail only if that psid is open (in parallel; a request arriving mid-refetch is replayed, never dropped). On `hello` after a reconnect or `resync`: refetch everything.
+  Fallback: refetch list (+ open detail) every 5 s regardless. Any 401 → login screen.
 - **Alerts**: new pending conversation → `document.title` prefix "(n) ", short WebAudio beep if 🔔 on,
   browser Notification if permission granted (button to ask).
 - All POST/PUT send `X-Requested-With: mimi-console`, `credentials: "same-origin"`.

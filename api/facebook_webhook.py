@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import asyncio
 import json
 import logging
 import os
@@ -134,6 +135,46 @@ async def _send_messenger_message(psid: str, text: str) -> None:
 
 send_messenger_text = _send_messenger_message  # public alias used by the teacher console API
 
+TYPING_TIMEOUT = 3.0
+
+
+async def _send_sender_actions(psid: str, *actions: str) -> None:
+    """Best-effort Graph sender actions (mark_seen, typing_on); a failure only logs a warning."""
+    if not FACEBOOK_PAGE_ACCESS_TOKEN or not actions:
+        return
+    url = f"https://graph.facebook.com/{FACEBOOK_GRAPH_API_VERSION}/me/messages"
+    headers = {"Authorization": f"Bearer {FACEBOOK_PAGE_ACCESS_TOKEN}"}
+    try:
+        async with httpx.AsyncClient(timeout=TYPING_TIMEOUT) as client:
+            for action in actions:
+                response = await client.post(
+                    url, headers=headers, json={"recipient": {"id": psid}, "sender_action": action})
+                if not response.is_success:
+                    logger.warning("Messenger sender action %s failed status=%s", action, response.status_code)
+                    return
+    except Exception as exc:
+        logger.warning("Messenger sender action failed: %r", exc)
+
+
+def _start_typing(psid: str) -> "asyncio.Task":
+    """Show 'seen' + typing dots to the student without delaying the engine."""
+    return asyncio.ensure_future(_send_sender_actions(psid, "mark_seen", "typing_on"))
+
+
+async def _stop_typing(psid: str, task: "asyncio.Task | None", *, replying: bool) -> None:
+    """Reply on its way: Facebook clears the dots itself. Nothing to say (takeover, error): switch them off."""
+    if task is None:
+        return
+    if replying:
+        if not task.done():
+            task.cancel()
+        return
+    try:
+        await asyncio.wait_for(asyncio.shield(task), TYPING_TIMEOUT)
+    except Exception:
+        pass
+    await _send_sender_actions(psid, "typing_off")
+
 
 class _Parts(list):
     """Messages to deliver; also carries the engine's handoff status for the console mirror."""
@@ -161,6 +202,17 @@ async def _console(op: str, psid: str, *args, **kwargs) -> None:
         await getattr(get_console_log(), op)(psid, *args, **kwargs)
     except Exception as exc:
         logger.warning("Teacher console %s failed: %r", op, exc)
+
+
+def _console_typing(psid: str, active: bool) -> None:
+    """Tell open consoles that Mimi is (not) composing a reply; carries no text."""
+    if psid == E2E_PROBE_PSID:
+        return
+    try:
+        from mimi_v2.console_log import get_console_log
+        get_console_log().set_typing(psid, active)
+    except Exception as exc:
+        logger.warning("Teacher console typing failed: %r", exc)
 
 
 async def _log_page_inbox_echo(recipient: str, text: str) -> None:
@@ -232,9 +284,17 @@ async def handle_facebook_event(
                 # If sender is not an admin, we just treat it as a normal message.
                 logger.warning(f"Unauthorized #resume attempt from {sender}")
 
+        typing_task = None if suppress_delivery else _start_typing(sender)  # overlaps the log write and engine
+        _console_typing(sender, True)
         await _console("append", sender, "student", message_text)
         handling_started = time.monotonic()
-        response_parts = await _process_message(sender, message_text)
+        try:
+            response_parts = await _process_message(sender, message_text)
+        except BaseException:
+            _console_typing(sender, False)
+            await _stop_typing(sender, typing_task, replying=False)
+            raise
+        await _stop_typing(sender, typing_task, replying=bool(response_parts) and not suppress_delivery)
         engine_done = time.monotonic()
         handoff_status = getattr(response_parts, "handoff_status", None)
         try:
@@ -256,6 +316,7 @@ async def handle_facebook_event(
                             await _console("append", sender, "mimi", text,
                                            status="sent" if delivered else "failed")
         finally:
+            _console_typing(sender, False)
             if handoff_status in _HANDOFF_STATUSES:
                 await _console("set_status", sender, handoff_status)
         # Latency only; no ids or message text. engine_s includes lock, storage and model calls.

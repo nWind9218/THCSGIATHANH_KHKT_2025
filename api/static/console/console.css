@@ -234,3 +234,9 @@ button, input, textarea { font: inherit; color: inherit; }
   .msg { max-width: 88%; }
   .me-name { display: none; }
 }
+
+/* Mimi đang trả lời… */
+.conv-typing { color: var(--accent, var(--muted)); font-style: italic; }
+.msg-typing .bubble { font-style: italic; color: var(--muted); animation: typing-pulse 1.4s ease-in-out infinite; }
+@keyframes typing-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .msg-typing .bubble { animation: none; } }

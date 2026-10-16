@@ -7,8 +7,9 @@
   const API = "/console/api";
   const BASE_TITLE = "Mimi · Bàn hỗ trợ thầy cô";
   const MAX_LEN = 4000;
-  const FALLBACK_MS = 15000;
-  const DEBOUNCE_MS = 300;
+  const FALLBACK_MS = 5000;     // lưới an toàn: sự kiện trong tiến trình không tới được bản sao khác
+  const DEBOUNCE_MS = 100;
+  const TYPING_TTL_MS = 90000;  // tự tắt "đang trả lời" nếu không nhận được tín hiệu kết thúc
 
   const STATUS_LABEL = { pending: "Cần hỗ trợ", accepted: "Thầy cô đang trả lời", none: "Mimi đang trả lời" };
   const TABS = [
@@ -41,6 +42,9 @@
     busy: new Set(),
     timers: { fallback: null, tick: null, debounce: null, reconnect: null },
     refreshing: false,
+    again: null,          // yêu cầu lấy lại đến trong lúc đang lấy: { detail: bool }
+    wantDetail: false,    // sự kiện đang chờ debounce có cần lấy lại chi tiết không
+    typing: {},           // psid -> timer; có mặt = Mimi đang soạn trả lời
   };
 
   const $ = (id) => document.getElementById(id);
@@ -213,7 +217,8 @@
       r1.appendChild(el("span", "conv-name", displayName(c)));
       r1.appendChild(el("span", "conv-time", relTime(c.last_ts)));
       const r2 = el("div", "row");
-      r2.appendChild(el("span", "conv-preview", c.last_preview || ""));
+      if (state.typing[c.psid]) r2.appendChild(el("span", "conv-preview conv-typing", "Mimi đang trả lời…"));
+      else r2.appendChild(el("span", "conv-preview", c.last_preview || ""));
       if (c.unread > 0) {
         const dot = el("span", "unread-dot");
         dot.title = "Tin nhắn chưa đọc";
@@ -239,6 +244,8 @@
     try {
       const data = await api("/conversations?filter=all");
       state.convs = data.conversations || [];
+      const open = state.convs.find((c) => c.psid === state.selected);
+      if (open) open.unread = 0;        // đang mở là đang đọc; danh sách và chi tiết được lấy song song
       state.counts = data.counts || state.counts;
       if (typeof data.server_time === "number") state.skew = data.server_time - Date.now() / 1000;
       detectNewPending();
@@ -366,14 +373,25 @@
     }
   }
 
-  // Lấy lại tất cả: chi tiết trước (để xóa chấm chưa đọc), rồi danh sách.
-  async function refreshAll() {
-    if (state.refreshing) return;
+  // Lấy lại danh sách (luôn) và chi tiết (nếu cần) song song. Yêu cầu đến lúc đang lấy sẽ được chạy lại ngay sau đó.
+  async function refreshAll(detail) {
+    detail = detail !== false;
+    if (state.refreshing) {
+      state.again = { detail: detail || !!(state.again && state.again.detail) };
+      return;
+    }
     state.refreshing = true;
     try {
-      if (state.selected) await loadDetail(state.selected, false);
-      await refreshList();
-    } finally { state.refreshing = false; }
+      await Promise.all([
+        detail && state.selected ? loadDetail(state.selected, false) : null,
+        refreshList(),
+      ]);
+    } finally {
+      state.refreshing = false;
+      const next = state.again;
+      state.again = null;
+      if (next && state.user) refreshAll(next.detail);
+    }
   }
 
   function windowInfo(conv) {
@@ -466,6 +484,12 @@
       }
       box.appendChild(row);
     });
+    if (state.selected && state.typing[state.selected]) {
+      const row = el("div", "msg msg-mimi msg-typing");
+      row.appendChild(el("div", "who", "Mimi"));
+      row.appendChild(el("div", "bubble", "Mimi đang trả lời…"));
+      box.appendChild(row);
+    }
     if (scrollBottom || nearBottom) box.scrollTop = box.scrollHeight;
     else box.scrollTop = prevTop;
   }
@@ -574,9 +598,25 @@
     $("conn-text").textContent = on ? "Đã kết nối" : "Đang kết nối lại…";
   }
 
-  function scheduleRefresh() {
+  // Danh sách luôn được lấy lại; chi tiết chỉ khi sự kiện thuộc cuộc trò chuyện đang mở.
+  function scheduleRefresh(psid) {
+    if (psid && psid === state.selected) state.wantDetail = true;
     clearTimeout(state.timers.debounce);
-    state.timers.debounce = setTimeout(refreshAll, DEBOUNCE_MS);
+    state.timers.debounce = setTimeout(() => {
+      const detail = state.wantDetail;
+      state.wantDetail = false;
+      refreshAll(detail);
+    }, DEBOUNCE_MS);
+  }
+
+  // "Mimi đang trả lời": chỉ là cờ bật/tắt, không lấy lại dữ liệu.
+  function setTyping(psid, active) {
+    if (!psid) return;
+    clearTimeout(state.typing[psid]);
+    if (active) state.typing[psid] = setTimeout(() => setTyping(psid, false), TYPING_TTL_MS);
+    else delete state.typing[psid];
+    renderList();
+    if (psid === state.selected) renderDetail(false);
   }
 
   function startRealtime() {
@@ -584,7 +624,7 @@
     setConn(false);
     state.esEverOpen = false;
     connectEvents();
-    state.timers.fallback = setInterval(refreshAll, FALLBACK_MS);
+    state.timers.fallback = setInterval(() => refreshAll(true), FALLBACK_MS);
     // Mỗi 30 giây: cập nhật đồng hồ 24 giờ và thời gian tương đối.
     state.timers.tick = setInterval(() => { renderDetail(); renderList(); }, 30000);
   }
@@ -600,8 +640,15 @@
       if (reconnect) refreshAll();       // bù những thay đổi đã lỡ
     };
     es.addEventListener("hello", () => setConn(true));
-    es.addEventListener("conversation", () => scheduleRefresh());
-    es.addEventListener("resync", () => refreshAll());
+    es.addEventListener("conversation", (ev) => {
+      let psid = null;
+      try { psid = JSON.parse(ev.data).psid; } catch (e) { /* bỏ qua */ }
+      scheduleRefresh(psid);
+    });
+    es.addEventListener("typing", (ev) => {
+      try { const d = JSON.parse(ev.data); setTyping(d.psid, !!d.active); } catch (e) { /* bỏ qua */ }
+    });
+    es.addEventListener("resync", () => refreshAll(true));
     es.onerror = () => {
       setConn(false);
       if (es.readyState === EventSource.CLOSED && state.es === es) {
@@ -617,6 +664,8 @@
 
   function stopRealtime() {
     if (state.es) { state.es.close(); state.es = null; }
+    Object.keys(state.typing).forEach((k) => clearTimeout(state.typing[k]));
+    state.typing = {};
     Object.keys(state.timers).forEach((k) => {
       clearTimeout(state.timers[k]);
       clearInterval(state.timers[k]);

@@ -272,3 +272,26 @@ async def test_takeover_accepts_from_any_state_and_is_idempotent(meta):
     assert len(redis.transactions) == 2 and len(redis.transactions[-1]) == 4
     await store.resume("a")
     assert (await store.load("a"))["handoff_status"] == "none"
+
+
+@pytest.mark.asyncio
+async def test_set_typing_publishes_a_flag_only_and_tracks_active_psids():
+    log = MemoryConsoleLog()
+    queue = log.bus.subscribe()
+    log.set_typing("s1", True)
+    log.set_typing("s2", True)
+    log.set_typing("s1", False)
+    assert drain(queue) == [
+        {"type": "typing", "psid": "s1", "active": True}, {"type": "typing", "psid": "s2", "active": True},
+        {"type": "typing", "psid": "s1", "active": False}]
+    assert log.bus.typing == {"s2"}
+    assert await log.list_conversations() == [] and log.memory.data == {}   # nothing is stored
+
+
+@pytest.mark.asyncio
+async def test_typing_event_overflow_still_resyncs():
+    bus = EventBus(maxsize=1)
+    queue = bus.subscribe()
+    bus.publish({"type": "typing", "psid": "s1", "active": True})
+    bus.publish({"type": "typing", "psid": "s1", "active": False})
+    assert drain(queue) == [{"type": "resync"}]

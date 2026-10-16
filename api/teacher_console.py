@@ -126,13 +126,22 @@ async def load_meta(log, psid: str) -> dict:
     return meta
 
 
-async def sync_status(log, store, psid: str, meta: dict) -> dict:
-    """Align the console mirror with the store (source of truth); on store trouble keep the mirror."""
+async def store_status(store, psid: str) -> str | None:
+    """Handoff status from the store (source of truth); None on store trouble."""
     try:
-        status = (await store.load(psid)).get("handoff_status")
+        return (await store.load(psid)).get("handoff_status")
     except Exception as exc:
         logger.warning("Console could not read handoff status psid=%s error=%s", psid, type(exc).__name__)
-        return meta
+        return None
+
+
+_UNSET: Any = object()
+
+
+async def sync_status(log, store, psid: str, meta: dict, status: str | None = _UNSET) -> dict:
+    """Align the console mirror with the store; on store trouble keep the mirror."""
+    if status is _UNSET:
+        status = await store_status(store, psid)
     if status in VALID_STATUSES and status != meta.get("handoff_status"):
         await log.set_status(psid, status)
         meta = {**meta, "handoff_status": status}
@@ -194,9 +203,11 @@ async def list_conversations(filter: str = "all", user: str = Depends(auth.curre
 async def conversation_detail(
     user: str = Depends(auth.current_user), psid: str = Depends(valid_psid), log=Depends(get_log), store=Depends(get_store),
 ):
-    meta = await sync_status(log, store, psid, await load_meta(log, psid))
-    messages = await log.history(psid)
-    await log.mark_read(psid)
+    # The three reads are independent Redis round trips: overlap them instead of paying for each in turn.
+    meta, messages, status = await asyncio.gather(load_meta(log, psid), log.history(psid), store_status(store, psid))
+    meta = await sync_status(log, store, psid, meta, status)
+    if meta.get("unread"):
+        await log.mark_read(psid)
     return {"conversation": to_conv({**meta, "unread": 0}), "messages": messages}
 
 
@@ -301,6 +312,8 @@ async def event_stream(
     queue = bus.subscribe()
     try:
         yield sse_frame("hello", {})
+        for psid in sorted(getattr(bus, "typing", ())):     # a page opened mid-reply still shows the indicator
+            yield sse_frame("typing", {"psid": psid, "active": True})
         last_sent = time.monotonic()
         while not await request.is_disconnected():
             try:
@@ -313,6 +326,8 @@ async def event_stream(
             last_sent = time.monotonic()
             if event.get("type") == "resync" or not event.get("psid"):
                 yield sse_frame("resync", {})
+            elif event.get("type") == "typing":      # a flag only: never any message text
+                yield sse_frame("typing", {"psid": event["psid"], "active": bool(event.get("active"))})
             else:
                 yield sse_frame("conversation", {"psid": event["psid"], "type": event.get("type")})
     finally:

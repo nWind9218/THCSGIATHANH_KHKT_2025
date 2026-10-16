@@ -1,4 +1,5 @@
 """Webhook to teacher-console mirroring; Facebook, storage and Redis are all faked."""
+import asyncio
 import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -91,6 +92,8 @@ async def test_failed_delivery_is_logged_as_failed(env):
 async def test_console_failure_never_blocks_bot_reply(env, monkeypatch, caplog):
     class Broken:
         def __getattr__(self, name):
+            if name == "set_typing":
+                raise ConnectionError("redis down")
             async def fail(*args, **kwargs):
                 raise ConnectionError("redis down")
             return fail
@@ -275,3 +278,160 @@ async def test_probe_with_parts_skips_console_and_delivery(env):
     await webhook.handle_facebook_event(webhook.E2E_PROBE_PSID, "hi", suppress_delivery=True)
     env.send.assert_not_awaited()
     assert await env.log.list_conversations() == []
+
+
+# --- typing indicator (Messenger sender actions + console flag) ----------------------------------------------------
+
+class _GraphStub:
+    """Records Graph calls made through the webhook's httpx client."""
+    def __init__(self, status=200, boom=None):
+        self.calls, self.status, self.boom = [], status, boom
+
+    def install(self, monkeypatch):
+        import httpx
+        stub = self
+
+        def handler(request):
+            if stub.boom:
+                raise stub.boom
+            stub.calls.append((str(request.url), request.headers.get("authorization"), json.loads(request.content)))
+            return httpx.Response(stub.status, json={"recipient_id": "x"})
+
+        class Client(httpx.AsyncClient):
+            def __init__(self, *args, **kwargs):
+                kwargs["transport"] = httpx.MockTransport(handler)
+                super().__init__(*args, **kwargs)
+        monkeypatch.setattr(webhook, "httpx", SimpleNamespace(AsyncClient=Client))
+        monkeypatch.setattr(webhook, "FACEBOOK_PAGE_ACCESS_TOKEN", "tok")
+        return self
+
+
+@pytest.mark.asyncio
+async def test_sender_actions_use_the_same_url_and_auth_as_messages(monkeypatch):
+    graph = _GraphStub().install(monkeypatch)
+    await webhook._send_sender_actions("s1", "mark_seen", "typing_on")
+    assert [c[2] for c in graph.calls] == [
+        {"recipient": {"id": "s1"}, "sender_action": "mark_seen"},
+        {"recipient": {"id": "s1"}, "sender_action": "typing_on"}]
+    assert graph.calls[0][0] == f"https://graph.facebook.com/{webhook.FACEBOOK_GRAPH_API_VERSION}/me/messages"
+    assert graph.calls[0][1] == "Bearer tok"
+
+
+@pytest.mark.asyncio
+async def test_sender_action_failures_only_log_a_warning(monkeypatch, caplog):
+    import httpx
+    graph = _GraphStub(status=400).install(monkeypatch)
+    with caplog.at_level("WARNING"):
+        await webhook._send_sender_actions("s1", "mark_seen", "typing_on")
+    assert len(graph.calls) == 1 and "mark_seen failed" in caplog.text    # stops after the first failure
+    caplog.clear()
+    _GraphStub(boom=httpx.ConnectError("down")).install(monkeypatch)
+    with caplog.at_level("WARNING"):
+        await webhook._send_sender_actions("s1", "typing_on")
+    assert "sender action failed" in caplog.text
+    monkeypatch.setattr(webhook, "FACEBOOK_PAGE_ACCESS_TOKEN", "")
+    graph = _GraphStub().install(monkeypatch)
+    monkeypatch.setattr(webhook, "FACEBOOK_PAGE_ACCESS_TOKEN", "")
+    await webhook._send_sender_actions("s1", "typing_on")
+    assert graph.calls == []
+
+
+@pytest.fixture
+def actions(env, monkeypatch):
+    """Order of everything the webhook does for one turn: sender actions, engine, deliveries."""
+    order = []
+    env.order = order
+
+    async def fake_actions(psid, *names):
+        order.extend(f"{name}:{psid}" for name in names)
+    monkeypatch.setattr(webhook, "_send_sender_actions", fake_actions)
+
+    async def respond(psid, text):
+        await asyncio.sleep(0)      # let the fire-and-forget typing task run first
+        order.append("engine")
+        return {"response_text": "Mimi nghe đây", "handoff_status": "none"}
+    env.engine.respond = respond
+    env.send.side_effect = lambda psid, text: order.append(f"send:{text}")
+    return env
+
+
+@pytest.mark.asyncio
+async def test_seen_and_typing_are_sent_before_the_engine_answers(actions):
+    await webhook.handle_facebook_event("s1", "xin chào")
+    assert actions.order == ["mark_seen:s1", "typing_on:s1", "engine", "send:Mimi nghe đây"]
+
+
+@pytest.mark.asyncio
+async def test_typing_does_not_delay_the_engine(actions, monkeypatch):
+    release = asyncio.Event()
+    started = []
+
+    async def hanging(psid, *names):
+        started.append(names)
+        await release.wait()
+    monkeypatch.setattr(webhook, "_send_sender_actions", hanging)
+    await asyncio.wait_for(webhook.handle_facebook_event("s1", "xin chào"), 2)   # would time out if it waited
+    assert started == [("mark_seen", "typing_on")]
+    assert [c.args for c in actions.send.await_args_list] == [("s1", "Mimi nghe đây")]
+
+
+@pytest.mark.asyncio
+async def test_probe_gets_no_sender_actions_and_no_console_flag(actions):
+    queue = actions.log.bus.subscribe()
+    await webhook.handle_facebook_event(webhook.E2E_PROBE_PSID, "probe", suppress_delivery=True)
+    assert actions.order == ["engine"] and queue.empty()
+
+
+@pytest.mark.asyncio
+async def test_typing_failure_never_blocks_the_reply(actions, monkeypatch):
+    async def boom(psid, *names):
+        raise RuntimeError("graph exploded")
+    monkeypatch.setattr(webhook, "_send_sender_actions", boom)
+    await webhook.handle_facebook_event("s1", "xin chào")
+    assert roles(await actions.log.history("s1"))[-1] == ("mimi", "Mimi nghe đây", "sent")
+
+
+@pytest.mark.asyncio
+async def test_typing_is_switched_off_only_when_nothing_is_sent(actions):
+    actions.engine.respond = AsyncMock(return_value={"response_text": "", "response_parts": [], "handoff_status": "accepted"})
+    await webhook.handle_facebook_event("s1", "alo")        # teacher took over: Mimi stays silent
+    assert actions.order == ["mark_seen:s1", "typing_on:s1", "typing_off:s1"]
+
+
+@pytest.mark.asyncio
+async def test_console_typing_flag_wraps_the_whole_reply(actions):
+    queue = actions.log.bus.subscribe()
+    await webhook.handle_facebook_event("s1", "xin chào")
+    events = []
+    while not queue.empty():
+        e = queue.get_nowait()
+        events.append((e["type"], e.get("active")))
+    assert events.index(("typing", True)) < events.index(("message", None))
+    last_message = len(events) - 1 - events[::-1].index(("message", None))
+    assert events.index(("typing", False)) > last_message      # cleared after Mimi's entry is logged
+    assert actions.log.bus.typing == set()
+
+
+@pytest.mark.asyncio
+async def test_console_typing_is_cleared_when_the_engine_fails(actions):
+    actions.engine.respond = AsyncMock(side_effect=RuntimeError("model down"))
+    queue = actions.log.bus.subscribe()
+    await webhook.handle_facebook_event("s1", "xin chào")
+    flags = []
+    while not queue.empty():
+        e = queue.get_nowait()
+        if e["type"] == "typing":
+            flags.append(e["active"])
+    assert flags == [True, False] and actions.log.bus.typing == set()
+
+
+@pytest.mark.asyncio
+async def test_console_typing_failure_never_blocks_the_bot(actions, monkeypatch, caplog):
+    class Broken(console_log.MemoryConsoleLog):
+        def set_typing(self, psid, active):
+            raise ConnectionError("bus exploded")
+    monkeypatch.setattr(console_log, "get_console_log", lambda: Broken())
+    with caplog.at_level("WARNING"):
+        await webhook.handle_facebook_event("s1", "xin chào")
+    assert "engine" in actions.order and "send:Mimi nghe đây" in actions.order
+    assert "Teacher console typing failed" in caplog.text
