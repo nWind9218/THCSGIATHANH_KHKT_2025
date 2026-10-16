@@ -1,22 +1,31 @@
 # *MIMI*: Chatbot help protect Kids from Education Hidden Dangers 
 ## I. Idea Origin
 ## II. Techstack Framework
-- Python
-- LangGraph
-## III. Quick start
-### Local MVP chat (workflow mới duy nhất)
-1. Cài dependency:
-	`pip install -r requirements.txt`
-2. Chạy local chat:
-	`python main.py`
-3. Nhập `User ID`, sau đó chat trực tiếp trong terminal.
-4. Gõ `/exit` để thoát.
+- Python, FastAPI (webhook Facebook Messenger)
+- Mimi v2 (`mimi_v2/`): lõi hội thoại, an toàn, chuyển người hỗ trợ
+- Redis (phiên hội thoại), PostgreSQL + pgvector (tri thức), Resend (email khẩn)
+- Gradio (chat thử cục bộ trước khi đưa lên production)
+- Model: OpenAI hoặc Shineshop (tương thích OpenAI), chọn bằng biến môi trường
 
-### Chạy test kịch bản luồng
-1. Cài dev dependency:
-	`pip install -r requirements_dev.txt`
-2. Chạy test:
-	`pytest -q`
+Repo này chỉ phục vụ giao tiếp qua Facebook Messenger. Mã engine cũ, chat WebSocket và công cụ eval nằm trong `legacy/`
+(xem `legacy/README.md`); không cần đọc chúng khi phát triển Mimi v2.
+
+## III. Quick start
+### Chat thử bằng Gradio (không cần Facebook, Redis hay database)
+1. `pip install -r requirements_local.txt`
+2. Chế độ offline (không gọi model): `python -m mimi_v2.simulator`
+3. Chế độ live: đặt `MIMI_V2_BASE_URL`, `MIMI_V2_API_KEY`, `MIMI_V2_MODEL` (hoặc `OPENAI_API_KEY`) trong `.env`, rồi
+   `python -m mimi_v2.simulator --live`
+4. Mở http://127.0.0.1:7860. Dữ liệu chỉ nằm trong RAM; Gradio không kết nối Facebook, database hay email.
+
+### Chạy webhook
+1. `pip install -r requirements.txt`
+2. Điền biến môi trường theo `.env.production.example`
+3. `uvicorn api.main:app --host 0.0.0.0 --port 8000`; webhook ở `/webhook/facebook`, kiểm tra sức khỏe ở `/health`.
+
+### Chạy test
+1. `pip install -r requirements_dev.txt`
+2. `pytest -q` (test lõi, chạy offline). Test của `legacy/` chạy riêng bằng `pytest legacy/tests`.
 
 ## IV. Standard Basement  
 

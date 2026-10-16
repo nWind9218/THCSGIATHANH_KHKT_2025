@@ -2,6 +2,5 @@
 pandas
 openpyxl
 psycopg[binary,pool]
-langgraph-cli[inmem]
 pytest
 pytest-asyncio

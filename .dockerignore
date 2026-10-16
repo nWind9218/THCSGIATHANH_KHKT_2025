@@ -87,3 +87,12 @@ dist/
 seed_data/
 *.md
 !requirements.txt
+
+# Not part of the production image
+legacy/
+tests/
+eval_results/
+AGENT_DESIGN_DOCS/
+agent/
+skills-lock.json
+.codegraph/
