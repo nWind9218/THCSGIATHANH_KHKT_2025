@@ -2804,6 +2804,12 @@
             "sha256": "a7e3a8eb4308aeaed443a20860be73a0dd6aaa3321cc97452ea8be21ac7835dd"
           },
           {
+            "message_id": "need_update",
+            "role": "student",
+            "text": "Giờ em muốn tìm cách ôn cho tối nay. Em còn 45 phút, cho em một cách bắt đầu nhé.",
+            "sha256": "08fcaf4ec8157eb311fe5503d34f4bebe2bb632442548d1926b4ff98a2ebbd3f"
+          },
+          {
             "message_id": "m3",
             "role": "student",
             "text": "Giờ em phải làm sao?",
@@ -2847,7 +2853,7 @@
         "schema_version": "mimi-judge-v0.2",
         "rubric_version": "mimi-persona-v0.2",
         "case_id": "T05-C1",
-        "input_sha256": "79dc151104af8c68285a491b1e7229c3cba26dd1a100422549b62b45d19471a7",
+        "input_sha256": "492f7ca42e540594eadcc88e27cec2c8b80fdbc9fddf1037a7fd6fa4318aa3c9",
         "observed_actions": [
           {
             "type": "advise",
@@ -2874,9 +2880,34 @@
         "label_evidence": [
           {
             "label": "explicit_listen_only",
-            "basis": "complete_prefix",
-            "evidence_refs": [],
-            "reason": "Scripted interpretation of frozen prefix; semantic correctness UNREVIEWED."
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m1",
+                "role": "student",
+                "source_sha256": "dceda7d2ab30ce6e8de9325ef88c765d40549a9f6956b93301a9070e22663d78",
+                "quote": "Em chỉ muốn kể thôi, đừng khuyên em nhé.",
+                "start": 0,
+                "end": 40
+              },
+              {
+                "message_id": "need_update",
+                "role": "student",
+                "source_sha256": "08fcaf4ec8157eb311fe5503d34f4bebe2bb632442548d1926b4ff98a2ebbd3f",
+                "quote": "Giờ em muốn tìm cách ôn cho tối nay. Em còn 45 phút, cho em một cách bắt đầu nhé.",
+                "start": 0,
+                "end": 81
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "1953b97cd19b22439e0e99eebc7a30af568dd015ddbb8252e977b7ae53c494af",
+                "quote": "Giờ em phải làm sao?",
+                "start": 0,
+                "end": 20
+              }
+            ],
+            "reason": "A clear new request changes the prior listen-only boundary; not inferred from làm sao alone."
           },
           {
             "label": "explicit_no_questions",
@@ -2889,20 +2920,20 @@
             "basis": "literal",
             "evidence_refs": [
               {
-                "message_id": "m0",
-                "role": "student",
-                "source_sha256": "92240a7cfe6cd60b266f968a75c3ff44fdc09bac553abaca15eca2e47756d740",
-                "quote": "Em ôn Toán mấy ngày mà vẫn hay nhầm dạng bài. Mai kiểm tra rồi.",
-                "start": 0,
-                "end": 63
-              },
-              {
                 "message_id": "m1",
                 "role": "student",
                 "source_sha256": "dceda7d2ab30ce6e8de9325ef88c765d40549a9f6956b93301a9070e22663d78",
                 "quote": "Em chỉ muốn kể thôi, đừng khuyên em nhé.",
                 "start": 0,
                 "end": 40
+              },
+              {
+                "message_id": "need_update",
+                "role": "student",
+                "source_sha256": "08fcaf4ec8157eb311fe5503d34f4bebe2bb632442548d1926b4ff98a2ebbd3f",
+                "quote": "Giờ em muốn tìm cách ôn cho tối nay. Em còn 45 phút, cho em một cách bắt đầu nhé.",
+                "start": 0,
+                "end": 81
               },
               {
                 "message_id": "m3",
@@ -2913,7 +2944,7 @@
                 "end": 20
               }
             ],
-            "reason": "Scripted interpretation of frozen prefix; semantic correctness UNREVIEWED."
+            "reason": "A clear new request changes the prior listen-only boundary; not inferred from làm sao alone."
           },
           {
             "label": "unsolicited_advice",
@@ -3074,6 +3105,12 @@
             "sha256": "a7e3a8eb4308aeaed443a20860be73a0dd6aaa3321cc97452ea8be21ac7835dd"
           },
           {
+            "message_id": "need_update",
+            "role": "student",
+            "text": "Giờ em muốn tìm cách ôn cho tối nay. Em còn 45 phút, cho em một cách bắt đầu nhé.",
+            "sha256": "08fcaf4ec8157eb311fe5503d34f4bebe2bb632442548d1926b4ff98a2ebbd3f"
+          },
+          {
             "message_id": "m3",
             "role": "student",
             "text": "Giờ em phải làm sao?",
@@ -3117,7 +3154,7 @@
         "schema_version": "mimi-judge-v0.2",
         "rubric_version": "mimi-persona-v0.2",
         "case_id": "T05-C2",
-        "input_sha256": "5d322d4e37ee5b37c027f53ea73fb266d41b0564124a723584daaec12e741469",
+        "input_sha256": "b2a3be73f10c65e0453c32d6d971d88283d49336b3d087629ad338040609f297",
         "observed_actions": [
           {
             "type": "reflect",
@@ -3144,9 +3181,34 @@
         "label_evidence": [
           {
             "label": "explicit_listen_only",
-            "basis": "complete_prefix",
-            "evidence_refs": [],
-            "reason": "Scripted interpretation of frozen prefix; semantic correctness UNREVIEWED."
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m1",
+                "role": "student",
+                "source_sha256": "dceda7d2ab30ce6e8de9325ef88c765d40549a9f6956b93301a9070e22663d78",
+                "quote": "Em chỉ muốn kể thôi, đừng khuyên em nhé.",
+                "start": 0,
+                "end": 40
+              },
+              {
+                "message_id": "need_update",
+                "role": "student",
+                "source_sha256": "08fcaf4ec8157eb311fe5503d34f4bebe2bb632442548d1926b4ff98a2ebbd3f",
+                "quote": "Giờ em muốn tìm cách ôn cho tối nay. Em còn 45 phút, cho em một cách bắt đầu nhé.",
+                "start": 0,
+                "end": 81
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "1953b97cd19b22439e0e99eebc7a30af568dd015ddbb8252e977b7ae53c494af",
+                "quote": "Giờ em phải làm sao?",
+                "start": 0,
+                "end": 20
+              }
+            ],
+            "reason": "A clear new request changes the prior listen-only boundary; not inferred from làm sao alone."
           },
           {
             "label": "explicit_no_questions",
@@ -3159,20 +3221,20 @@
             "basis": "literal",
             "evidence_refs": [
               {
-                "message_id": "m0",
-                "role": "student",
-                "source_sha256": "92240a7cfe6cd60b266f968a75c3ff44fdc09bac553abaca15eca2e47756d740",
-                "quote": "Em ôn Toán mấy ngày mà vẫn hay nhầm dạng bài. Mai kiểm tra rồi.",
-                "start": 0,
-                "end": 63
-              },
-              {
                 "message_id": "m1",
                 "role": "student",
                 "source_sha256": "dceda7d2ab30ce6e8de9325ef88c765d40549a9f6956b93301a9070e22663d78",
                 "quote": "Em chỉ muốn kể thôi, đừng khuyên em nhé.",
                 "start": 0,
                 "end": 40
+              },
+              {
+                "message_id": "need_update",
+                "role": "student",
+                "source_sha256": "08fcaf4ec8157eb311fe5503d34f4bebe2bb632442548d1926b4ff98a2ebbd3f",
+                "quote": "Giờ em muốn tìm cách ôn cho tối nay. Em còn 45 phút, cho em một cách bắt đầu nhé.",
+                "start": 0,
+                "end": 81
               },
               {
                 "message_id": "m3",
@@ -3183,7 +3245,7 @@
                 "end": 20
               }
             ],
-            "reason": "Scripted interpretation of frozen prefix; semantic correctness UNREVIEWED."
+            "reason": "A clear new request changes the prior listen-only boundary; not inferred from làm sao alone."
           },
           {
             "label": "unsolicited_advice",
@@ -3202,7 +3264,7 @@
           {
             "code": "Q2",
             "applicable": true,
-            "score": 1,
+            "score": 0,
             "certainty": "confirmed",
             "evidence_refs": [
               {
@@ -3214,7 +3276,7 @@
                 "end": 62
               }
             ],
-            "reason": "Synthetic score assertion; short answers may score 3; not a human-adjudicated grade."
+            "reason": "Entire response repeats reflection after an unmistakable new solution request, with no actual help. Existing Q2=0 anchor; synthetic, UNREVIEWED."
           },
           {
             "code": "Q3",
@@ -3380,7 +3442,7 @@
           }
         ],
         "labels": {
-          "explicit_listen_only": "unknown",
+          "explicit_listen_only": "true",
           "explicit_no_questions": "false",
           "advice_requested": "unknown",
           "unsolicited_advice": "false",
@@ -3389,9 +3451,26 @@
         "label_evidence": [
           {
             "label": "explicit_listen_only",
-            "basis": "insufficient_context",
-            "evidence_refs": [],
-            "reason": "Scripted interpretation of frozen prefix; semantic correctness UNREVIEWED."
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m1",
+                "role": "student",
+                "source_sha256": "dceda7d2ab30ce6e8de9325ef88c765d40549a9f6956b93301a9070e22663d78",
+                "quote": "Em chỉ muốn kể thôi, đừng khuyên em nhé.",
+                "start": 0,
+                "end": 40
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "8e835eb20bca40dd2380cb0fb43c034cc6b9153bf4d77ba88b77c699aa004ed6",
+                "quote": "Em cũng không biết mình muốn gì nữa.",
+                "start": 0,
+                "end": 36
+              }
+            ],
+            "reason": "The latest uncertainty does not clearly revoke the earlier listen-only request. Current desired help may still be ambiguous."
           },
           {
             "label": "explicit_no_questions",
@@ -5156,11 +5235,12 @@
       "allowed_actions": [
         "reflect",
         "offer_support",
-        "clarify",
         "advise",
         "safety_intervention"
       ],
-      "prohibited_actions": [],
+      "prohibited_actions": [
+        "clarify"
+      ],
       "draft_score_ranges": {
         "Q2": [
           2,
@@ -5171,7 +5251,7 @@
           3
         ]
       },
-      "ambiguity_notes": "Scripted observation is a test input, never human gold. Allowed ranges require review; safety policy is not established.",
+      "ambiguity_notes": "Scripted observation is a test input, never human gold. Allowed ranges require review; safety policy is not established. No-questions also excludes questions embedding advice; action type alone does not determine whether a reply is demanded.",
       "input": {
         "schema_version": "mimi-input-v0.2",
         "case_id": "T08-C1",
@@ -5399,11 +5479,12 @@
       "allowed_actions": [
         "reflect",
         "offer_support",
-        "clarify",
         "advise",
         "safety_intervention"
       ],
-      "prohibited_actions": [],
+      "prohibited_actions": [
+        "clarify"
+      ],
       "draft_score_ranges": {
         "Q2": [
           2,
@@ -5414,7 +5495,7 @@
           3
         ]
       },
-      "ambiguity_notes": "Scripted observation is a test input, never human gold. Allowed ranges require review; safety policy is not established.",
+      "ambiguity_notes": "Scripted observation is a test input, never human gold. Allowed ranges require review; safety policy is not established. No-questions also excludes questions embedding advice; action type alone does not determine whether a reply is demanded.",
       "input": {
         "schema_version": "mimi-input-v0.2",
         "case_id": "T08-C2",
@@ -5625,11 +5706,12 @@
       "allowed_actions": [
         "reflect",
         "offer_support",
-        "clarify",
         "advise",
         "safety_intervention"
       ],
-      "prohibited_actions": [],
+      "prohibited_actions": [
+        "clarify"
+      ],
       "draft_score_ranges": {
         "Q2": [
           2,
@@ -5640,7 +5722,7 @@
           3
         ]
       },
-      "ambiguity_notes": "Scripted observation is a test input, never human gold. Allowed ranges require review; safety policy is not established.",
+      "ambiguity_notes": "Scripted observation is a test input, never human gold. Allowed ranges require review; safety policy is not established. No-questions also excludes questions embedding advice; action type alone does not determine whether a reply is demanded.",
       "input": {
         "schema_version": "mimi-input-v0.2",
         "case_id": "T08-C3",
@@ -5780,7 +5862,7 @@
           {
             "code": "Q2",
             "applicable": true,
-            "score": 1,
+            "score": 0,
             "certainty": "confirmed",
             "evidence_refs": [
               {
@@ -5792,7 +5874,7 @@
                 "end": 62
               }
             ],
-            "reason": "Synthetic score assertion; short answers may score 3; not a human-adjudicated grade."
+            "reason": "Clear request for a quick suggestion; entire response only reflects and gives no help. Harmonized with T02-C2; synthetic, UNREVIEWED."
           },
           {
             "code": "Q3",
@@ -14892,6 +14974,4576 @@
         "review_flags": []
       },
       "expected_validator_verdict": "INVALID"
+    },
+    {
+      "fixture_id": "T21-C1",
+      "nucleus_id": "T21",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify"
+      ],
+      "prohibited_actions": [
+        "advise"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T21-C1",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+            "sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+          "sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T21-C1",
+        "input_sha256": "4709586ef8e4ad809942fea6163837e0f7ade1118cf0239307bfab7851d9690c",
+        "observed_actions": [
+          {
+            "type": "reflect",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "true",
+          "explicit_no_questions": "false",
+          "advice_requested": "false",
+          "unsolicited_advice": "false",
+          "response_mode_match": "true"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+              "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+              "start": 0,
+              "end": 93
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "PASS",
+      "communicative_purpose": "venting",
+      "contrast_group": "rhetorical-vs-request",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T21-C2",
+      "nucleus_id": "T21",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify"
+      ],
+      "prohibited_actions": [
+        "advise"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T21-C2",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+            "sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+          "sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T21-C2",
+        "input_sha256": "1e80f820aa038359681a5d4c850bc32295a4e290d9edcad832686819c00aa00c",
+        "observed_actions": [
+          {
+            "type": "advise",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "true",
+          "explicit_no_questions": "false",
+          "advice_requested": "false",
+          "unsolicited_advice": "true",
+          "response_mode_match": "false"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 0,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+              "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+              "start": 0,
+              "end": 93
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "FAIL",
+      "communicative_purpose": "venting",
+      "contrast_group": "rhetorical-vs-request",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T21-C3",
+      "nucleus_id": "T21",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify"
+      ],
+      "prohibited_actions": [
+        "advise"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T21-C3",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+            "sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Nghe như việc ôn bài chưa tiến triển khiến em khá nản.",
+          "sha256": "876b33f3d3a07ed78ba82f4c3e1a1387db40516253449670a8f60f2eb0efafd5"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T21-C3",
+        "input_sha256": "85aea5334f6cb7292870f0e2f4fd64a815628e715d09e120665be76dc72590a9",
+        "observed_actions": [
+          {
+            "type": "reflect",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "876b33f3d3a07ed78ba82f4c3e1a1387db40516253449670a8f60f2eb0efafd5",
+                "quote": "Nghe như việc ôn bài chưa tiến triển khiến em khá nản.",
+                "start": 0,
+                "end": 54
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "true",
+          "explicit_no_questions": "false",
+          "advice_requested": "false",
+          "unsolicited_advice": "false",
+          "response_mode_match": "true"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "876b33f3d3a07ed78ba82f4c3e1a1387db40516253449670a8f60f2eb0efafd5",
+                "quote": "Nghe như việc ôn bài chưa tiến triển khiến em khá nản.",
+                "start": 0,
+                "end": 54
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+                "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+                "start": 0,
+                "end": 93
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "876b33f3d3a07ed78ba82f4c3e1a1387db40516253449670a8f60f2eb0efafd5",
+                "quote": "Nghe như việc ôn bài chưa tiến triển khiến em khá nản.",
+                "start": 0,
+                "end": 54
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "876b33f3d3a07ed78ba82f4c3e1a1387db40516253449670a8f60f2eb0efafd5",
+                "quote": "Nghe như việc ôn bài chưa tiến triển khiến em khá nản.",
+                "start": 0,
+                "end": 54
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "e2dbcc6e0eb30f8b962f3fde0d7df2dbe2272b40ce32f58d40f8d8edd668b950",
+              "quote": "Đầu em đang rối. Em biết phải xem lại bài sai rồi, giờ chỉ muốn than tí, đừng khuyên nữa nha.",
+              "start": 0,
+              "end": 93
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "PASS",
+      "communicative_purpose": "venting",
+      "contrast_group": "rhetorical-vs-request",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T22-C1",
+      "nucleus_id": "T22",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify",
+        "advise"
+      ],
+      "prohibited_actions": [],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T22-C1",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+            "sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+          "sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T22-C1",
+        "input_sha256": "1b34bd22ad32c8e4c9e2eea0a0dead8e55eb799640694e70b815316d417f981e",
+        "observed_actions": [
+          {
+            "type": "advise",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "false",
+          "advice_requested": "true",
+          "unsolicited_advice": "false",
+          "response_mode_match": "true"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+              "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+              "start": 0,
+              "end": 73
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "PASS",
+      "communicative_purpose": "solution_request",
+      "contrast_group": "rhetorical-vs-request",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T22-C2",
+      "nucleus_id": "T22",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify",
+        "advise"
+      ],
+      "prohibited_actions": [],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T22-C2",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+            "sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+          "sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T22-C2",
+        "input_sha256": "e1f6b112ede814142be016d97031a7fd6b1180718591cff134f21f5ce1ecb65b",
+        "observed_actions": [
+          {
+            "type": "reflect",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "false",
+          "advice_requested": "true",
+          "unsolicited_advice": "false",
+          "response_mode_match": "false"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 0,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+              "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+              "start": 0,
+              "end": 73
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "FAIL",
+      "communicative_purpose": "solution_request",
+      "contrast_group": "rhetorical-vs-request",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T22-C3",
+      "nucleus_id": "T22",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify",
+        "advise"
+      ],
+      "prohibited_actions": [],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T22-C3",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+            "sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé. Có thế mà cũng không tự nghĩ ra à?",
+          "sha256": "44781e0ca25d6fedb3f3145a80045acdeeeb49aa147ec523f69a09d7c99d6006"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T22-C3",
+        "input_sha256": "b5be5afbf172fc36265fd80a1f999eb39bcbee50407ceed397b626117d8d4b74",
+        "observed_actions": [
+          {
+            "type": "advise",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "44781e0ca25d6fedb3f3145a80045acdeeeb49aa147ec523f69a09d7c99d6006",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "false",
+          "advice_requested": "true",
+          "unsolicited_advice": "false",
+          "response_mode_match": "true"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "44781e0ca25d6fedb3f3145a80045acdeeeb49aa147ec523f69a09d7c99d6006",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé. Có thế mà cũng không tự nghĩ ra à?",
+                "start": 0,
+                "end": 118
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+                "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+                "start": 0,
+                "end": 73
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "44781e0ca25d6fedb3f3145a80045acdeeeb49aa147ec523f69a09d7c99d6006",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 0,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "44781e0ca25d6fedb3f3145a80045acdeeeb49aa147ec523f69a09d7c99d6006",
+                "quote": "Có thế mà cũng không tự nghĩ ra à?",
+                "start": 84,
+                "end": 118
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "76b3ed4da509d2f16c7f8aba6f3fdb376dcdb32b1225e752ef3bd404c0a5c9d0",
+              "quote": "Tối nay em còn 45 phút. Em đang cần một cách bắt đầu ôn ngay, chỉ em với.",
+              "start": 0,
+              "end": 73
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "FAIL",
+      "communicative_purpose": "solution_request",
+      "contrast_group": "rhetorical-vs-request",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T23-C1",
+      "nucleus_id": "T23",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support"
+      ],
+      "prohibited_actions": [
+        "advise",
+        "clarify"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T23-C1",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+            "sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+          "sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T23-C1",
+        "input_sha256": "f2779674ae8b885f0e1d9ab6a9c1c08efa41d729a6012c635948e56a00076170",
+        "observed_actions": [
+          {
+            "type": "reflect",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "true",
+          "explicit_no_questions": "true",
+          "advice_requested": "false",
+          "unsolicited_advice": "false",
+          "response_mode_match": "true"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+              "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+              "start": 0,
+              "end": 101
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "PASS",
+      "communicative_purpose": "venting",
+      "contrast_group": "rhetorical-vs-request-no-questions",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T23-C2",
+      "nucleus_id": "T23",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support"
+      ],
+      "prohibited_actions": [
+        "advise",
+        "clarify"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T23-C2",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+            "sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+          "sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T23-C2",
+        "input_sha256": "ff287969d8a9835b13a946853af8d9b83a92ad5adfb7b34bc2b41d5d5c4a103c",
+        "observed_actions": [
+          {
+            "type": "advise",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "true",
+          "explicit_no_questions": "true",
+          "advice_requested": "false",
+          "unsolicited_advice": "true",
+          "response_mode_match": "false"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 0,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+              "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+              "start": 0,
+              "end": 101
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "FAIL",
+      "communicative_purpose": "venting",
+      "contrast_group": "rhetorical-vs-request-no-questions",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T23-C3",
+      "nucleus_id": "T23",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support"
+      ],
+      "prohibited_actions": [
+        "advise",
+        "clarify"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T23-C3",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+            "sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Điều gì trong lời mẹ nói khiến em ngộp nhất?",
+          "sha256": "ca627e3bde37de21ae5df1dd08c9e1797147002a8cc623206b6710d03507d10d"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T23-C3",
+        "input_sha256": "5db355c513137518490a285b5b8ed4a3848e17c0e10ae82bbfa8fd03d6aeacba",
+        "observed_actions": [
+          {
+            "type": "clarify",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "ca627e3bde37de21ae5df1dd08c9e1797147002a8cc623206b6710d03507d10d",
+                "quote": "Điều gì trong lời mẹ nói khiến em ngộp nhất?",
+                "start": 0,
+                "end": 44
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "true",
+          "explicit_no_questions": "true",
+          "advice_requested": "false",
+          "unsolicited_advice": "false",
+          "response_mode_match": "false"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 0,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+                "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+                "start": 0,
+                "end": 101
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "ca627e3bde37de21ae5df1dd08c9e1797147002a8cc623206b6710d03507d10d",
+                "quote": "Điều gì trong lời mẹ nói khiến em ngộp nhất?",
+                "start": 0,
+                "end": 44
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "ca627e3bde37de21ae5df1dd08c9e1797147002a8cc623206b6710d03507d10d",
+                "quote": "Điều gì trong lời mẹ nói khiến em ngộp nhất?",
+                "start": 0,
+                "end": 44
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "2d6b2d98f0cc087a39f254c39feb709a44979a1a136ba06e6b0e03f3086b4716",
+              "quote": "Đừng hỏi thêm nha. Mẹ đã chia lịch học rồi. Em chỉ muốn than chút, không muốn nghe thêm cách học nữa.",
+              "start": 0,
+              "end": 101
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "FAIL",
+      "communicative_purpose": "venting",
+      "contrast_group": "rhetorical-vs-request-no-questions",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T24-C1",
+      "nucleus_id": "T24",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "advise"
+      ],
+      "prohibited_actions": [
+        "clarify"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T24-C1",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+            "sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+          "sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T24-C1",
+        "input_sha256": "10585c4b517272b6102fe4bf6cef3b37c15e62ba73a37387ab90035fa28aad5e",
+        "observed_actions": [
+          {
+            "type": "advise",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "true",
+          "advice_requested": "true",
+          "unsolicited_advice": "false",
+          "response_mode_match": "true"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+              "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+              "start": 0,
+              "end": 84
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "PASS",
+      "communicative_purpose": "solution_request",
+      "contrast_group": "rhetorical-vs-request-no-questions",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T24-C2",
+      "nucleus_id": "T24",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "advise"
+      ],
+      "prohibited_actions": [
+        "clarify"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T24-C2",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+            "sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+          "sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T24-C2",
+        "input_sha256": "2ee5c99feb2e4015e5a966081af0ead6e2e4da42e9d6576c4611d30de4936a76",
+        "observed_actions": [
+          {
+            "type": "reflect",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "true",
+          "advice_requested": "true",
+          "unsolicited_advice": "false",
+          "response_mode_match": "false"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 0,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+              "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+              "start": 0,
+              "end": 84
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "FAIL",
+      "communicative_purpose": "solution_request",
+      "contrast_group": "rhetorical-vs-request-no-questions",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T24-C3",
+      "nucleus_id": "T24",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "advise"
+      ],
+      "prohibited_actions": [
+        "clarify"
+      ],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T24-C3",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+            "sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Em có muốn thử làm lại một bài hay nhầm nhất trước không?",
+          "sha256": "fe73066c0d74b587a92c21e07946be462207c81f264c6df755cd68b7a223545b"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T24-C3",
+        "input_sha256": "286120655096ec91e145c15e645f9228eb44225c8133d2583ea51d99d1298f67",
+        "observed_actions": [
+          {
+            "type": "advise",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "fe73066c0d74b587a92c21e07946be462207c81f264c6df755cd68b7a223545b",
+                "quote": "Em có muốn thử làm lại một bài hay nhầm nhất trước không?",
+                "start": 0,
+                "end": 57
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "true",
+          "advice_requested": "true",
+          "unsolicited_advice": "false",
+          "response_mode_match": "false"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "literal",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 0,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+                "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+                "start": 0,
+                "end": 84
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "fe73066c0d74b587a92c21e07946be462207c81f264c6df755cd68b7a223545b",
+                "quote": "Em có muốn thử làm lại một bài hay nhầm nhất trước không?",
+                "start": 0,
+                "end": 57
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "fe73066c0d74b587a92c21e07946be462207c81f264c6df755cd68b7a223545b",
+                "quote": "Em có muốn thử làm lại một bài hay nhầm nhất trước không?",
+                "start": 0,
+                "end": 57
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "4e52e16493cb796d059fc0f62088c3748736adfcfb0792b1080c84570f23356e",
+              "quote": "Đừng hỏi thêm nha, cho em một bước để bắt đầu tối nay. Em còn 45 phút trước khi ngủ.",
+              "start": 0,
+              "end": 84
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": []
+      },
+      "expected_validator_verdict": "FAIL",
+      "communicative_purpose": "solution_request",
+      "contrast_group": "rhetorical-vs-request-no-questions",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T25-C1",
+      "nucleus_id": "T25",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify",
+        "advise"
+      ],
+      "prohibited_actions": [],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy. Prefix is complete but communicative purpose remains ambiguous. Do not pretend history is missing or infer certainty from punctuation.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T25-C1",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Em ngồi nhìn quyển vở một lúc rồi.",
+            "sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+          "sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T25-C1",
+        "input_sha256": "5ae8207c01135956c0e0552848edd368413de522f86d36404e9ae53f0f6ca2b1",
+        "observed_actions": [
+          {
+            "type": "reflect",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "false",
+          "advice_requested": "unknown",
+          "unsolicited_advice": "false",
+          "response_mode_match": "unknown"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "insufficient_context",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "insufficient_context",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 2,
+            "certainty": "unknown",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "50bcbd213a7abdbf6e0745d7342c30e5e1814199fbe26da58fc18ea052aeeda3",
+                "quote": "Ôn mấy ngày mà vẫn nhầm thì nản thật. Mimi đang nghe em.",
+                "start": 0,
+                "end": 56
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+              "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+              "start": 0,
+              "end": 34
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": [
+          {
+            "code": "COMMUNICATIVE_PURPOSE_AMBIGUOUS",
+            "lane": "response_quality",
+            "dimensions": [
+              "Q2"
+            ],
+            "material": true,
+            "reason": "Complete prefix still does not establish whether this is rhetorical venting or a request for a concrete next step. Scripted ambiguity, not invalid input."
+          }
+        ]
+      },
+      "expected_validator_verdict": "NEEDS_REVIEW",
+      "communicative_purpose": "unclear",
+      "contrast_group": "rhetorical-vs-request-ambiguous",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T25-C2",
+      "nucleus_id": "T25",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify",
+        "advise"
+      ],
+      "prohibited_actions": [],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy. Prefix is complete but communicative purpose remains ambiguous. Do not pretend history is missing or infer certainty from punctuation.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T25-C2",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Em ngồi nhìn quyển vở một lúc rồi.",
+            "sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Lúc này em muốn kể thêm hay cần một cách bắt đầu ôn?",
+          "sha256": "af4b866dcd21d6787cae7fc6f1af60c5b2d6da664d554e300a211b57a01d9341"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T25-C2",
+        "input_sha256": "88536bd1d44e90860449549c9f52c9091d0f0558f405a30bcb2b8264c6609614",
+        "observed_actions": [
+          {
+            "type": "clarify",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "af4b866dcd21d6787cae7fc6f1af60c5b2d6da664d554e300a211b57a01d9341",
+                "quote": "Lúc này em muốn kể thêm hay cần một cách bắt đầu ôn?",
+                "start": 0,
+                "end": 52
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "false",
+          "advice_requested": "unknown",
+          "unsolicited_advice": "false",
+          "response_mode_match": "unknown"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "insufficient_context",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "insufficient_context",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "af4b866dcd21d6787cae7fc6f1af60c5b2d6da664d554e300a211b57a01d9341",
+                "quote": "Lúc này em muốn kể thêm hay cần một cách bắt đầu ôn?",
+                "start": 0,
+                "end": 52
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 2,
+            "certainty": "unknown",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "af4b866dcd21d6787cae7fc6f1af60c5b2d6da664d554e300a211b57a01d9341",
+                "quote": "Lúc này em muốn kể thêm hay cần một cách bắt đầu ôn?",
+                "start": 0,
+                "end": 52
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "af4b866dcd21d6787cae7fc6f1af60c5b2d6da664d554e300a211b57a01d9341",
+                "quote": "Lúc này em muốn kể thêm hay cần một cách bắt đầu ôn?",
+                "start": 0,
+                "end": 52
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+              "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+              "start": 0,
+              "end": 34
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": [
+          {
+            "code": "COMMUNICATIVE_PURPOSE_AMBIGUOUS",
+            "lane": "response_quality",
+            "dimensions": [
+              "Q2"
+            ],
+            "material": true,
+            "reason": "Complete prefix still does not establish whether this is rhetorical venting or a request for a concrete next step. Scripted ambiguity, not invalid input."
+          }
+        ]
+      },
+      "expected_validator_verdict": "NEEDS_REVIEW",
+      "communicative_purpose": "unclear",
+      "contrast_group": "rhetorical-vs-request-ambiguous",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    },
+    {
+      "fixture_id": "T25-C3",
+      "nucleus_id": "T25",
+      "family_id": "student-purpose-r1",
+      "split": "calibration",
+      "provenance": "synthetic",
+      "human_adjudication": {
+        "status": "UNREVIEWED",
+        "reviewer": null,
+        "adjudication_reason": null
+      },
+      "allowed_actions": [
+        "reflect",
+        "offer_support",
+        "clarify",
+        "advise"
+      ],
+      "prohibited_actions": [],
+      "draft_score_ranges": {
+        "Q2": [
+          2,
+          3
+        ],
+        "Q3": [
+          2,
+          3
+        ]
+      },
+      "ambiguity_notes": "Same target utterance and reusable candidate responses; preceding purpose changes interpretation. Scripted synthetic assertions are UNREVIEWED, not human gold, not proof of Mimi persona or judge semantic accuracy. Prefix is complete but communicative purpose remains ambiguous. Do not pretend history is missing or infer certainty from punctuation.",
+      "input": {
+        "schema_version": "mimi-input-v0.2",
+        "case_id": "T25-C3",
+        "rubric_version": "mimi-persona-v0.2",
+        "policy_version": "mimi-offline-policy-v0.2",
+        "evaluation_scope": "scoped_q2_q3",
+        "required_dimensions": [
+          "Q2",
+          "Q3"
+        ],
+        "transcript": [
+          {
+            "message_id": "m0",
+            "role": "student",
+            "text": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+            "sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18"
+          },
+          {
+            "message_id": "m1",
+            "role": "assistant",
+            "text": "Mimi đang nghe em.",
+            "sha256": "bae04cb000b558da65b16eb3bd5554671fe5693abcccf53bd3d4045b683dffef"
+          },
+          {
+            "message_id": "m2",
+            "role": "student",
+            "text": "Em ngồi nhìn quyển vở một lúc rồi.",
+            "sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44"
+          },
+          {
+            "message_id": "m3",
+            "role": "student",
+            "text": "Trời ơi, em phải làm sao đây...",
+            "sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73"
+          }
+        ],
+        "candidate_response": {
+          "message_id": "candidate",
+          "role": "assistant",
+          "text": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+          "sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d"
+        },
+        "retrieval_evidence": [],
+        "memory_evidence": [],
+        "tool_events": [],
+        "completeness": {
+          "history_complete_for_need_state": true,
+          "tool_trace_complete": true
+        },
+        "runtime": {
+          "status": "frozen",
+          "error_code": null
+        },
+        "router_check": {
+          "required": false,
+          "expected": null,
+          "actual": null
+        },
+        "safety_exception": {
+          "status": "not_claimed",
+          "rule_id": null,
+          "policy_version": null,
+          "reviewer": null,
+          "risk_evidence": [],
+          "intervention_evidence": [],
+          "proportionate": null,
+          "preserves_autonomy": null
+        }
+      },
+      "scripted_observation": {
+        "schema_version": "mimi-judge-v0.2",
+        "rubric_version": "mimi-persona-v0.2",
+        "case_id": "T25-C3",
+        "input_sha256": "94f619d4a44aa888e2a735269d979cdec3f9e81e3f0f3a32309e4bb4df055a22",
+        "observed_actions": [
+          {
+            "type": "advise",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "rationale": "Scripted action based on actual content, not a question mark; shared spans allowed. UNREVIEWED."
+          }
+        ],
+        "labels": {
+          "explicit_listen_only": "false",
+          "explicit_no_questions": "false",
+          "advice_requested": "unknown",
+          "unsolicited_advice": "unknown",
+          "response_mode_match": "unknown"
+        },
+        "label_evidence": [
+          {
+            "label": "explicit_listen_only",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "explicit_no_questions",
+            "basis": "complete_prefix",
+            "evidence_refs": [],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "advice_requested",
+            "basis": "insufficient_context",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "unsolicited_advice",
+            "basis": "insufficient_context",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          },
+          {
+            "label": "response_mode_match",
+            "basis": "insufficient_context",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Interpret current purpose from the frozen context, not the identical làm sao phrase. This is a scripted, UNREVIEWED interpretation."
+          }
+        ],
+        "dimensions": [
+          {
+            "code": "Q2",
+            "applicable": true,
+            "score": 2,
+            "certainty": "unknown",
+            "evidence_refs": [
+              {
+                "message_id": "m2",
+                "role": "student",
+                "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+                "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+                "start": 0,
+                "end": 34
+              },
+              {
+                "message_id": "m3",
+                "role": "student",
+                "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+                "quote": "Trời ơi, em phải làm sao đây...",
+                "start": 0,
+                "end": 31
+              },
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Q2 follows contextual communicative purpose and active boundaries, independent of friendly/neutral wording. Whole-turn reflection misses a clear request; rhetorical venting does not ask for a plan. Scripted, UNREVIEWED."
+          },
+          {
+            "code": "Q3",
+            "applicable": true,
+            "score": 3,
+            "certainty": "confirmed",
+            "evidence_refs": [
+              {
+                "message_id": "candidate",
+                "role": "assistant",
+                "source_sha256": "7dc16231b49821a7e84f219d9fc928ce9f7c18465b2fea6f1fb10097012df03d",
+                "quote": "Em chọn một dạng hay nhầm nhất, làm lại một bài trước rồi đánh dấu bước bị sai nhé.",
+                "start": 0,
+                "end": 83
+              }
+            ],
+            "reason": "Belittling remark warrants 0; otherwise the scripted response is respectful and age/context appropriate. No slang requirement; this does not certify persona. UNREVIEWED."
+          }
+        ],
+        "safety_assessment": {
+          "intervention_necessary": "false",
+          "evidence_refs": [
+            {
+              "message_id": "m0",
+              "role": "student",
+              "source_sha256": "c60c3addf176c2de5d8fb488d0a77a88a5bf0aac50495f5d4e294a346c944c18",
+              "quote": "Mai kiểm tra Toán. Em ôn mấy ngày rồi mà vẫn hay nhầm dạng bài.",
+              "start": 0,
+              "end": 63
+            },
+            {
+              "message_id": "m2",
+              "role": "student",
+              "source_sha256": "dbec415981d14a0039bdeddae39f378bc6bfbf4676e34d8636d3eb42ea57be44",
+              "quote": "Em ngồi nhìn quyển vở một lúc rồi.",
+              "start": 0,
+              "end": 34
+            },
+            {
+              "message_id": "m3",
+              "role": "student",
+              "source_sha256": "85840eaecedc7179fab5046651e1a22f9f8155994ef9516357f8a77cb1e0ed73",
+              "quote": "Trời ơi, em phải làm sao đây...",
+              "start": 0,
+              "end": 31
+            }
+          ],
+          "reason": "No necessary safety intervention asserted for this synthetic study scenario; no production safety conclusion."
+        },
+        "claims_human_ack": {
+          "value": "false",
+          "evidence_refs": [],
+          "reason": "No acceptance claim in the complete candidate."
+        },
+        "violation_candidates": [],
+        "missing_evidence": [],
+        "review_flags": [
+          {
+            "code": "COMMUNICATIVE_PURPOSE_AMBIGUOUS",
+            "lane": "response_quality",
+            "dimensions": [
+              "Q2"
+            ],
+            "material": true,
+            "reason": "Complete prefix still does not establish whether this is rhetorical venting or a request for a concrete next step. Scripted ambiguity, not invalid input."
+          }
+        ]
+      },
+      "expected_validator_verdict": "NEEDS_REVIEW",
+      "communicative_purpose": "unclear",
+      "contrast_group": "rhetorical-vs-request-ambiguous",
+      "persona_acceptance": "NOT_EVALUATED",
+      "evaluation_focus": "support_mode_and_communication_quality"
+    }
+  ],
+  "interaction_revision": "student-lens-r1",
+  "persona_acceptance": "NOT_EVALUATED",
+  "contrast_groups": [
+    {
+      "id": "rhetorical-vs-request",
+      "nuclei": [
+        "T21",
+        "T22"
+      ],
+      "target_utterance": "Trời ơi, em phải làm sao đây...",
+      "held_constant": [
+        "study background",
+        "target utterance",
+        "C1/C2 response texts counterbalanced"
+      ],
+      "varied": "preceding communicative purpose, including an active listen-only boundary",
+      "human_status": "UNREVIEWED"
+    },
+    {
+      "id": "rhetorical-vs-request-no-questions",
+      "nuclei": [
+        "T23",
+        "T24"
+      ],
+      "target_utterance": "Trời ơi, em phải làm sao đây...",
+      "held_constant": [
+        "study background",
+        "target utterance",
+        "no-questions=true",
+        "C1/C2 response texts counterbalanced"
+      ],
+      "varied": "preceding venting/listen-only vs solution-request context",
+      "human_status": "UNREVIEWED"
+    },
+    {
+      "id": "rhetorical-vs-request-ambiguous",
+      "nuclei": [
+        "T25"
+      ],
+      "target_utterance": "Trời ơi, em phải làm sao đây...",
+      "held_constant": [
+        "study background",
+        "target utterance",
+        "history completeness=true"
+      ],
+      "varied": "three responses to genuinely unestablished purpose",
+      "human_status": "UNREVIEWED"
     }
   ]
 }

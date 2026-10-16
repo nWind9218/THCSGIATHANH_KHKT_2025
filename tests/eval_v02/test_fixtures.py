@@ -6,7 +6,7 @@ from mimi_eval.validator import evaluate
 
 
 def test_all_scripted_outcomes_and_human_status(suite):
-    assert len(suite["cases"])==64
+    assert len(suite["cases"])==79
     ids=[r["fixture_id"] for r in suite["cases"]]
     assert len(ids)==len(set(ids))
     for row in suite["cases"]:
@@ -17,7 +17,7 @@ def test_all_scripted_outcomes_and_human_status(suite):
 
 def test_nuclei_and_family_split_no_leakage(suite):
     counts=Counter(r["nucleus_id"] for r in suite["cases"] if r["nucleus_id"]!="CONTROL")
-    assert counts=={f"T{i:02}":3 for i in range(1,21)}
+    assert counts=={f"T{i:02}":3 for i in range(1,26)}
     splits=defaultdict(set)
     for r in suite["cases"]:splits[r["family_id"]].add(r["split"])
     assert all(len(v)==1 for v in splits.values())

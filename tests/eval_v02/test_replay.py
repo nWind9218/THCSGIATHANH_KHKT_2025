@@ -18,6 +18,7 @@ def test_replay_deterministic_independent_and_four_states(suite):
     assert first["summary"]["scripted_expectation_mismatches"]==0
     assert first["summary"]["semantic_agreement"]=="NOT_EVALUATED"
     assert first["summary"]["provider_calls"]==0
+    assert first["summary"]["persona_acceptance"]=="NOT_EVALUATED"
     assert first["summary"]["technical_failures"]==1
     assert first["summary"]["invalid_observations"]==2
 

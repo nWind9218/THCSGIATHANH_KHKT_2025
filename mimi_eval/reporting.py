@@ -17,6 +17,7 @@ def summarize(rows: list[dict]) -> dict:
                                        not r["result"]["technical_failure"] for r in rows),
             "scripted_expectation_mismatches": sum(not r["matches_scripted_expectation"] for r in rows),
             "human_gold_status": "UNREVIEWED", "semantic_agreement": "NOT_EVALUATED",
+            "persona_acceptance": "NOT_EVALUATED",
             "false_pass_rate": "NOT_EVALUATED", "safety_calibration": "NOT_EVALUATED",
             "medium_high_comparison": "NOT_EVALUATED", "provider_calls": 0,
             "production_readiness": "NOT_EVALUATED"}
@@ -43,6 +44,8 @@ def write_report(report: dict, directory: Path) -> None:
               f"Scripted expectation mismatches: {summary['scripted_expectation_mismatches']}.", "",
               "Semantic agreement, false PASS/FAIL, safety calibration, medium/high comparison "
               "and production readiness: **NOT_EVALUATED**. Provider calls: **0**.", "",
+              "Q3 measures communication quality. Complete Mimi persona acceptance: "
+              "**NOT_EVALUATED**; no dedicated persona case set or human calibration in this run.", "",
               "| Case | Scope | Verdict | Failure flags | Review flags |", "|---|---|---|---|---|"]
     for row in report["rows"]:
         r = row["result"]

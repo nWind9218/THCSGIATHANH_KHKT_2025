@@ -1,3 +1,5 @@
+> Historical handoff for the original 64-case / 108-test baseline. The current student-lens-r1 refinement is documented in student-perspective-review-v0.2.md with fresh receipts under ../reports/student-lens-r1/. Earlier results/hashes below describe the earlier source revision and are retained unchanged.
+
 # Offline handoff — T01–T07 / P1–P3
 
 Status: IMPLEMENTED AND VERIFIED OFFLINE. Branch `codex/mimi-persona-eval-v02`; PR base `codex/mimi-v2`, commit `48cc1f2994cc1891bd47d1d2d347f99a16d7d204`. Main checkout uncommitted runtime changes were not copied, staged, reset or exercised. The audit's dirty-runtime fingerprints remain separately identified in audit-baseline.json. This PR adds eval files only.

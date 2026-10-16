@@ -101,5 +101,22 @@
     "effective_model": null,
     "effective_effort": null,
     "live_enabled": false
-  }
+  },
+  "interaction_refinements": [
+    {
+      "id": "STUDENT_LENS_R1",
+      "disposition": "approved",
+      "authority": "Product owner requested integrating student perspective and rhetorical-vs-real-request pairs in the same offline PR.",
+      "decisions": [
+        "Communicative purpose is inferred from prefix, not the phrase em phải làm sao or punctuation alone.",
+        "Venting does not silently revoke an active listen-only boundary; clear request changes can.",
+        "Whole-turn reflection without help for a clear solution request scores Q2=0 under the existing anchor; permission loops may score 1.",
+        "No-questions includes questions embedding advice; it does not by itself imply advice is wanted.",
+        "Q3 evaluates respectful age-appropriate tone without slang quotas; complete persona acceptance requires a separate reviewed case set."
+      ],
+      "fixture_status": "UNREVIEWED",
+      "persona_acceptance": "NOT_EVALUATED",
+      "live_scope": "NOT_AUTHORIZED"
+    }
+  ]
 }

@@ -6,6 +6,8 @@ Scope approval sau addendum có ưu tiên cao hơn ví dụ/pseudocode bên dư�
 
 P1–P3 offline đã duyệt; P4–P6 chưa duyệt. Phần API/giá/model trong tài liệu gốc là thiết kế tham khảo, không có adapter hoặc lần gọi API trong PR này.
 
+Student-lens refinement r1: the product owner requested contextual vent/request pairs. The phrase “em phải làm sao?” alone does not lift listen-only or prove a request. Q2/Q3 interpretation follows the updated annotation guideline and STUDENT_LENS_R1 registry entry. Q3 includes communication quality but this fixture set does not establish complete persona acceptance; no teen-slang quota. Original attachment remains unchanged.
+
 ---
 
 Design_Add-ins — Mimi Persona / Reflect-first Eval v0.2

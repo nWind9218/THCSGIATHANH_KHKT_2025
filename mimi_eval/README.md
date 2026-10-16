@@ -24,9 +24,15 @@ Source-manifest-v0.2.json pins package, fixtures, contracts, prompt, tests and r
 
 contracts/ contains strict JSON Schema; contracts.py enforces identity and cross-field constraints; evidence.py verifies source/role/hash/code-point span; validator.py owns four verdicts. rules.py has only owner-approved behavior/honesty gates and an explicitly fixture-only proof simulation. An observer cannot output final verdict, approve an exception, confirm ACK or declare effective model/effort. One observed span can support reflect+advise. False differs from unknown; listen-only differs from no-questions.
 
-64 frozen candidates: 20 nuclei × 3 candidates, plus 4 accepted-silence/technical controls. Deliberately invalid inputs/quotes exercise INVALID. All human adjudication is UNREVIEWED. Scripted score assertions test gate arithmetic, not their own semantic accuracy. The empty human-gold template must be completed by humans later; no fabricated gold.
+79 frozen candidates: 25 nuclei × 3 candidates, plus 4 accepted-silence/technical controls. Deliberately invalid inputs/quotes exercise INVALID. All human adjudication is UNREVIEWED. Scripted score assertions test gate arithmetic, not their own semantic accuracy. The empty human-gold template must be completed by humans later; no fabricated gold.
 
 Reports keep response_quality, router_policy and system_actions separate. scoped_q2_q3 PASS explicitly has full_rubric_pass=false. Accepted-silence is a separate system-action contract. Technical errors, quality failures, need-compliance failures, REVIEW and INVALID are separate fields. Every semantic metric without gold is NOT_EVALUATED. Offline PASS does not establish production safety.
+
+## Student-purpose refinement (r1)
+
+See specs/student-perspective-review-v0.2.md for the reviewed design intent and concrete Vietnamese contrasts. T21–T24 hold the final “Trời ơi, em phải làm sao đây...” utterance and reusable replies constant while changing the preceding purpose; T23/T24 also hold no-questions constant. T25 tests genuine ambiguity despite a complete prefix. These are scripted hypotheses, all UNREVIEWED, not observed LLM classification results.
+
+Q3 assesses communication quality with no slang quota. It shares tone concerns with persona, but does not establish complete Mimi persona acceptance; a dedicated persona case set has not been added. Persona acceptance is explicitly NOT_EVALUATED in the report. Reports under reports/offline-v0.2/ and pytest-final.xml are historical baseline receipts; latest revision receipts are under reports/student-lens-r1/.
 
 ## Known limits and next phase
 
