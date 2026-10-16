@@ -13,10 +13,6 @@ from typing import Any
 import httpx
 from fastapi import APIRouter, Request, Response, HTTPException, BackgroundTasks
 
-from graph.state import CounselingState
-from graph.workflow import build_counseling_graph
-from memory import load_history, load_topic, set_takeover_flag
-
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
@@ -129,49 +125,9 @@ async def _send_messenger_message(psid: str, text: str) -> None:
 
 
 async def _process_message(psid: str, text: str) -> str:
-    if os.getenv("MIMI_ENGINE", "legacy").strip().lower() == "v2":
-        from mimi_v2.production import get_production_engine
-        result = await get_production_engine().respond(psid, text)
-        return (result.get("response_text") or "").strip()
-    # We pass only the new message. load_memory_node will load history from Redis 
-    # and merge it, avoiding the duplication bug.
-    messages = [{"role": "user", "content": text}]
-
-    graph = build_counseling_graph()
-    state: CounselingState = {
-        "messages": messages,
-        "user_id": psid,
-        "intent_category": "simple", # Defaults
-        "info_gap_status": "missing",
-        "is_emergency": False,
-        "human_takeover": False,
-    }
-
-    result = await graph.ainvoke(state)
-
-    if result.get("is_emergency") or result.get("human_takeover"):
-        logger.warning(
-            "[RUNTIME_DIAG] Facebook emergency/takeover state psid=%s is_emergency=%s human_takeover=%s platform=%s service=%s",
-            psid,
-            bool(result.get("is_emergency")),
-            bool(result.get("human_takeover")),
-            _runtime_context().get("platform"),
-            _runtime_context().get("service"),
-        )
-    
-    # Check if human takeover is active
-    if result.get("human_takeover") and not result.get("is_emergency"):
-        # If takeover is active and it wasn't JUST triggered (which would have a comfort message),
-        # then we should remain silent.
-        if not result.get("response_text"):
-            return ""
-
-    response_text = (result.get("response_text") or "").strip()
-
-    if not response_text and not result.get("human_takeover"):
-        response_text = "Mình đã nhận được tin nhắn của bạn, bạn nói rõ hơn một chút nhé."
-
-    return response_text
+    from mimi_v2.production import get_production_engine
+    result = await get_production_engine().respond(psid, text)
+    return (result.get("response_text") or "").strip()
 
 
 async def handle_facebook_event(
@@ -198,7 +154,7 @@ async def handle_facebook_event(
             return
 
         # Check for #resume command from authorized admins
-        if clean_text.split()[:1] == ["#accept"] and os.getenv("MIMI_ENGINE", "legacy").strip().lower() == "v2":
+        if clean_text.split()[:1] == ["#accept"]:
             if sender in ADMIN_FACEBOOK_PSIDS:
                 parts = message_text.split()
                 if len(parts) == 2:
@@ -217,11 +173,8 @@ async def handle_facebook_event(
                 parts = message_text.split()
                 if len(parts) >= 2:
                     target_psid = parts[1].strip()
-                    if os.getenv("MIMI_ENGINE", "legacy").strip().lower() == "v2":
-                        from mimi_v2.production import get_production_engine
-                        await get_production_engine().store.resume(target_psid)
-                    else:
-                        await set_takeover_flag(target_psid, False)
+                    from mimi_v2.production import get_production_engine
+                    await get_production_engine().store.resume(target_psid)
                     
                     # Notify admin
                     await _send_messenger_message(sender, f"✅ Đã kích hoạt lại Bot cho học sinh {target_psid}.")

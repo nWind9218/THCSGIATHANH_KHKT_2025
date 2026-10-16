@@ -6,8 +6,6 @@ import os
 import asyncio
 import logging
 from dotenv import load_dotenv
-from langgraph.checkpoint.redis import AsyncRedisSaver
-from langgraph.checkpoint.base import BaseCheckpointSaver
 load_dotenv()
 
 SUPABASE_DB_URL = os.getenv("SUPABASE_DB_URL")
@@ -106,32 +104,7 @@ async def start_pooling():
         logger.info("✅ Pooling successfully (Supabase PostgreSQL + Redis)")
 
 
-async def get_redis_checkpointer():
-    """
-    PHƯƠNG PHÁP THỦ CÔNG: Tránh hoàn toàn lỗi 'decode' và 'surrogates'
-    """
-    # 1. Tạo client thô (Binary) - KHÔNG decode_responses
-    redis_url = resolve_redis_url()
-    storage_client = aioredis.from_url(
-        redis_url,
-        decode_responses=False,
-        socket_connect_timeout=5,
-        socket_timeout=10,
-        socket_keepalive=True,
-        health_check_interval=30,
-        retry=_redis_retry(),
-    )
 
-    # 2. Khởi tạo Saver mà không gọi __init__ tiêu chuẩn để tránh parse URL lại
-    saver = AsyncRedisSaver.__new__(AsyncRedisSaver)
-    
-    # 3. Gán trực tiếp client đã cấu hình vào thuộc tính nội bộ
-    saver._redis = storage_client
-    
-    # 4. Kích hoạt bộ Serializer (serde) của LangGraph thủ công
-    BaseCheckpointSaver.__init__(saver)
-    
-    return saver
 async def close_db_pools():
     """Đóng connection pools"""
     global pg_pool, redis_client, redis_checkpoint_client

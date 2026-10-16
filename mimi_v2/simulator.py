@@ -74,7 +74,7 @@ class FaultStore(InMemoryStore):
 
 def load_local_model_environment(path: str | Path = ".env") -> dict:
     """Copy only authorized model variables, never Facebook/DB/Redis credentials."""
-    allowed = {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL"}
+    allowed = {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY"}
     result = {key: os.environ[key] for key in allowed if os.environ.get(key)}
     if Path(path).is_file():
         from dotenv import dotenv_values
@@ -94,19 +94,20 @@ def make_engine(config: dict | None = None):
     if type(config.get("live", False)) is not bool:
         raise ValueError("live must be boolean")
     if config.get("live"):
-        from mimi_v2.models import ModelConfig, OpenAIModel
+        from mimi_v2.models import ModelConfig, OpenAIModel, resolve_endpoint
         env = load_local_model_environment()
-        if not env.get("OPENAI_API_KEY"):
-            raise ValueError("OPENAI_API_KEY required for explicit live mode")
+        base_url, key = resolve_endpoint(env)
+        if not key:
+            raise ValueError("API key required for explicit live mode")
         settings = ModelConfig.from_env(env).public_config()
         settings.update({k: v for k, v in config.items() if k not in {"live", "engine"}})
         model_config = ModelConfig(**settings)
-        model = OpenAIModel(model_config, api_key=env["OPENAI_API_KEY"])
+        model = OpenAIModel(model_config, api_key=key, base_url=base_url)
     else:
         model = OfflineModel()
     store = FaultStore()
     if config.get("engine") == "baseline":
-        from mimi_v2.baseline import BaselineEngine
+        from legacy.eval_tools.baseline import BaselineEngine
         return BaselineEngine(model, store)
     return CounselingEngine(model, store)
 
@@ -212,10 +213,10 @@ def main():
     parser = argparse.ArgumentParser(description="Local-only Gradio Messenger simulator")
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--api", choices=["responses", "chat_completions"], default="responses")
-    parser.add_argument("--model", default="gpt-5-mini")
+    parser.add_argument("--model", default=None, help="defaults to MIMI_V2_MODEL / OPENAI_CHAT_MODEL")
     parser.add_argument("--port", type=int, default=7860)
     args = parser.parse_args()
-    build_app({"live": args.live, "api": args.api, "model": args.model}).queue().launch(
+    build_app({"live": args.live, "api": args.api, **({"model": args.model} if args.model else {})}).queue().launch(
         server_name="127.0.0.1", server_port=args.port, share=False, show_error=False)
 
 

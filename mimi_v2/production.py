@@ -133,14 +133,12 @@ class ProductionStore:
 
     @bounded(NOTIFY_TIMEOUT)
     async def notify(self, user_id: str, text: str) -> bool:
-        # Independent attempts: a log failure must not prevent email or Pub/Sub.
-        from memory import log_emergency, send_emergency_email, publish_admin_alert
+        # Independent attempts: a log failure must not prevent the email.
+        from memory import log_emergency, send_emergency_email
         summary = f"Mimi v2 pending human review: {user_id}"
         outcomes = await asyncio.gather(
             log_emergency(user_id, summary),
             send_emergency_email(user_id, summary, text),
-            publish_admin_alert(user_id, {"type": "emergency", "status": "pending",
-                                          "summary": summary, "raw_message": text}),
             return_exceptions=True,
         )
         # Delivery means email API accepted a request, never a teacher acknowledgement.

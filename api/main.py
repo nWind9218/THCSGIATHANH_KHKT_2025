@@ -1,4 +1,4 @@
-"""FastAPI main application with WebSocket support for real-time counseling chatbot."""
+"""FastAPI application serving the Facebook Messenger webhook for the Mimi counseling bot."""
 
 import logging
 import os
@@ -7,8 +7,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
@@ -19,7 +18,6 @@ try:
         check_postgres_health,
         check_redis_health,
     )
-    from api.cors_config import get_cors_settings
 except ModuleNotFoundError:
     # Support direct execution from the api folder: python main.py
     project_root = Path(__file__).resolve().parents[1]
@@ -32,16 +30,9 @@ except ModuleNotFoundError:
         check_postgres_health,
         check_redis_health,
     )
-    from api.cors_config import get_cors_settings
 
 load_dotenv()
 logger = logging.getLogger(__name__)
-
-# WebSocket connection managers
-student_connections: dict[str, WebSocket] = {}  # user_id -> WebSocket
-teacher_connections: dict[str, WebSocket] = {}  # teacher_id -> WebSocket
-teacher_subscriptions: dict[str, set[str]] = {}  # teacher_id -> set of user_ids
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -65,24 +56,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Mimi Counseling Bot",
-    description="Real-time teen counseling chatbot with teacher supervision",
+    description="Teen counseling chatbot on Facebook Messenger with teacher handoff",
     version="1.0.0",
     lifespan=lifespan,
 )
-
-# Configure CORS from environment variables
-cors_settings = get_cors_settings()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_settings["allow_origins"],
-    allow_origin_regex=cors_settings["allow_origin_regex"],
-    allow_credentials=cors_settings["allow_credentials"],
-    allow_methods=cors_settings["allow_methods"],
-    allow_headers=cors_settings["allow_headers"],
-    expose_headers=cors_settings["expose_headers"],
-    max_age=cors_settings["max_age"],
-)
-
 
 @app.get("/health", tags=["Health"])
 async def health_check():
@@ -116,13 +93,8 @@ async def root():
     }
 
 
-# WebSocket and webhook endpoints imported from submodules
-from api.chat_ws import router as chat_router
-from api.admin_ws import router as admin_router
 from api.facebook_webhook import router as facebook_router
 
-app.include_router(chat_router, prefix="/ws", tags=["WebSocket"])
-app.include_router(admin_router, prefix="/ws/admin", tags=["Admin WebSocket"])
 app.include_router(facebook_router, tags=["Facebook Webhook"])
 
 

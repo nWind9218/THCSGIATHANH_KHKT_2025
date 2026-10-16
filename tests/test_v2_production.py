@@ -185,13 +185,10 @@ async def test_notify_independent_failures_and_delivery_is_not_human_acceptance(
     async def email(*args):
         attempts.append("email")
         return True
-    async def publish(*args):
-        attempts.append("publish")
-        raise RuntimeError("pubsub unavailable")
-    monkeypatch.setitem(sys.modules, "memory", SimpleNamespace(log_emergency=log, send_emergency_email=email, publish_admin_alert=publish))
+    monkeypatch.setitem(sys.modules, "memory", SimpleNamespace(log_emergency=log, send_emergency_email=email))
     redis = FakeRedis()
     assert await store_for(redis).notify("a", "test") is True
-    assert set(attempts) == {"log", "email", "publish"}
+    assert set(attempts) == {"log", "email"}
     assert redis.transactions == []
 
 

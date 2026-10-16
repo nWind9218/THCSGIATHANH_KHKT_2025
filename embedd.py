@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--csv",
-        default="design/student_case_dataset.csv",
+        default="legacy/design/student_case_dataset.csv",
         help="Path to source CSV file.",
     )
     parser.add_argument(
