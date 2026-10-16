@@ -20,6 +20,26 @@ class ModelError(Exception):
         super().__init__(code)
 
 
+OPENAI_BASE_URL = "https://api.openai.com/v1"
+# Student content and credentials may only go to an explicitly approved host.
+ALLOWED_BASE_URLS = {OPENAI_BASE_URL, "https://api.shineshop.dev/v1"}
+
+
+def resolve_endpoint(env: Mapping[str, str] | None = None) -> tuple[str, str | None]:
+    """Return (base_url, key). Default is OpenAI; ambient OPENAI_BASE_URL/proxy vars are ignored.
+
+    A custom MIMI_V2_BASE_URL must be on the allowlist and uses only MIMI_V2_API_KEY,
+    so the OpenAI key is never sent to another provider.
+    """
+    env = os.environ if env is None else env
+    base = (env.get("MIMI_V2_BASE_URL") or "").strip().rstrip("/") or OPENAI_BASE_URL
+    if base not in ALLOWED_BASE_URLS:
+        raise ModelError("unapproved_base_url")
+    if base == OPENAI_BASE_URL:
+        return base, env.get("OPENAI_API_KEY")
+    return base, env.get("MIMI_V2_API_KEY")
+
+
 def _capabilities(model: str) -> tuple[set[str], bool]:
     # Exact families also accept pinned snapshots; unknown models remain usable
     # with default parameters, but optional capabilities must be known.
@@ -48,6 +68,9 @@ def _supports_structured_output(model: str) -> bool:
     if re.fullmatch(r"gpt-5(?:\.[124])?(?:-(?:mini|nano|pro))?(?:-\d{4}-\d{2}-\d{2})?", model):
         return True
     if re.fullmatch(r"gpt-4\.1(?:-(?:mini|nano))?(?:-\d{4}-\d{2}-\d{2})?", model):
+        return True
+    # Verified against Shineshop /v1/responses with a strict json_schema probe.
+    if model == "gpt-5.6-luna":
         return True
     if model in {"gpt-4o", "gpt-4o-mini"} or model.startswith("gpt-4o-mini-"):
         return True
@@ -153,9 +176,10 @@ def _usage(value: Any) -> dict:
 
 class OpenAIModel:
     def __init__(self, config: ModelConfig | None = None, api_key: str | None = None, client: Any = None,
-                 usage_observer: Any = None):
+                 usage_observer: Any = None, base_url: str | None = None):
         self.config = config or ModelConfig.from_env()
         self._api_key = api_key
+        self._base_url = base_url
         self._client = client
         self._usage_observer = usage_observer
 
@@ -203,12 +227,16 @@ class OpenAIModel:
         try:
             if owned:
                 from openai import AsyncOpenAI
-                key = self._api_key or os.environ.get("OPENAI_API_KEY")
+                # Explicit allowlisted endpoint: ambient proxy/base-url variables
+                # cannot redirect student content or credentials elsewhere.
+                if self._base_url:
+                    base_url, env_key = resolve_endpoint({"MIMI_V2_BASE_URL": self._base_url, "MIMI_V2_API_KEY": self._api_key or "", "OPENAI_API_KEY": self._api_key or ""})
+                else:
+                    base_url, env_key = resolve_endpoint()
+                key = env_key if base_url != OPENAI_BASE_URL else (self._api_key or env_key)
                 if not key:
                     raise ModelError("missing_credential")
-                # Explicit canonical endpoint: ambient proxy/base-url variables
-                # cannot redirect student content or credentials elsewhere.
-                client = AsyncOpenAI(api_key=key, base_url="https://api.openai.com/v1", max_retries=0, timeout=self.config.timeout)
+                client = AsyncOpenAI(api_key=key, base_url=base_url, max_retries=0, timeout=self.config.timeout)
             kwargs = {"model": self.config.model, "store": False}
             if self.config.api == "responses":
                 kwargs.update(input=clean, max_output_tokens=self.config.max_output_tokens)

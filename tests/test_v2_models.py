@@ -171,7 +171,8 @@ async def test_sdk_dump_supported_and_client_close_errors_redacted(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_missing_key_no_request(monkeypatch):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    for name in ("OPENAI_API_KEY", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
     with pytest.raises(ModelError, match="missing_credential"):
         await OpenAIModel().complete([{ "role": "user", "content": "Hello"}])
 
@@ -273,3 +274,34 @@ async def test_provider_error_code_allowlist(provider_code, status, expected):
     assert error.value.code == expected
     assert error.value.status == status
     assert "sk-secret" not in repr(error.value)
+
+
+def test_endpoint_defaults_to_openai_and_ignores_ambient_base_url():
+    from mimi_v2.models import OPENAI_BASE_URL, resolve_endpoint
+    env = {"OPENAI_API_KEY": "sk-a", "OPENAI_BASE_URL": "https://evil.example/v1"}
+    assert resolve_endpoint(env) == (OPENAI_BASE_URL, "sk-a")
+
+
+def test_custom_endpoint_uses_only_its_own_key_and_allowlist():
+    from mimi_v2.models import resolve_endpoint
+    env = {"OPENAI_API_KEY": "sk-openai", "MIMI_V2_BASE_URL": "https://api.shineshop.dev/v1/"}
+    assert resolve_endpoint(env) == ("https://api.shineshop.dev/v1", None)
+    env["MIMI_V2_API_KEY"] = "shine-key"
+    assert resolve_endpoint(env) == ("https://api.shineshop.dev/v1", "shine-key")
+    with pytest.raises(ModelError, match="unapproved_base_url"):
+        resolve_endpoint({"MIMI_V2_BASE_URL": "https://evil.example/v1"})
+
+
+@pytest.mark.asyncio
+async def test_custom_endpoint_client_gets_shineshop_url_and_key(monkeypatch):
+    import openai
+    seen = {}
+    fake, _ = client(response())
+    fake.close = AsyncMock()
+    def factory(**kwargs):
+        seen.update(kwargs)
+        return fake
+    monkeypatch.setattr(openai, "AsyncOpenAI", factory)
+    monkeypatch.delenv("MIMI_V2_BASE_URL", raising=False)
+    await OpenAIModel(api_key="shine-key", base_url="https://api.shineshop.dev/v1").complete([{"role": "user", "content": "Hello"}])
+    assert seen["base_url"] == "https://api.shineshop.dev/v1" and seen["api_key"] == "shine-key"
