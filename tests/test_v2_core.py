@@ -90,7 +90,7 @@ async def test_all_risk_routes_pending_and_accepted_silence(risk, hint):
     engine = CounselingEngine(model, store)
     result = await engine.respond("a", "nguy cơ")
     assert result["handoff_status"] == "pending"
-    assert "chưa có xác nhận" in result["response"]
+    assert "Mình đang nhờ thầy cô" in result["response"]
     assert result["sources"] == {}
     assert len(store.alerts) == 1
     await engine.respond("a", "tiếp nối")

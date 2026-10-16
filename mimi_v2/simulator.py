@@ -74,7 +74,8 @@ class FaultStore(InMemoryStore):
 
 def load_local_model_environment(path: str | Path = ".env") -> dict:
     """Copy only authorized model variables, never Facebook/DB/Redis credentials."""
-    allowed = {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY"}
+    allowed = {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY", "MIMI_V2_MODEL", "MIMI_V2_API",
+               "MIMI_V2_REASONING_EFFORT", "MIMI_V2_VERBOSITY", "MIMI_V2_MAX_OUTPUT_TOKENS", "MIMI_V2_TIMEOUT"}
     result = {key: os.environ[key] for key in allowed if os.environ.get(key)}
     if Path(path).is_file():
         from dotenv import dotenv_values
@@ -87,7 +88,7 @@ def load_local_model_environment(path: str | Path = ".env") -> dict:
 
 def make_engine(config: dict | None = None):
     config = config or {}
-    if set(config) - {"live", "api", "model", "engine", "reasoning_effort", "verbosity", "max_output_tokens", "timeout"}:
+    if set(config) - {"live", "api", "model", "engine", "reasoning_effort", "verbosity", "max_output_tokens", "timeout", "routing"}:
         raise ValueError("Unknown engine configuration")
     if config.get("engine", "v2") not in {"v2", "baseline"}:
         raise ValueError("Unknown engine")
@@ -100,9 +101,13 @@ def make_engine(config: dict | None = None):
         if not key:
             raise ValueError("API key required for explicit live mode")
         settings = ModelConfig.from_env(env).public_config()
-        settings.update({k: v for k, v in config.items() if k not in {"live", "engine"}})
+        settings.update({k: v for k, v in config.items() if k not in {"live", "engine", "routing"}})
         model_config = ModelConfig(**settings)
-        model = OpenAIModel(model_config, api_key=key, base_url=base_url)
+        if config.get("routing") == "adaptive":
+            from mimi_v2.models import RoutedModel
+            model = RoutedModel.from_env(env, api_key=key, base_url=base_url)
+        else:
+            model = OpenAIModel(model_config, api_key=key, base_url=base_url)
     else:
         model = OfflineModel()
     store = FaultStore()

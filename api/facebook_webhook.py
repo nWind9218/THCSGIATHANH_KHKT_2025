@@ -7,6 +7,7 @@ import hmac
 import json
 import logging
 import os
+import time
 import uuid
 from typing import Any
 
@@ -134,6 +135,7 @@ async def handle_facebook_event(
     sender: str,
     message_text: str,
     suppress_delivery: bool = False,
+    received_at: float | None = None,
 ):
     """Asynchronous handler for Facebook events to avoid webhook timeouts."""
     try:
@@ -190,7 +192,9 @@ async def handle_facebook_event(
                 # If sender is not an admin, we just treat it as a normal message.
                 logger.warning(f"Unauthorized #resume attempt from {sender}")
 
+        handling_started = time.monotonic()
         response_text = await _process_message(sender, message_text)
+        engine_done = time.monotonic()
         if response_text:
             if suppress_delivery:
                 logger.info(
@@ -199,6 +203,15 @@ async def handle_facebook_event(
                 )
             else:
                 await _send_messenger_message(sender, response_text)
+        # Latency only; no ids or message text. engine_s includes lock, storage and model calls.
+        done = time.monotonic()
+        logger.info("[LATENCY] %s", json.dumps({
+            "queue_wait_s": round(handling_started - received_at, 3) if received_at is not None else None,
+            "engine_s": round(engine_done - handling_started, 3),
+            "send_s": round(done - engine_done, 3),
+            "end_to_end_s": round(done - received_at, 3) if received_at is not None else None,
+            "replied": bool(response_text) and not suppress_delivery,
+        }))
     except Exception:
         logger.exception(
             "Failed to process Messenger event for %s runtime_ctx=%s",
@@ -236,6 +249,7 @@ async def verify_webhook(request: Request):
 
 @router.post("/webhook/facebook")
 async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
+    received_at = time.monotonic()
     raw_body = await request.body()
     signature = request.headers.get("x-hub-signature-256")
     probe_requested = request.headers.get(E2E_PROBE_HEADER) == "1"
@@ -304,6 +318,7 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
                 sender,
                 message_text,
                 suppress_delivery,
+                received_at=received_at,
             )
             if _is_production_env():
                 logger.info(

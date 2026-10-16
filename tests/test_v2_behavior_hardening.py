@@ -91,7 +91,7 @@ async def test_listen_closing_conflict_never_bypasses_safety(risk, hint):
     engine = CounselingEngine(model, store)
     result = await engine.respond("synthetic", "Mình chỉ muốn được lắng nghe")
     assert result["handoff_status"] == "pending"
-    assert "chưa có xác nhận" in result["response_text"]
+    assert "Mình đang nhờ thầy cô" in result["response_text"]
     assert all(purpose != "reply" for purpose, _ in model.calls)
     await store.acknowledge("synthetic")
     before = len(model.calls)

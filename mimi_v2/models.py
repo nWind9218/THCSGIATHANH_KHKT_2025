@@ -6,7 +6,7 @@ import math
 import os
 import logging
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any, Mapping
 
 
@@ -59,6 +59,9 @@ def _capabilities(model: str) -> tuple[set[str], bool]:
         return {"none", "low", "medium", "high", "xhigh"}, True
     if model.startswith(("o3", "o4-mini")):
         return {"low", "medium", "high"}, False
+    if model == "gpt-5.6-luna":
+        # Reasoning levels listed on the Shineshop model catalog; verbosity not confirmed.
+        return {"none", "low", "medium", "high", "xhigh"}, False
     return set(), False
 
 
@@ -312,3 +315,62 @@ class OpenAIModel:
                     await client.close()
                 except Exception:
                     pass
+
+
+# Per-flow defaults measured on OpenAI: gpt-5.4-mini was both faster and at least as
+# accurate on safety as gpt-5-mini. Safety never drops below "low".
+ROUTE_DEFAULTS = {"safety": ("gpt-5.4-mini", "low"), "assessment": ("gpt-5.4-mini", "none"), "reply": ("gpt-5.4-mini", "low")}
+FALLBACK_DEFAULT = ("gpt-5-mini", "low")
+
+
+class RoutedModel:
+    """Opt-in adaptive router: one OpenAIModel per (flow, effort), same call interface.
+
+    The core passes `effort` (per-turn override) and `fallback` (second attempt after a
+    transient failure). Safety never falls back to a weaker model: it retries the same one.
+    """
+
+    routable = True
+
+    def __init__(self, base: ModelConfig | None = None, routes: Mapping[str, tuple[str, str | None]] | None = None,
+                 fallback: tuple[str, str | None] | None = FALLBACK_DEFAULT, api_key: str | None = None,
+                 client: Any = None, usage_observer: Any = None, base_url: str | None = None):
+        self.config = base or ModelConfig.from_env()
+        self._routes = dict(ROUTE_DEFAULTS if routes is None else routes)
+        self._fallback = fallback
+        self._kwargs = dict(api_key=api_key, client=client, usage_observer=usage_observer, base_url=base_url)
+        self._cache: dict[tuple, OpenAIModel] = {}
+        for purpose in self._routes:
+            self._config_for(purpose, None, False)  # fail at startup, not on a student's turn
+        if fallback is not None:
+            self._config_for("reply", None, True)
+
+    @classmethod
+    def from_env(cls, env: Mapping[str, str] | None = None, **kwargs) -> "RoutedModel":
+        env = os.environ if env is None else env
+        routes = {}
+        for purpose, (model, effort) in ROUTE_DEFAULTS.items():
+            key = purpose.upper()
+            routes[purpose] = (env.get(f"MIMI_V2_MODEL_{key}") or model, env.get(f"MIMI_V2_EFFORT_{key}") or effort)
+        fallback = (env.get("MIMI_V2_FALLBACK_MODEL") or FALLBACK_DEFAULT[0], env.get("MIMI_V2_FALLBACK_EFFORT") or FALLBACK_DEFAULT[1])
+        if (env.get("MIMI_V2_FALLBACK_MODEL") or "").lower() == "off":
+            fallback = None
+        return cls(ModelConfig.from_env(env), routes, fallback, **kwargs)
+
+    def _config_for(self, purpose: str, effort: str | None, fallback: bool) -> ModelConfig:
+        if fallback and purpose != "safety" and self._fallback is not None:
+            model, route_effort = self._fallback  # a per-turn effort is tuned for the primary model
+            effort = None
+        else:
+            model, route_effort = self._routes.get(purpose, (self.config.model, self.config.reasoning_effort))
+        return replace(self.config, model=model, reasoning_effort=effort or route_effort)
+
+    def _model_for(self, config: ModelConfig) -> OpenAIModel:
+        key = (config.model, config.reasoning_effort)
+        if key not in self._cache:
+            self._cache[key] = OpenAIModel(config, **self._kwargs)
+        return self._cache[key]
+
+    async def complete(self, messages: list[dict], purpose: str = "reply", effort: str | None = None,
+                       fallback: bool = False) -> ModelReply:
+        return await self._model_for(self._config_for(purpose, effort, fallback)).complete(messages, purpose=purpose)

@@ -90,10 +90,10 @@ def test_eval_error_and_human_review_accounting(tmp_path):
 def test_key_environment_whitelist(tmp_path, monkeypatch):
     path = tmp_path / ".env"
     path.write_text("OPENAI_API_KEY=test-key\nOPENAI_CHAT_MODEL=test-model\nFACEBOOK_PAGE_ACCESS_TOKEN=do-not-load\nREDIS_URL=do-not-load\n", encoding="utf-8")
-    for name in ("OPENAI_API_KEY", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY"):
+    for name in ("OPENAI_API_KEY", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY", "MIMI_V2_MODEL"):
         monkeypatch.delenv(name, raising=False)
     env = load_local_model_environment(path)
-    assert set(env) <= {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY"}
+    assert not {k for k in env if not k.startswith("MIMI_V2_")} - {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL"}
     assert env["OPENAI_API_KEY"] == "test-key"
     with pytest.raises(ValueError):
         make_engine({"facebook_token": "anything"})

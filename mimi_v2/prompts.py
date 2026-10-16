@@ -75,3 +75,15 @@ không muốn lời khuyên/câu hỏi là giới hạn hỗ trợ, không phả
 Chỉ chọn closing khi người dùng thực sự muốn dừng hoặc chào kết thúc; cảm ơn đơn
 thuần khi vẫn tiếp tục chia sẻ hoặc xin lắng nghe không đủ để chọn closing.
 safety_hint nâng mức cảnh báo khi ngữ cảnh tiết lộ nguy cơ. Không xuất suy luận nội bộ."""
+
+# Fixed handoff reply (previous Mimi version's wording, with the teachers' contact numbers).
+HANDOFF_MESSAGE = (
+    "Mình rất lo cho bạn khi nghe điều này. Bạn không đơn độc đâu nhé. "
+    "Nếu bạn cần được giúp đỡ ngay, hãy gọi cho các cô để được hỗ trợ trực tiếp:\n"
+    "📞 Cô Thúy: 0962186108\n"
+    "📞 Cô Trâm: 0915266338\n"
+    "Hoặc gọi Tổng đài Quốc gia 111 (miễn phí, 24/7). "
+)
+HANDOFF_REQUEST_SENT = "Mình đang nhờ thầy cô hỗ trợ bạn ngay bây giờ."
+# Never claim teachers were asked when the notification could not be delivered.
+HANDOFF_REQUEST_NOT_SENT = "Mình chưa gửi được yêu cầu tới thầy cô, nên bạn hãy gọi trực tiếp theo các số trên nhé."
