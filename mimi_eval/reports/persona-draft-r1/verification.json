@@ -1,0 +1,49 @@
+{
+  "revision": "persona-draft-r1",
+  "verified_at_utc": "2026-10-16T20:56:15.136268+00:00",
+  "python": "3.13.3",
+  "previous_eval_commit": "53060849bb764120a03816f4868a18ec2e403b25",
+  "source_manifest_sha256": "798e9198279fa95287840480516a583624c1b8eb95e4fe393788cf0159b8a1dd",
+  "unit_tests": {
+    "count": 146,
+    "failures_and_errors": 0,
+    "result": "PASS",
+    "command": ".\\.venv-local\\Scripts\\python.exe -m pytest -q tests/eval_v02 --junitxml=mimi_eval/reports/persona-draft-r1/pytest-final.xml"
+  },
+  "persona_draft": {
+    "scenarios": 17,
+    "illustrative_candidates": 51,
+    "facets": 6,
+    "flexible_tone_directions": 4,
+    "data_schema_and_evidence_integrity": "PASS",
+    "detailed_rubric_status": "PROPOSED_FOR_PRODUCT_REVIEW",
+    "human_annotations": "UNREVIEWED",
+    "persona_acceptance": "NOT_EVALUATED",
+    "semantic_accuracy": "NOT_EVALUATED",
+    "scorer_implemented": false
+  },
+  "existing_behavior_replay": {
+    "command": ".\\.venv-local\\Scripts\\python.exe -m mimi_eval.replay --offline --validate-only",
+    "cases": 79,
+    "scripted_expectation_mismatches": 0,
+    "result": "PASS_HARNESS_ONLY",
+    "unchanged_sources": [
+      "mimi_eval/validator.py",
+      "mimi_eval/contracts.py",
+      "mimi_eval/evidence.py",
+      "mimi_eval/rules.py",
+      "mimi_eval/replay.py",
+      "mimi_eval/prompts/mimi-judge-observer-prompt-v0.2.md",
+      "mimi_eval/fixtures/mimi-contrastive-suite-v0.2.json"
+    ]
+  },
+  "provider_calls": 0,
+  "database_calls": 0,
+  "runtime_changed": false,
+  "artifact_hashes": {
+    "mimi_eval/specs/source-manifest-v0.2.json": "798e9198279fa95287840480516a583624c1b8eb95e4fe393788cf0159b8a1dd",
+    "mimi_eval/reports/persona-draft-r1/source-manifest-before.json": "6fe5f0144f80b7c239f05bf567f0e372137423023b09fd0f6c1ccf7ba748de61",
+    "mimi_eval/reports/persona-draft-r1/source-manifest-after.json": "798e9198279fa95287840480516a583624c1b8eb95e4fe393788cf0159b8a1dd",
+    "mimi_eval/reports/persona-draft-r1/pytest-final.xml": "5376428080a6214446bf6c27c2fc898f0529f7eb99304256ea8c07725180857a"
+  }
+}

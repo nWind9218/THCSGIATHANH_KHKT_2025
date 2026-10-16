@@ -1,0 +1,53 @@
+{
+  "version": "mimi-offline-source-manifest-v0.2",
+  "base_commit": "48cc1f2994cc1891bd47d1d2d347f99a16d7d204",
+  "files": {
+    "mimi_eval/__init__.py": "a2afc5232905129f64f9ca74d1d4fe2acbb16cd2c6779012892bf5651c137d1e",
+    "mimi_eval/contracts/mimi-judge-contract-v0.2.schema.json": "ff03b856d33b753bbc71c2ffc6d880fb10914a13fe07c2838e39c8623f5bea45",
+    "mimi_eval/contracts/mimi-judge-input-v0.2.schema.json": "3f4da34ae878c0b25e297a34af225ffc14673afbc8d5dd5c82f29bb0c151f378",
+    "mimi_eval/contracts.py": "36fe6c331172962bc4461695b5ea3b495673f7e13b7ae2072fa70fd5ccda2c12",
+    "mimi_eval/evidence.py": "d5b112da66cb9928aeef1ed9c3f64ef875e5c9c7207067433364f4fb79613290",
+    "mimi_eval/fixtures/human-gold-template.v0.2.json": "1abb4cbbd7b334a48ef93ba2e46d7ba1c8dbe6a45f046b05dac442a1d075e3fa",
+    "mimi_eval/fixtures/mimi-contrastive-suite-v0.2.json": "11710bd025883f710b14fe9ed7ca77ffd7e94362b0f548631b0689221b12f531",
+    "mimi_eval/prompts/mimi-judge-observer-prompt-v0.2.md": "0f41bc8da22b225573bd65bfaa337707071b544bf7ab40449105740ceb510d6d",
+    "mimi_eval/README.md": "0522631699b2f415b021e1c8806a510b73b965b0d9601022ba37d0f91ef018d0",
+    "mimi_eval/replay.py": "151afd834c612d1729e6caae67239d1ce8d5401264d87d96321ba5ef04c7d19f",
+    "mimi_eval/reporting.py": "5fef43acf7254561142d740dacc57d3139e3a8f9d025b8e1f50603c619507bf1",
+    "mimi_eval/rules.py": "c7701966d5d1065ba84e3fff9032d92a63733c06e2a1d8937e57821efcfd2d38",
+    "mimi_eval/specs/audit-baseline.json": "73f68ffa5aebd943ca4a7edea67f984ac67e9e8b408fee0c119f0374505b47ac",
+    "mimi_eval/specs/decision-register-v0.2.json": "2fd7b36e3ef5eb79c2d3493ee0ea777ef92594172b6eadf83e87890e9051abb4",
+    "mimi_eval/specs/Design_Add-ins.md": "9d11b8b4dbc6842af4238e7d739555b1d47578042c00ed796174c888fb065d32",
+    "mimi_eval/specs/mimi-eval-validator-rules-v0.2.md": "0dedbfbc61852987069a51553134958a9216d7533a1c00f76aeddc60074dd433",
+    "mimi_eval/specs/mimi-q2-q3-annotation-guideline-v0.2.md": "39f680a55c7f0ab2a99431bba705325a48ec32861fb34ec03a7f25dad2340b0c",
+    "mimi_eval/specs/scope-approval.md": "5d268ed79d00bf63ea342d1a850e0b2e6960ee0cde7212bf2508faa23abf52de",
+    "mimi_eval/validator.py": "8fd0ae4ec8896f1aad56f6541a6c86106e3491a67ec2213adb73e49d8e235377",
+    "requirements_eval.txt": "809647825be6ca81541fc2e89c6077c8a29029241c6c3c98c57a1671a825ae5d",
+    "tests/eval_v02/conftest.py": "20104e597a1c495567e6567399c1c662ad7406cef8053208315101c06fe97fa9",
+    "tests/eval_v02/test_contracts.py": "67499a04bb80368643ae5376aa2b7508ff9629211b81fdd6da62efb5a2577dda",
+    "tests/eval_v02/test_evidence.py": "e585168ba9f38037ba313c9c5e6e310c0b85ca6cb2b57cf2780af6461553c581",
+    "tests/eval_v02/test_fixtures.py": "cc00e09f94635635b7f92d3914f7dd4c7d5ac09159ef4359cdf9a5744a479f16",
+    "tests/eval_v02/test_observer_prompt.py": "54162f6410271f6dbe321184302d46b0557f46d456c1af5c0ee66393e9de022c",
+    "tests/eval_v02/test_replay.py": "a3a08b329d07c1621f0f9cd7e72091ae5fe088eef0b035d697528b11e0b08a3d",
+    "tests/eval_v02/test_validator.py": "f6982e5f678272b821db4587780b8a1b724a244e9ae791fb07e6c429dc995832"
+  },
+  "dependencies": {
+    "jsonschema": "4.23.0",
+    "pytest": "9.0.3",
+    "attrs": "26.1.0",
+    "jsonschema-specifications": "2025.9.1",
+    "referencing": "0.37.0",
+    "rpds-py": "2026.9.1",
+    "colorama": "0.4.6",
+    "iniconfig": "2.3.1",
+    "packaging": "26.3",
+    "pluggy": "1.7.0",
+    "pygments": "2.21.0"
+  },
+  "excludes": [
+    "source manifest itself",
+    "generated reports/verification receipts",
+    "offline-handoff.md"
+  ],
+  "production_safety": "NOT_EVALUATED",
+  "source_hash_mode": "lf_utf8"
+}

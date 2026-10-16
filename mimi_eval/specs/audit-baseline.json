@@ -1,0 +1,180 @@
+{
+  "version": "audit-baseline-v0.2",
+  "head": "48cc1f2994cc1891bd47d1d2d347f99a16d7d204",
+  "base_branch": "codex/mimi-v2",
+  "runtime_under_test": "NONE_FROZEN_CANDIDATES_ONLY",
+  "main_checkout_has_uncommitted_changes": true,
+  "audit_manifest_sha256": "0420acc34f33a3f5a78460790a3b1d1afd5eda10eeed200129d2ce9384f17c61",
+  "source_attachment_sha256": "f408662e7db5d258c7a6c90cc21d8c26509d15cc45b0b02846136bf3380eae25",
+  "audit_sources": [
+    {
+      "path": "mimi_v2/__init__.py",
+      "sha256_bytes": "f6672690bfe0ff6936dda669f8371cc1e9c1a99f35a0833e4dd1ca08ccfa5dee"
+    },
+    {
+      "path": "mimi_v2/contracts.py",
+      "sha256_bytes": "84dec1b1627adc6083e03134f732fbf08b93a16f826dc3b6d64818ab7e7af0d1"
+    },
+    {
+      "path": "mimi_v2/core.py",
+      "sha256_bytes": "cb9c9e3e766243d7d0e82a3471a562f04586a1b57c05fcedeecd30888673830e"
+    },
+    {
+      "path": "mimi_v2/gradio_prod.py",
+      "sha256_bytes": "a93f4e04c7fe70f50b54d111229e42e59f355f9d6a14b4f4d6f0422a245fc547"
+    },
+    {
+      "path": "mimi_v2/models.py",
+      "sha256_bytes": "dceedc81eb6c28d933373432fac6a31bc83dac65b91d83df2221c52ced4ab204"
+    },
+    {
+      "path": "mimi_v2/production.py",
+      "sha256_bytes": "532ecf60ff601b78052c3145cef360daa0abc6bddb91daadda05bea855bc83ec"
+    },
+    {
+      "path": "mimi_v2/prompts.py",
+      "sha256_bytes": "7a78e41a7926b456dd18b99b9464dbb652a56f422757b824ceef0779ef01d9eb"
+    },
+    {
+      "path": "mimi_v2/simulator.py",
+      "sha256_bytes": "de4e3f1b1c20b98a4477eb2929113828610266c50936e547f487fab4902c6fdd"
+    },
+    {
+      "path": "mimi_v2/store.py",
+      "sha256_bytes": "e9ef2975ceb3f068ded4af8b5327c4ede7bf899820bca99d3ddf0f2ff9956e57"
+    },
+    {
+      "path": "mimi_v2/tracing.py",
+      "sha256_bytes": "09409c79e317146af1e7bd4cc1edfedf3057e23e843f88c3bf43dfbc00a64035"
+    },
+    {
+      "path": "api/__init__.py",
+      "sha256_bytes": "78806125c47ad391cf058f8ea711afd049ef7601373045a5ab6622c398c6aa2c"
+    },
+    {
+      "path": "api/facebook_webhook.py",
+      "sha256_bytes": "1a7261d1bd8b0e49632f418812e2c979551db523684fd4338d3333a46a316cf4"
+    },
+    {
+      "path": "api/main.py",
+      "sha256_bytes": "2fe5ccee73cab3c8a55cf7f748fd9c8266fccd13bf0e1fa737472ff9e9d95463"
+    },
+    {
+      "path": "memory/__init__.py",
+      "sha256_bytes": "aec2b6e337ecb086011754871cfb623ddecd073d58cd2c8fcd1a1870ebf5f9d5"
+    },
+    {
+      "path": "memory/supabase_client.py",
+      "sha256_bytes": "fdbadae5b6f8ff12131ffe134026d70856593958ed7fd6092a19ecb8b02fbb5b"
+    },
+    {
+      "path": "utils/database.py",
+      "sha256_bytes": "0b80ae58dc9075b78785df35abd797344097cdabe1abd2958fdb5918a98dd62a"
+    },
+    {
+      "path": "utils/embeddings.py",
+      "sha256_bytes": "21b136a276ec4795f90f4f2e6879845083b2382265131edd764949e1d60271ce"
+    },
+    {
+      "path": "tests/test_facebook_webhook_delivery.py",
+      "sha256_bytes": "55b9545a1fa484da613e004d2662060f9c466467fed93f0b079b93ec084beb45"
+    },
+    {
+      "path": "tests/test_resend_email_service.py",
+      "sha256_bytes": "121a8bff34e6f49983165d240e2ec9948af9c5ee4feb7665afa560670109db1e"
+    },
+    {
+      "path": "tests/test_v2_behavior_hardening.py",
+      "sha256_bytes": "7398fd64c1a9bc020b0fb526ee5255dae5eb7ebddabc8c7ed896453457f06bb1"
+    },
+    {
+      "path": "tests/test_v2_core.py",
+      "sha256_bytes": "bf903932382e7c2f3d7df2e8458805ece9646ed811a5b4850562d8e99df95eea"
+    },
+    {
+      "path": "tests/test_v2_gradio_prod.py",
+      "sha256_bytes": "4aac2876034b1f6e88ab584150df5e998de41f75cd3638d092dedaedd5600092"
+    },
+    {
+      "path": "tests/test_v2_messenger_routing.py",
+      "sha256_bytes": "b034308fa25151e6a52592ce415cc44e0873f19172c6d2c4f93c32c8d5444f09"
+    },
+    {
+      "path": "tests/test_v2_models.py",
+      "sha256_bytes": "5e3b2ed60e8c8b8c15c261ba70eaec9fe763ac99c7f3293e281bbfaba3fafefc"
+    },
+    {
+      "path": "tests/test_v2_parallel_screen.py",
+      "sha256_bytes": "f63bfb25888bdcb3dab23588d4fe58cb5f5081b12b94888174dfcbb3d9e83863"
+    },
+    {
+      "path": "tests/test_v2_production.py",
+      "sha256_bytes": "203462d899f9bb20fed351c8213494eb75aa59e3b06bd6d8dc36e440999e2d71"
+    },
+    {
+      "path": "tests/test_v2_routing.py",
+      "sha256_bytes": "85913a0156e6e761a8e1d6c9466a1a2c272e8fab49001681b175d5eb9751b883"
+    },
+    {
+      "path": "tests/test_v2_tracing.py",
+      "sha256_bytes": "3b3396a6b0483f842f79da18a9097bcc3fa90fa0745feceeaf1d5630da27aba7"
+    },
+    {
+      "path": "tests/test_v2_transient_retry.py",
+      "sha256_bytes": "b8172aa158a123613f53c39c6c1aec5569e737742a59f5877f7e46966dcc99fa"
+    },
+    {
+      "path": "legacy/eval_tools/__init__.py",
+      "sha256_bytes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy/eval_tools/assessment_preflight.py",
+      "sha256_bytes": "02c5cb83782ee9b9682226a54814b5f57e184f20309a3b6f555492402b2df66d"
+    },
+    {
+      "path": "legacy/eval_tools/baseline.py",
+      "sha256_bytes": "2cc6f7fa435775e4e0bc4c75802fc3322ff4d27a2e20f00672bd3877be4fd8b4"
+    },
+    {
+      "path": "legacy/eval_tools/batch_eval.py",
+      "sha256_bytes": "c67cf2a1e90687c2ddc777803a09ec902185a256d5d6106017381d9e75cea1aa"
+    },
+    {
+      "path": "legacy/eval_tools/datasets.py",
+      "sha256_bytes": "6a76ec2a1ac6acc3b3de9d0989999eae52ff5e33fa0771879c4d8260803224cb"
+    },
+    {
+      "path": "legacy/eval_tools/evaluation.py",
+      "sha256_bytes": "2789ac185bd590bccfb682a52906d7e894bd0700d56ace3a80beba7777065da8"
+    },
+    {
+      "path": "legacy/eval_tools/pilot.py",
+      "sha256_bytes": "cbcebd4a63eba6122fb7dbd92832a34c977d17564c9a9ea8e6cee114e72bcc06"
+    },
+    {
+      "path": "README.md",
+      "sha256_bytes": "2204a5f05b83e3dce13e88e7364a2c5e7bf6ea74a7a77cfd1c74f9073d04647d"
+    },
+    {
+      "path": "ARCHITECTURE.md",
+      "sha256_bytes": "c861557f0321bed2ca14f4a7404329acd31612538cb96ca6e91d2b8b7dd9620c"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256_bytes": "64814362a2f66a1dbdc7e9ba5baecf13a94aceea98c8929f659f70cace1e0f11"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256_bytes": "8dd1b43279effdb3c83dbed6b4c3e015dcb42bd8841a0b4ecaf4d817b1037423"
+    },
+    {
+      "path": "requirements_dev.txt",
+      "sha256_bytes": "545f9210ff3b9f3599c339af9b7696d37e8ddf9a3bf4b92550047fed20689408"
+    },
+    {
+      "path": "requirements_local.txt",
+      "sha256_bytes": "e6b25cddaa0c3d3d9a4950ed5f15a7f6f8898cda817ae3eb13e6370d1c669f5f"
+    }
+  ],
+  "note": "These are dirty-main-checkout audit hashes, NOT a claim that this isolated worktree contains those uncommitted runtime changes. No runtime is exercised by replay."
+}

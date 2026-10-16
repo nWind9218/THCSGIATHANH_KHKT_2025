@@ -1,0 +1,410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "mimi-persona-suite-draft-v0.2",
+      "type": "string"
+    },
+    "rubric_version": {
+      "const": "mimi-persona-draft-v0.2",
+      "type": "string"
+    },
+    "document_status": {
+      "const": "PROPOSED_FOR_PRODUCT_REVIEW",
+      "type": "string"
+    },
+    "human_gold_status": {
+      "const": "UNREVIEWED",
+      "type": "string"
+    },
+    "persona_acceptance": {
+      "const": "NOT_EVALUATED",
+      "type": "string"
+    },
+    "semantic_metrics": {
+      "const": "NOT_EVALUATED",
+      "type": "string"
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scenario"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "rubric_version",
+    "document_status",
+    "human_gold_status",
+    "persona_acceptance",
+    "semantic_metrics",
+    "scenarios"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "source": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "student",
+            "assistant"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "message_id",
+        "role",
+        "text",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "student",
+            "assistant",
+            "tool"
+          ]
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "message_id",
+        "source_sha256",
+        "role",
+        "quote",
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    },
+    "score": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P6"
+          ]
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "applicability_note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "code",
+        "range",
+        "rationale",
+        "applicability_note",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "pattern": "^MP[0-9]{2}-C[1-3]$"
+        },
+        "style_variant": {
+          "type": "string",
+          "enum": [
+            "balanced",
+            "underengaged",
+            "overperformed",
+            "natural_alternative",
+            "formulaic",
+            "context_mismatch",
+            "preference_ignored",
+            "identity_fabrication",
+            "dependency_claim"
+          ]
+        },
+        "response": {
+          "$ref": "#/$defs/source"
+        },
+        "draft_scores": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/score"
+          },
+          "minItems": 1
+        },
+        "policy_review_tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "HONESTY_REVIEW",
+              "RELATIONSHIP_POLICY_REVIEW"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "example_status": {
+          "const": "ILLUSTRATIVE_NOT_CANONICAL",
+          "type": "string"
+        },
+        "human_adjudication": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "const": "UNREVIEWED",
+              "type": "string"
+            },
+            "reviewers": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "maxItems": 0
+            },
+            "adjudication_reason": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "status",
+            "reviewers",
+            "adjudication_reason"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "case_id",
+        "style_variant",
+        "response",
+        "draft_scores",
+        "policy_review_tags",
+        "example_status",
+        "human_adjudication"
+      ],
+      "additionalProperties": false
+    },
+    "scenario": {
+      "type": "object",
+      "properties": {
+        "scenario_id": {
+          "type": "string",
+          "pattern": "^MP[0-9]{2}$"
+        },
+        "family_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "split": {
+          "type": "string",
+          "enum": [
+            "calibration",
+            "held_out"
+          ]
+        },
+        "persona_focus": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "P1",
+              "P2",
+              "P3",
+              "P4",
+              "P5",
+              "P6"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          }
+        },
+        "target_user_message": {
+          "$ref": "#/$defs/source"
+        },
+        "behavior_controls": {
+          "type": "object",
+          "properties": {
+            "support_mode": {
+              "type": "string",
+              "enum": [
+                "greet",
+                "celebrate",
+                "listen",
+                "advice",
+                "identity",
+                "relational",
+                "closing",
+                "banter",
+                "encourage"
+              ]
+            },
+            "listen_only": {
+              "type": "boolean"
+            },
+            "no_questions": {
+              "type": "boolean"
+            },
+            "advice_requested": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "support_mode",
+            "listen_only",
+            "no_questions",
+            "advice_requested",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "review_notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/candidate"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "tone_context": {
+          "type": "object",
+          "properties": {
+            "appropriate_modes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "subtle_playful",
+                  "mischievous_playful",
+                  "gentle_warm",
+                  "energetic_encouraging"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "annotation_status": {
+              "const": "PROPOSED_UNREVIEWED_NOT_ROUTER_GOLD",
+              "type": "string"
+            }
+          },
+          "required": [
+            "appropriate_modes",
+            "reason",
+            "annotation_status"
+          ],
+          "additionalProperties": false
+        },
+        "completeness": {
+          "type": "object",
+          "properties": {
+            "history_complete_for_voice_assessment": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "history_complete_for_voice_assessment"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "scenario_id",
+        "family_id",
+        "split",
+        "persona_focus",
+        "context",
+        "target_user_message",
+        "behavior_controls",
+        "review_notes",
+        "candidates",
+        "tone_context",
+        "completeness"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

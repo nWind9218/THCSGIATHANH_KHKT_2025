@@ -1,0 +1,22 @@
+{
+  "cases": 79,
+  "verdict_counts": {
+    "PASS": 33,
+    "FAIL": 28,
+    "NEEDS_REVIEW": 15,
+    "INVALID": 3
+  },
+  "technical_failures": 1,
+  "quality_failures": 14,
+  "need_compliance_failures": 11,
+  "invalid_observations": 2,
+  "scripted_expectation_mismatches": 0,
+  "human_gold_status": "UNREVIEWED",
+  "semantic_agreement": "NOT_EVALUATED",
+  "persona_acceptance": "NOT_EVALUATED",
+  "false_pass_rate": "NOT_EVALUATED",
+  "safety_calibration": "NOT_EVALUATED",
+  "medium_high_comparison": "NOT_EVALUATED",
+  "provider_calls": 0,
+  "production_readiness": "NOT_EVALUATED"
+}
