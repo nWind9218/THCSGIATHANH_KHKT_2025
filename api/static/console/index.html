@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Mimi · Bàn hỗ trợ thầy cô</title>
+<link rel="stylesheet" href="/console/static/console.css">
+</head>
+<body>
+
+<!-- Màn hình đăng nhập -->
+<main id="login-view" class="login-view" hidden>
+  <form id="login-form" class="login-card" autocomplete="on">
+    <h1>Mimi · Bàn hỗ trợ thầy cô</h1>
+    <p class="muted">Đăng nhập để xem và trả lời tin nhắn của học sinh.</p>
+    <label for="login-user">Tên đăng nhập</label>
+    <input id="login-user" name="username" type="text" autocomplete="username" required>
+    <label for="login-pass">Mật khẩu</label>
+    <input id="login-pass" name="password" type="password" autocomplete="current-password" required>
+    <p id="login-error" class="form-error" role="alert" hidden></p>
+    <button id="login-btn" type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+  </form>
+</main>
+
+<!-- Console bị tắt (503) -->
+<main id="disabled-view" class="login-view" hidden>
+  <div class="login-card">
+    <h1>Bàn hỗ trợ chưa sẵn sàng</h1>
+    <p id="disabled-text" class="muted"></p>
+  </div>
+</main>
+
+<!-- Ứng dụng chính -->
+<div id="app-view" class="app" hidden>
+  <header class="topbar">
+    <h1 class="brand">Mimi <span class="brand-sub">· Bàn hỗ trợ thầy cô</span></h1>
+    <div class="topbar-right">
+      <span id="conn" class="conn conn-off" role="status"><span class="dot" aria-hidden="true">●</span> <span id="conn-text">Đang kết nối lại…</span></span>
+      <button id="notify-btn" class="btn btn-quiet" type="button" hidden>Bật thông báo</button>
+      <button id="sound-btn" class="btn btn-quiet" type="button" aria-pressed="true" title="Bật/tắt âm báo">🔔</button>
+      <span id="me-name" class="me-name"></span>
+      <button id="logout-btn" class="btn btn-quiet" type="button">Đăng xuất</button>
+    </div>
+  </header>
+
+  <div id="layout" class="layout show-list">
+    <aside class="list-col" aria-label="Danh sách cuộc trò chuyện">
+      <div id="tabs" class="tabs" role="tablist" aria-label="Lọc cuộc trò chuyện"></div>
+      <ul id="conv-list" class="conv-list"></ul>
+      <p id="list-empty" class="empty" hidden></p>
+    </aside>
+
+    <section class="thread-col" aria-label="Cuộc trò chuyện">
+      <div id="no-select" class="empty empty-big">Chọn một cuộc trò chuyện ở bên trái</div>
+      <div id="thread-view" class="thread-view" hidden>
+        <div class="thread-head">
+          <button id="back-btn" class="btn btn-quiet back-btn" type="button">← Danh sách</button>
+          <div class="head-main">
+            <div class="head-name">
+              <h2 id="head-title"></h2>
+              <button id="alias-btn" class="btn btn-quiet" type="button">✏️ Đặt tên gợi nhớ</button>
+              <form id="alias-form" class="alias-form" hidden>
+                <label for="alias-input" class="sr-only">Tên gợi nhớ</label>
+                <input id="alias-input" type="text" maxlength="60" placeholder="Ví dụ: Bạn lớp 8A">
+                <button class="btn btn-primary" type="submit">Lưu</button>
+                <button id="alias-cancel" class="btn" type="button">Hủy</button>
+              </form>
+            </div>
+            <div class="head-meta">
+              <span id="head-badge"></span>
+              <span id="head-window" class="muted"></span>
+            </div>
+          </div>
+        </div>
+
+        <div id="banner" class="banner">
+          <p id="banner-text"></p>
+          <button id="action-btn" class="btn" type="button"></button>
+        </div>
+
+        <div id="messages" class="messages" tabindex="0" aria-label="Tin nhắn" aria-live="polite"></div>
+
+        <form id="composer" class="composer">
+          <label for="composer-text" class="sr-only">Nội dung tin nhắn</label>
+          <textarea id="composer-text" rows="2" maxlength="4000" placeholder="Nhập tin nhắn cho học sinh…"></textarea>
+          <div class="composer-row">
+            <span id="composer-note" class="muted composer-note"></span>
+            <span id="counter" class="muted">0/4000</span>
+            <button id="send-btn" class="btn btn-primary" type="submit">Gửi</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
+
+<dialog id="resume-dialog" class="dialog">
+  <form method="dialog" id="resume-form">
+    <h2>Trả lại cuộc trò chuyện cho Mimi?</h2>
+    <p>Mimi sẽ tiếp tục trả lời học sinh này.</p>
+    <label class="check"><input id="resume-greet" type="checkbox" checked> Gửi lời nhắn “Mimi đã quay trở lại…” cho học sinh</label>
+    <div class="dialog-actions">
+      <button id="resume-cancel" class="btn" type="button">Hủy</button>
+      <button id="resume-ok" class="btn btn-primary" type="submit" value="ok">Trả lại cho Mimi</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+<script src="/console/static/console.js"></script>
+</body>
+</html>

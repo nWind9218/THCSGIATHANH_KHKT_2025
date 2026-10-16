@@ -157,6 +157,13 @@ class ProductionStore:
             session["handoff_status"] = "accepted"
             await self._write(user_id, session, takeover=True)
 
+    async def takeover(self, user_id: str) -> None:
+        """Human takeover from any state (teacher console); idempotent."""
+        async with self.conversation_lock(user_id):
+            session = await self.load(user_id)
+            session["handoff_status"] = "accepted"
+            await self._write(user_id, session, takeover=True)
+
     async def resume(self, user_id: str) -> None:
         async with self.conversation_lock(user_id):
             session = await self.load(user_id)

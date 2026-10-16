@@ -8,7 +8,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 try:
@@ -97,6 +98,23 @@ async def root():
 from api.facebook_webhook import router as facebook_router
 
 app.include_router(facebook_router, tags=["Facebook Webhook"])
+
+from api.teacher_console import router as console_router
+
+CONSOLE_STATIC_DIR = Path(__file__).resolve().parent / "static" / "console"
+
+app.include_router(console_router)
+app.mount("/console/static", StaticFiles(directory=CONSOLE_STATIC_DIR, check_dir=False), name="console-static")
+
+
+@app.get("/console", include_in_schema=False)
+@app.get("/console/", include_in_schema=False)
+async def console_page():
+    """Teacher console single page; the page itself calls /console/api/me to decide whether to show login."""
+    index = CONSOLE_STATIC_DIR / "index.html"
+    if not index.is_file():
+        return JSONResponse(status_code=404, content={"detail": "Bàn hỗ trợ chưa có giao diện"})
+    return FileResponse(index, media_type="text/html", headers={"Cache-Control": "no-cache"})
 
 
 if __name__ == "__main__":
