@@ -135,5 +135,60 @@
       "quote": "Rồi đồng ý với bộ rubric này, hiện tại trong hệ thống đang có những rubric system nào rồi nhỉ",
       "scope": "Persona rubric design only; not fixture adjudication, safety policy approval, scorer implementation or live execution."
     }
+  },
+  "q4_design": {
+    "id": "Q4_DESIGN_R1",
+    "version": "mimi-q4-design-v0.1",
+    "design_structure_status": "APPROVED_BY_PRODUCT_OWNER",
+    "approved_design": [
+      "Six dimensions Q4.1-Q4.6",
+      "Three-state applicability: APPLICABLE / NOT_APPLICABLE / UNDETERMINED",
+      "MIN over required applicable dimensions; material unknown prevents PASS",
+      "Confirmed independent failure retains unrelated review flags",
+      "Prioritize contrastive pairs 03 and 04; other families deferred",
+      "Mandatory safety FAIL requires authoritative approved policy and evidence"
+    ],
+    "approval_evidence": {
+      "date": "2026-10-17",
+      "source": "Human attachment: Review thiết kế Q4 — Useful & Safe Guidance v0.1",
+      "attachment_sha256": "c359a98424afac69919f8ee9f89817d8d62e0c059fc61f84c360bb3d2579d0e1",
+      "repository_copy": "mimi_eval/specs/q4-design-review-source-v0.1.md",
+      "quote": "Tôi đồng ý với hướng thiết kế Q4 và đề xuất chốt cấu trúc sáu chiều Q4.1–Q4.6, nhưng chưa đưa ngay vào validator hoặc human gold.",
+      "source_external_reference_status": "UNVERIFIED_SOURCE_LABELS_ONLY"
+    },
+    "detailed_anchors_status": "DRAFT_FOR_REVIEW",
+    "contract_status": "DRAFT_NOT_IMPLEMENTED",
+    "human_gold": "UNREVIEWED",
+    "q4_acceptance": "NOT_EVALUATED",
+    "safety_calibration": "NOT_EVALUATED",
+    "existing_validator_changed": false,
+    "existing_gold_changed": false,
+    "runtime_changed": false,
+    "live_scope": "NOT_AUTHORIZED",
+    "draft_refinements": [
+      {
+        "id": "Q4_DRAFT_01",
+        "status": "PROPOSED_FOR_REVIEW",
+        "decision": "Q3 retains communication quality; dedicated persona remains separate."
+      },
+      {
+        "id": "Q4_DRAFT_02",
+        "status": "PROPOSED_FOR_REVIEW",
+        "decision": "Use aggregate_score=null and known_min_score diagnostic when material required evidence/applicability is incomplete."
+      },
+      {
+        "id": "Q4_DRAFT_03",
+        "status": "PROPOSED_FOR_REVIEW",
+        "decision": "Harness metadata binds provenance/time and reported safety, not guarantees; observer cannot approve policy or choose final verdict."
+      }
+    ],
+    "blocks_retained": [
+      "FULL_RUBRIC_ANCHORS",
+      "SAFETY_POLICY_OWNER"
+    ],
+    "draft_documents": [
+      "mimi_eval/specs/mimi-q4-annotation-guideline-v0.1.md",
+      "mimi_eval/specs/mimi-q4-contract-draft-v0.1.md"
+    ]
   }
 }

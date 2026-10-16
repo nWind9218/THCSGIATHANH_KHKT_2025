@@ -2,7 +2,7 @@
   "version": "mimi-offline-source-manifest-v0.2",
   "base_commit": "48cc1f2994cc1891bd47d1d2d347f99a16d7d204",
   "files": {
-    "mimi_eval/README.md": "f731b2cf18c4d91adad4b6afe740dc7b380987e46a0ea96ae720d381508287ec",
+    "mimi_eval/README.md": "3dac717d9fede6f818a051f38c5486d4ef9ab84ee8d38c3c8b38747983320db7",
     "mimi_eval/__init__.py": "a2afc5232905129f64f9ca74d1d4fe2acbb16cd2c6779012892bf5651c137d1e",
     "mimi_eval/contracts.py": "36fe6c331172962bc4461695b5ea3b495673f7e13b7ae2072fa70fd5ccda2c12",
     "mimi_eval/contracts/mimi-judge-contract-v0.2.schema.json": "ff03b856d33b753bbc71c2ffc6d880fb10914a13fe07c2838e39c8623f5bea45",
@@ -19,12 +19,15 @@
     "mimi_eval/rules.py": "c7701966d5d1065ba84e3fff9032d92a63733c06e2a1d8937e57821efcfd2d38",
     "mimi_eval/specs/Design_Add-ins.md": "721ca16754cfa146a3e908107e5aff5bd2a2ae8e087dcee6a5614044c22b5e52",
     "mimi_eval/specs/audit-baseline.json": "73f68ffa5aebd943ca4a7edea67f984ac67e9e8b408fee0c119f0374505b47ac",
-    "mimi_eval/specs/decision-register-v0.2.json": "13160fb3f42fa1cad0146ee88e5018426fe78d5914ff0b6af343a16a311c4d65",
+    "mimi_eval/specs/decision-register-v0.2.json": "d74434ffba127c404100a01cb95e171da9d23faf1fbd81e5f7ec60edb0c8a720",
     "mimi_eval/specs/mimi-eval-validator-rules-v0.2.md": "38afa3def442cb80b4d9cb722cf6a105e0ec823bbc760417f8cdc88f5be03380",
     "mimi_eval/specs/mimi-persona-rubric-v0.2.json": "f4e776496526b8d0ec2b90007962b251d03a6613773f34d41e2e8cd46525295a",
     "mimi_eval/specs/mimi-persona-rubric-v0.2.md": "205d673e0163cff8f112306a9241e0e1ce519777e9a1bdca4ff7454de81e9f58",
     "mimi_eval/specs/mimi-q2-q3-annotation-guideline-v0.2.md": "24839caf977075ebccc377e31da6bb59d46353174d2a437fdff6fc19b98ec9b6",
-    "mimi_eval/specs/rubric-inventory-v0.2.md": "33192e454805d12886e4993a8f126264613b611a6a3979f8dce9896516ec538c",
+    "mimi_eval/specs/mimi-q4-annotation-guideline-v0.1.md": "5abb95d91a3671ebf0044e52e225a0405b0d03036e38b0c54a91b118d149ea8e",
+    "mimi_eval/specs/mimi-q4-contract-draft-v0.1.md": "1a753da2682f9e1efc5a80677b6bcea635b4ee506c5e1b0a60762db8801ee8f0",
+    "mimi_eval/specs/q4-design-review-source-v0.1.md": "b8fcb31302b0dea1c860413e09852e855b85bd8df1c321fb4d36fef101ce053f",
+    "mimi_eval/specs/rubric-inventory-v0.2.md": "71a44488607dad632f531cd7a54bfcb14ab452acc48a6f14ae5c7049d4f0e53c",
     "mimi_eval/specs/scope-approval.md": "5d268ed79d00bf63ea342d1a850e0b2e6960ee0cde7212bf2508faa23abf52de",
     "mimi_eval/specs/student-perspective-review-v0.2.md": "fcd43ea3f06d1655890cc132fa12281b5cb992ddc379ad50465ff1ff633f3c5a",
     "mimi_eval/validator.py": "8fd0ae4ec8896f1aad56f6541a6c86106e3491a67ec2213adb73e49d8e235377",
@@ -65,5 +68,8 @@
   "persona_revision": "persona-draft-r1",
   "persona_approval_revision": "persona-approved-r1",
   "approval_parent_commit": "c7ff9f5c18db0d0d4fb99dd202de2afc035b07f2",
-  "approval_previous_manifest_sha256": "798e9198279fa95287840480516a583624c1b8eb95e4fe393788cf0159b8a1dd"
+  "approval_previous_manifest_sha256": "798e9198279fa95287840480516a583624c1b8eb95e4fe393788cf0159b8a1dd",
+  "q4_design_revision": "q4-design-r1",
+  "q4_design_parent_commit": "66adc4762274952d8f45aaeff7322a16829c54e0",
+  "q4_previous_manifest_sha256": "be16ea2d31c5783c2260fec2e01595f622f06076ec306e4a8305eeb93861ad2d"
 }

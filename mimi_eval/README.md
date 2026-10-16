@@ -46,7 +46,7 @@ Validation receipts under reports/persona-draft-r1/ cover draft structure, sourc
 
 - Deterministic evidence integrity does not prove semantic correctness; wrong but literal interpretations remain possible until human calibration.
 - Authoritative safety/privacy policy version and qualified owner are not supplied. Safety exception proof is simulated only. Unapproved policy claims review.
-- Detailed Q1/Q4/Q5/Q6 baseline score anchors are unavailable: full-rubric PASS is blocked rather than invented.
+- Q1/Q5/Q6 detailed anchors remain unavailable. Q4 now has approved design structure but detailed anchors/contract are review-only drafts, not executable acceptance. FULL_RUBRIC_ANCHORS remains blocked; existing validator rules are unchanged.
 - Router comparisons are fixture expectations, not production router calibration. Frozen replay does not exercise the dirty runtime changes audited in the main checkout.
 - Model contract is simulated configuration only: gpt-5.6-terra / Responses / standard / medium, high for approved comparison. No effective model/effort is claimed; provider_calls=0.
 - P4 proposal: separately approve exact Promptfoo pin/bridge preserving four verdicts; credential/endpoint/entitlement; physical-attempt ledger with shared request/USD ceilings; Terra adapter mocks, followed by separately authorized live smoke. Do not transition phases automatically.
@@ -54,3 +54,5 @@ Validation receipts under reports/persona-draft-r1/ cover draft structure, sourc
 Rollback: revert the dedicated eval PR only (mimi_eval/, tests/eval_v02/, requirements_eval.txt). No runtime, generator prompt, shared schema or database migration is part of this PR.
 
 Product approval recorded on 2026-10-17 in the rubric and decision registry. Approval covers rubric design, not illustrative scores, human gold or persona acceptance. Approval revision receipts: reports/persona-approved-r1/. Current rubric inventory: specs/rubric-inventory-v0.2.md. Historical draft receipts remain unchanged.
+
+Q4 design review r1: `specs/mimi-q4-annotation-guideline-v0.1.md` and `specs/mimi-q4-contract-draft-v0.1.md` capture the approved structure and proposed detailed anchors/ownership. Exact user review is retained as `specs/q4-design-review-source-v0.1.md`. Prioritize pairs 03/04; no executable Q4 schema/scorer, fixture/gold changes or safety policy approval. Receipts: `reports/q4-design-r1/`.
