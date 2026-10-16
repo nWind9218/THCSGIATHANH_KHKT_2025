@@ -90,10 +90,10 @@ def test_eval_error_and_human_review_accounting(tmp_path):
 def test_key_environment_whitelist(tmp_path, monkeypatch):
     path = tmp_path / ".env"
     path.write_text("OPENAI_API_KEY=test-key\nOPENAI_CHAT_MODEL=test-model\nFACEBOOK_PAGE_ACCESS_TOKEN=do-not-load\nREDIS_URL=do-not-load\n", encoding="utf-8")
-    for name in ("OPENAI_API_KEY", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY"):
+    for name in ("OPENAI_API_KEY", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY", "MIMI_V2_MODEL"):
         monkeypatch.delenv(name, raising=False)
     env = load_local_model_environment(path)
-    assert set(env) <= {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY"}
+    assert not {k for k in env if not k.startswith("MIMI_V2_")} - {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL"}
     assert env["OPENAI_API_KEY"] == "test-key"
     with pytest.raises(ValueError):
         make_engine({"facebook_token": "anything"})
@@ -172,3 +172,13 @@ def test_diagnostics_failure_cannot_be_human_approved():
     ratings["ratings"][0].update(verdict="pass", reviewer="Teacher")
     apply_reviews(job, ratings)
     assert job["summary"]["error"] == 1 and job["summary"]["pass"] == 0
+
+
+def test_grading_ignores_first_turn_greeting():
+    from legacy.eval_tools.evaluation import check_turn, reply_text
+    from mimi_v2.prompts import GREETING_MESSAGE
+    result = {"response_parts": [GREETING_MESSAGE, "Mình nghe bạn nè."]}
+    result["response_text"] = "\n\n".join(result["response_parts"])
+    assert reply_text(result) == "Mình nghe bạn nè."
+    checks = check_turn(result, {"max_chars": 40, "not_contains": [GREETING_MESSAGE[:10]], "contains": ["nghe"]})
+    assert checks and all(c["passed"] for c in checks), checks

@@ -32,6 +32,7 @@ except ModuleNotFoundError:
     )
 
 load_dotenv()
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "info").upper(), format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager

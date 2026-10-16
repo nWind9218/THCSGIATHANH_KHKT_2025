@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import os
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from functools import wraps
+from time import perf_counter
 
 
 IO_TIMEOUT = 10.0
@@ -105,15 +107,18 @@ class ProductionStore:
     async def search(self, user_id: str, query: str) -> dict:
         from utils.database import get_pg_connection, fetchall
         from utils.embeddings import embed_text, vector_literal
+        started = perf_counter()
         await get_pg_connection()
         vector = vector_literal(await embed_text(query))
+        embedded = perf_counter()
         queries = [
             ("psychology", "SELECT id, content, source_url, 1-(embedding <=> $1::vector) AS similarity FROM psychology_kb WHERE 1-(embedding <=> $1::vector) >= $2 ORDER BY embedding <=> $1::vector LIMIT 3", (vector, self.min_similarity)),
             ("student_knowledge", "SELECT id, user_intent, response_mode, should_do, should_not_do, sample_responses, 1-(embedding <=> $1::vector) AS similarity FROM student_knowledge WHERE 1-(embedding <=> $1::vector) >= $2 ORDER BY embedding <=> $1::vector LIMIT 3", (vector, self.min_similarity)),
             ("user_memory", "SELECT id, content, 1-(embedding <=> $1::vector) AS similarity FROM user_memory_kb WHERE user_id=$2 AND 1-(embedding <=> $1::vector) >= $3 ORDER BY embedding <=> $1::vector LIMIT 3", (vector, user_id, self.min_similarity)),
         ]
         values = await asyncio.gather(*(fetchall(sql, *args) for _, sql, args in queries), return_exceptions=True)
-        result = {"psychology": "", "student_knowledge": "", "user_memory": "", "sources": [], "errors": []}
+        result = {"psychology": "", "student_knowledge": "", "user_memory": "", "sources": [], "errors": [],
+                  "_timings": {"embed_s": round(embedded - started, 3), "sql_s": round(perf_counter() - embedded, 3)}}
         for (kind, _, _), rows in zip(queries, values):
             if isinstance(rows, BaseException):
                 result["errors"].append(f"{kind}_unavailable")
@@ -167,9 +172,12 @@ def get_production_engine():
     global _engine
     if _engine is None:
         from .core import CounselingEngine
-        from .models import OpenAIModel, ModelConfig, ModelError
+        from .models import OpenAIModel, ModelConfig, ModelError, RoutedModel
         config = ModelConfig.from_env()
         if config.timeout > MODEL_TIMEOUT_LIMIT:
             raise ModelError("production_timeout_exceeds_lease_budget")
-        _engine = CounselingEngine(OpenAIModel(config), ProductionStore())
+        # Opt-in: MIMI_V2_ROUTING=adaptive picks model/effort per flow (see models.RoutedModel).
+        adaptive = os.environ.get("MIMI_V2_ROUTING", "").strip().lower() == "adaptive"
+        model = RoutedModel.from_env() if adaptive else OpenAIModel(config)
+        _engine = CounselingEngine(model, ProductionStore())
     return _engine

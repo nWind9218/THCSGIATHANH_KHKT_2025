@@ -10,17 +10,17 @@ import mimi_v2.production as production
 
 @pytest.mark.asyncio
 async def test_webhook_calls_shared_v2_engine(monkeypatch):
-    engine = SimpleNamespace(respond=AsyncMock(return_value={"response_text": "v2"}))
+    engine = SimpleNamespace(respond=AsyncMock(return_value={"response_text": "v2", "response_parts": ["greeting", "v2"]}))
     monkeypatch.setattr(production, "get_production_engine", lambda: engine)
-    assert await webhook._process_message("local", "hello") == "v2"
+    assert await webhook._process_message("local", "hello") == ["greeting", "v2"]
     engine.respond.assert_awaited_once_with("local", "hello")
 
 
 @pytest.mark.asyncio
 async def test_accepted_takeover_stays_silent(monkeypatch):
-    engine = SimpleNamespace(respond=AsyncMock(return_value={"response_text": "", "handoff_status": "accepted"}))
+    engine = SimpleNamespace(respond=AsyncMock(return_value={"response_text": "", "response_parts": [], "handoff_status": "accepted"}))
     monkeypatch.setattr(production, "get_production_engine", lambda: engine)
-    assert await webhook._process_message("local", "hello") == ""
+    assert await webhook._process_message("local", "hello") == []
 
 
 @pytest.mark.asyncio
@@ -29,7 +29,7 @@ async def test_accept_only_authorized_admin(monkeypatch):
     acknowledge = AsyncMock()
     engine = SimpleNamespace(store=SimpleNamespace(acknowledge=acknowledge))
     monkeypatch.setattr(production, "get_production_engine", lambda: engine)
-    process = AsyncMock(return_value="ordinary")
+    process = AsyncMock(return_value=["ordinary"])
     send = AsyncMock()
     monkeypatch.setattr(webhook, "_process_message", process)
     monkeypatch.setattr(webhook, "_send_messenger_message", send)

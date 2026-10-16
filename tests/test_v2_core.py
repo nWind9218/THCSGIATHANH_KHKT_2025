@@ -17,9 +17,10 @@ def assessment(**changes):
 
 
 class FakeModel:
-    def __init__(self, assessments=None, risk="safe", fail=None):
+    def __init__(self, assessments=None, risk="safe", fail=None, recheck=None):
         self.assessments = list(assessments or [])
-        self.risk, self.fail, self.calls = risk, fail, []
+        # recheck: answer to the second safety opinion requested when only the assessment hint flagged the turn.
+        self.risk, self.fail, self.recheck, self.calls = risk, fail, recheck, []
 
     async def complete(self, messages, purpose):
         self.calls.append((purpose, messages))
@@ -27,7 +28,8 @@ class FakeModel:
         if self.fail == purpose:
             raise RuntimeError("fixture failure")
         if purpose == "safety":
-            text = json.dumps({"risk": self.risk, "reason": "fixture"})
+            risk = self.recheck if self.recheck and "Bộ phân tích phụ" in messages[0]["content"] else self.risk
+            text = json.dumps({"risk": risk, "reason": "fixture"})
         elif purpose == "assessment":
             text = json.dumps(self.assessments.pop(0) if self.assessments else assessment())
         else:
@@ -79,18 +81,18 @@ async def test_listen_instruction_overrides_remaining_missing_info_without_strip
     prompt = next(messages[0]["content"] for purpose, messages in model.calls if purpose == "reply")
     assert "quy tắc listen ưu tiên" in prompt
     assert result["assessment"]["missing_fields"] == ["time"]
-    assert result["response"] == "Mimi hiểu điều bạn vừa chia sẻ."
+    assert result["response_parts"][-1] == "Mimi hiểu điều bạn vừa chia sẻ."
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("risk, hint", [("urgent", "safe"), ("safe", "urgent"), ("bogus", "safe")])
 async def test_all_risk_routes_pending_and_accepted_silence(risk, hint):
     store = InMemoryStore()
-    model = FakeModel([assessment(safety_hint=hint)], risk=risk)
+    model = FakeModel([assessment(safety_hint=hint)], risk=risk, recheck="urgent")
     engine = CounselingEngine(model, store)
     result = await engine.respond("a", "nguy cơ")
     assert result["handoff_status"] == "pending"
-    assert "chưa có xác nhận" in result["response"]
+    assert "Mình đang nhờ thầy cô" in result["response"]
     assert result["sources"] == {}
     assert len(store.alerts) == 1
     await engine.respond("a", "tiếp nối")

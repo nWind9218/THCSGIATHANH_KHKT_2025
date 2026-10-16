@@ -6,17 +6,19 @@ import pytest
 
 from mimi_v2.contracts import ContractError, normalize_assessment
 from mimi_v2.core import CounselingEngine
+from mimi_v2.prompts import CLOSING_MESSAGE, GREETING_MESSAGE
 from mimi_v2.store import InMemoryStore
 
 
 class Model:
-    def __init__(self, *, intent="closing", need="listen", risk="safe", hint="safe", reply="Mimi nghe bạn đang mệt vì mạng yếu, vẫn muốn được lắng nghe.", role="student"):
-        self.intent, self.need, self.risk, self.hint = intent, need, risk, hint
+    def __init__(self, *, intent="closing", need="listen", risk="safe", hint="safe", recheck="urgent", reply="Mimi nghe bạn đang mệt vì mạng yếu, vẫn muốn được lắng nghe.", role="student"):
+        self.intent, self.need, self.risk, self.hint, self.recheck = intent, need, risk, hint, recheck
         self.reply, self.role, self.calls = reply, role, []
 
     async def complete(self, messages, purpose):
         self.calls.append((purpose, messages))
-        text = json.dumps({"risk": self.risk, "reason": "synthetic fixture"}) if purpose == "safety" else json.dumps({
+        risk = self.recheck if "Bộ phân tích phụ" in messages[0]["content"] else self.risk
+        text = json.dumps({"risk": risk, "reason": "synthetic fixture"}) if purpose == "safety" else json.dumps({
             "known": [], "missing_fields": [], "next_question_focus": "", "need": self.need,
             "intent": self.intent, "topic": "network", "core_issue": "limited network",
             "safety_hint": self.hint, "user_role": self.role,
@@ -29,8 +31,9 @@ async def test_confirmed_listen_closing_conflict_does_not_preempt_actual_reply()
     model = Model()
     result = await CounselingEngine(model, InMemoryStore()).respond(
         "synthetic", "Mình chỉ muốn được lắng nghe lúc này, chưa muốn lời khuyên hay câu hỏi tiếp.")
-    assert result["response_text"] == model.reply
-    assert "?" not in result["response_text"]
+    # First turn: the one-time AI greeting precedes the actual reply.
+    assert result["response_parts"] == [GREETING_MESSAGE, model.reply]
+    assert "?" not in result["response_parts"][-1]
     assert [purpose for purpose, _ in model.calls] == ["safety", "assessment", "reply"]
     prompt = model.calls[-1][1][0]["content"]
     assert "từ chối lời khuyên" in prompt
@@ -43,8 +46,8 @@ async def test_genuine_closing_listen_is_given_stop_rule_and_complete_user_conte
     model = Model(reply="Cảm ơn bạn. Bạn nghỉ ngơi nhé.")
     user = "Cảm ơn, mình muốn dừng ở đây và nghỉ một chút."
     result = await CounselingEngine(model, InMemoryStore()).respond("synthetic", user)
-    assert result["response_text"] == model.reply
-    assert "?" not in result["response_text"]
+    assert result["response_parts"][-1] == model.reply
+    assert "?" not in result["response_parts"][-1]
     assert result["assessment"]["intent"] == "closing"
     assert model.calls[-1][0] == "reply"
     assert model.calls[-1][1][-1]["content"] == user
@@ -55,8 +58,8 @@ async def test_genuine_closing_listen_is_given_stop_rule_and_complete_user_conte
 async def test_unambiguous_nonlisten_closing_keeps_bounded_goodbye():
     model = Model(need="comfort")
     result = await CounselingEngine(model, InMemoryStore()).respond("synthetic", "Mình dừng ở đây, tạm biệt.")
-    assert "Cảm ơn bạn" in result["response_text"]
-    assert "?" not in result["response_text"]
+    assert result["response_parts"][-1] == CLOSING_MESSAGE
+    assert "?" not in CLOSING_MESSAGE
     assert [purpose for purpose, _ in model.calls] == ["safety", "assessment"]
 
 
@@ -91,7 +94,7 @@ async def test_listen_closing_conflict_never_bypasses_safety(risk, hint):
     engine = CounselingEngine(model, store)
     result = await engine.respond("synthetic", "Mình chỉ muốn được lắng nghe")
     assert result["handoff_status"] == "pending"
-    assert "chưa có xác nhận" in result["response_text"]
+    assert "Mình đang nhờ thầy cô" in result["response_text"]
     assert all(purpose != "reply" for purpose, _ in model.calls)
     await store.acknowledge("synthetic")
     before = len(model.calls)

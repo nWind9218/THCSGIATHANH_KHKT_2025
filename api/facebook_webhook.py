@@ -7,11 +7,14 @@ import hmac
 import json
 import logging
 import os
+import time
 import uuid
 from typing import Any
 
 import httpx
 from fastapi import APIRouter, Request, Response, HTTPException, BackgroundTasks
+
+from mimi_v2.messenger_format import to_messenger
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -98,6 +101,9 @@ async def _send_messenger_message(psid: str, text: str) -> None:
     url = f"https://graph.facebook.com/{FACEBOOK_GRAPH_API_VERSION}/me/messages"
     headers = {"Authorization": f"Bearer {FACEBOOK_PAGE_ACCESS_TOKEN}"}
 
+    # Safety net: Messenger shows text verbatim, so strip any LaTeX/Markdown that slipped through (idempotent).
+    text = to_messenger(text) or text
+
     async with httpx.AsyncClient(timeout=15.0) as client:
         for chunk in _chunk_text(text):
             payload = {
@@ -124,16 +130,21 @@ async def _send_messenger_message(psid: str, text: str) -> None:
                 ) from None
 
 
-async def _process_message(psid: str, text: str) -> str:
+async def _process_message(psid: str, text: str) -> list[str]:
+    """Messages to deliver for one turn, in order (e.g. crisis reply, then the one-time AI greeting)."""
     from mimi_v2.production import get_production_engine
     result = await get_production_engine().respond(psid, text)
-    return (result.get("response_text") or "").strip()
+    parts = result.get("response_parts")
+    if not isinstance(parts, list):
+        parts = [result.get("response_text") or ""]
+    return [part.strip() for part in parts if isinstance(part, str) and part.strip()]
 
 
 async def handle_facebook_event(
     sender: str,
     message_text: str,
     suppress_delivery: bool = False,
+    received_at: float | None = None,
 ):
     """Asynchronous handler for Facebook events to avoid webhook timeouts."""
     try:
@@ -190,15 +201,27 @@ async def handle_facebook_event(
                 # If sender is not an admin, we just treat it as a normal message.
                 logger.warning(f"Unauthorized #resume attempt from {sender}")
 
-        response_text = await _process_message(sender, message_text)
-        if response_text:
+        handling_started = time.monotonic()
+        response_parts = await _process_message(sender, message_text)
+        engine_done = time.monotonic()
+        if response_parts:
             if suppress_delivery:
                 logger.info(
                     "[RUNTIME_DIAG] E2E probe completed sender=%s delivery_suppressed=true",
                     sender,
                 )
             else:
-                await _send_messenger_message(sender, response_text)
+                for part in response_parts:
+                    await _send_messenger_message(sender, part)
+        # Latency only; no ids or message text. engine_s includes lock, storage and model calls.
+        done = time.monotonic()
+        logger.info("[LATENCY] %s", json.dumps({
+            "queue_wait_s": round(handling_started - received_at, 3) if received_at is not None else None,
+            "engine_s": round(engine_done - handling_started, 3),
+            "send_s": round(done - engine_done, 3),
+            "end_to_end_s": round(done - received_at, 3) if received_at is not None else None,
+            "replied": bool(response_parts) and not suppress_delivery,
+        }))
     except Exception:
         logger.exception(
             "Failed to process Messenger event for %s runtime_ctx=%s",
@@ -236,6 +259,7 @@ async def verify_webhook(request: Request):
 
 @router.post("/webhook/facebook")
 async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
+    received_at = time.monotonic()
     raw_body = await request.body()
     signature = request.headers.get("x-hub-signature-256")
     probe_requested = request.headers.get(E2E_PROBE_HEADER) == "1"
@@ -304,6 +328,7 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
                 sender,
                 message_text,
                 suppress_delivery,
+                received_at=received_at,
             )
             if _is_production_env():
                 logger.info(

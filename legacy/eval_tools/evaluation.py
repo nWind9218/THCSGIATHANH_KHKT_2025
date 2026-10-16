@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from legacy.eval_tools.datasets import digest, load_dataset, validate_dataset
+from mimi_v2.prompts import GREETING_MESSAGE
 
 
 async def prepare_local_case(engine, user_id: str, case: dict) -> dict:
@@ -59,8 +60,14 @@ async def execute_local_turn(engine, user_id: str, turn: dict) -> dict:
             engine.store.fault = "none"
 
 
+def reply_text(result: dict) -> str:
+    """Reply text without the one-time AI-disclosure greeting."""
+    parts = result.get("response_parts") or [result.get("response_text", result.get("response", "")) or ""]
+    return "\n\n".join(p for p in parts if p != GREETING_MESSAGE)
+
+
 def check_turn(result: dict, expected: dict) -> list[dict]:
-    text = result.get("response_text", result.get("response", "")) or ""
+    text = reply_text(result)
     assessment = result.get("assessment") or {}
     values = {
         "intent": assessment.get("intent", result.get("intent_category")),
@@ -138,7 +145,7 @@ async def run_job(dataset: dict, configurations: list[dict], engine_factory) -> 
                         diagnostics = result.get("diagnostics", [])
                         errors = result.get("errors", []) or (diagnostics.get("errors", []) if isinstance(diagnostics, dict) else diagnostics)
                         status = "error" if errors else "fail" if any(not c["passed"] for c in checks) else "pending_review" if turn.get("review") or not checks else "pass"
-                        entry = {"index": index, "input": turn["user"], "output": result.get("response_text", result.get("response", "")),
+                        entry = {"index": index, "input": turn["user"], "output": reply_text(result),
                                  "result": result, "checks": checks, "status": status,
                                  "review_criteria": turn.get("review", []), "human_review": None}
                     except Exception as exc:

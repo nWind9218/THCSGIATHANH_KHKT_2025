@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from legacy.eval_tools.datasets import digest, load_dataset, validate_dataset
-from legacy.eval_tools.evaluation import check_turn, execute_local_turn, prepare_local_case, source_provenance, review_template
+from legacy.eval_tools.evaluation import check_turn, execute_local_turn, prepare_local_case, reply_text, source_provenance, review_template
 from legacy.eval_tools.pilot import MODEL_SETTINGS, UsageLedger
 
 
@@ -390,7 +390,7 @@ async def run_batch(dataset: dict, output: Path, *, key=None, resume=False, conc
                     diagnostics = result.get("diagnostics", [])
                     errors = result.get("error") or result.get("errors", []) or (diagnostics.get("errors", []) if isinstance(diagnostics, dict) else diagnostics)
                     status = "error" if errors else "fail" if any(not c["passed"] for c in checks) else "pending_review" if turn.get("review") or not checks else "pass"
-                    entry = {"index": index, "input": turn["user"], "output": result.get("response_text", result.get("response", "")),
+                    entry = {"index": index, "input": turn["user"], "output": reply_text(result),
                              "result": result, "checks": checks, "status": status, "review_criteria": turn.get("review", []), "human_review": None}
                 except JobPause:
                     # Only this case's attempts determine whether its turn was
