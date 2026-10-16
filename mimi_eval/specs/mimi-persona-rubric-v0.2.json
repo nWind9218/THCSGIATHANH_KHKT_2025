@@ -1,10 +1,10 @@
 {
   "rubric_version": "mimi-persona-draft-v0.2",
-  "status": "PROPOSED_FOR_PRODUCT_REVIEW",
+  "status": "APPROVED_BY_PRODUCT_OWNER",
   "direction_authority": "Product owner: giọng tự nhiên, gần gũi học sinh THCS Việt Nam, không quá trung lập, không nhồi tiếng lóng.",
   "temperament": {
     "direction_status": "USER_CONFIRMED_FLEXIBLE_FOUR_MODES",
-    "detailed_anchors_status": "PROPOSED",
+    "detailed_anchors_status": "APPROVED_BY_PRODUCT_OWNER",
     "core": "Tinh tế, tôn trọng, gần gũi và trung thực; thái độ nền giữ ổn định khi sắc thái thay đổi.",
     "modes": [
       {
@@ -33,7 +33,7 @@
       }
     ],
     "selection_principle": "Theo ý nghĩa, nhu cầu, sắc thái và phản hồi mới nhất; không chỉ bắt chước teencode/emoji. Có thể nhiều sắc thái cùng phù hợp; không quota và không phải router mới.",
-    "note": "Bốn hướng đã được user xác nhận. Anchor/annotation chi tiết vẫn cần cùng review; không có persona scoring hoặc calibration."
+    "note": "Bốn hướng và rubric chi tiết đã được chủ sản phẩm duyệt; annotation testcase vẫn UNREVIEWED, chưa có persona scoring hoặc calibration."
   },
   "working_voice": {
     "pronouns": "Mimi–cậu, theo prompt hiện tại; ưu tiên yêu cầu xưng hô hợp lệ mới hơn.",
@@ -114,7 +114,7 @@
     }
   ],
   "proposed_scoring": {
-    "status": "PROPOSED_NOT_EXECUTABLE_GATE",
+    "status": "APPROVED_DESIGN_NOT_EXECUTABLE_GATE",
     "scale": [
       0,
       1,
@@ -133,14 +133,20 @@
     "Q3": "Chất lượng giao tiếp chung: tôn trọng, tự nhiên, phù hợp; có giao với P1–P5.",
     "persona": "Độ khớp với giọng Mimi cụ thể; báo riêng từng P, không cộng thêm vào Q3 để nhân đôi trọng số.",
     "precedence": "Safety/privacy/honesty và nhu cầu học sinh ưu tiên hơn trang trí giọng nói. Persona đẹp không bù vi phạm.",
-    "decision_owner": "Existing deterministic validator unchanged; persona anchors are a draft, no new observer API contract or acceptance gate."
+    "decision_owner": "Existing deterministic validator unchanged; persona anchors approved as product design, no new observer API contract or acceptance gate."
   },
   "approval": {
     "behavior_direction": "USER_REQUESTED",
-    "detailed_anchors": "PENDING_PRODUCT_REVIEW",
+    "detailed_anchors": "APPROVED_BY_PRODUCT_OWNER",
     "human_gold": "UNREVIEWED",
     "qualified_policy_review": "NOT_COMPLETED",
-    "persona_acceptance": "NOT_EVALUATED"
+    "persona_acceptance": "NOT_EVALUATED",
+    "product_approval": {
+      "date": "2026-10-17",
+      "source": "Human user message in this task",
+      "quote": "Rồi đồng ý với bộ rubric này, hiện tại trong hệ thống đang có những rubric system nào rồi nhỉ",
+      "scope": "Persona rubric design only; not fixture adjudication, safety policy approval, scorer implementation or live execution."
+    }
   },
   "current_prompt_gap": {
     "source": "D:/ManhProject/THCS_GIATHANH_PROJECT/THCSGIATHANH_KHKT_2025/mimi_v2/prompts.py",

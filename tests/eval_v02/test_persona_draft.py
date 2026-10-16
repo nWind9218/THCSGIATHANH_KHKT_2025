@@ -33,15 +33,21 @@ def test_persona_schema_and_fixture_shape(persona_suite,persona_schema):
     assert persona_suite["persona_acceptance"] == "NOT_EVALUATED"
 
 
-def test_six_facets_are_proposed_not_a_new_acceptance_authority(persona_rubric):
-    assert persona_rubric["status"] == "PROPOSED_FOR_PRODUCT_REVIEW"
+def test_six_facets_are_approved_design_not_operational_acceptance(persona_rubric):
+    assert persona_rubric["status"] == "APPROVED_BY_PRODUCT_OWNER"
     assert {d["code"] for d in persona_rubric["dimensions"]} == {f"P{i}" for i in range(1,7)}
     for d in persona_rubric["dimensions"]:
         assert set(d["anchors"]) == {"0","1","2","3"}
         assert all(d["anchors"].values())
-    assert persona_rubric["approval"]["detailed_anchors"] == "PENDING_PRODUCT_REVIEW"
-    assert persona_rubric["proposed_scoring"]["status"] == "PROPOSED_NOT_EXECUTABLE_GATE"
+    assert persona_rubric["approval"]["detailed_anchors"] == "APPROVED_BY_PRODUCT_OWNER"
+    assert persona_rubric["proposed_scoring"]["status"] == "APPROVED_DESIGN_NOT_EXECUTABLE_GATE"
     assert persona_rubric["proposed_scoring"]["no_full_persona_pass_from_scoped_cases"] is True
+    assert persona_rubric["approval"]["human_gold"] == "UNREVIEWED"
+    assert persona_rubric["approval"]["qualified_policy_review"] == "NOT_COMPLETED"
+    assert persona_rubric["approval"]["persona_acceptance"] == "NOT_EVALUATED"
+    register=json.loads((ROOT/"specs/decision-register-v0.2.json").read_text(encoding="utf-8"))
+    assert register["persona_design"]["detailed_rubric_status"] == persona_rubric["status"]
+    assert register["persona_design"]["fixture_status"] == "UNREVIEWED"
 
 
 def test_four_flexible_modes_with_positive_examples(persona_suite,persona_rubric):

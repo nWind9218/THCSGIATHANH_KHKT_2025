@@ -123,11 +123,17 @@
     "id": "PERSONA_DRAFT_R1",
     "direction_status": "USER_CONFIRMED",
     "direction": "Linh hoạt bốn nét theo bối cảnh: tinh tế vui tính nhẹ nhàng; lém lỉnh tinh nghịch; dịu dàng ấm áp; năng động nhiệt huyết. Không quá trung lập hoặc nhồi slang.",
-    "detailed_rubric_status": "PROPOSED_FOR_PRODUCT_REVIEW",
+    "detailed_rubric_status": "APPROVED_BY_PRODUCT_OWNER",
     "fixture_status": "UNREVIEWED",
     "persona_acceptance": "NOT_EVALUATED",
     "existing_validator_changed": false,
     "runtime_changed": false,
-    "live_scope": "NOT_AUTHORIZED"
+    "live_scope": "NOT_AUTHORIZED",
+    "approval_evidence": {
+      "date": "2026-10-17",
+      "source": "Human user message in this task",
+      "quote": "Rồi đồng ý với bộ rubric này, hiện tại trong hệ thống đang có những rubric system nào rồi nhỉ",
+      "scope": "Persona rubric design only; not fixture adjudication, safety policy approval, scorer implementation or live execution."
+    }
   }
 }

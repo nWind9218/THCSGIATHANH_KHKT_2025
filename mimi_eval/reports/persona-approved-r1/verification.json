@@ -1,0 +1,62 @@
+{
+  "revision": "persona-approved-r1",
+  "verified_at_utc": "2026-10-16T21:10:36.167145+00:00",
+  "python": "3.13.3",
+  "parent_commit": "c7ff9f5c18db0d0d4fb99dd202de2afc035b07f2",
+  "source_manifest_sha256": "be16ea2d31c5783c2260fec2e01595f622f06076ec306e4a8305eeb93861ad2d",
+  "source_files": 36,
+  "unit_tests": {
+    "count": 146,
+    "failures_and_errors": 0,
+    "result": "PASS",
+    "command": ".\\.venv-local\\Scripts\\python.exe -m pytest -q tests/eval_v02 --junitxml=mimi_eval/reports/persona-approved-r1/pytest-final.xml"
+  },
+  "rubric_design": "APPROVED_BY_PRODUCT_OWNER",
+  "anchors_changed": false,
+  "fixture_annotations": "UNREVIEWED",
+  "persona_acceptance": "NOT_EVALUATED",
+  "semantic_accuracy": "NOT_EVALUATED",
+  "production_safety": "NOT_EVALUATED",
+  "scorer_implemented": false,
+  "provider_calls": 0,
+  "database_calls": 0,
+  "runtime_changed": false,
+  "unchanged_sources": [
+    "mimi_eval/validator.py",
+    "mimi_eval/contracts.py",
+    "mimi_eval/evidence.py",
+    "mimi_eval/rules.py",
+    "mimi_eval/replay.py",
+    "mimi_eval/prompts/mimi-judge-observer-prompt-v0.2.md",
+    "mimi_eval/fixtures/mimi-contrastive-suite-v0.2.json",
+    "mimi_eval/fixtures/mimi-persona-suite-draft-v0.2.json"
+  ],
+  "existing_behavior_replay": {
+    "cases": 79,
+    "verdict_counts": {
+      "PASS": 33,
+      "FAIL": 28,
+      "NEEDS_REVIEW": 15,
+      "INVALID": 3
+    },
+    "technical_failures": 1,
+    "quality_failures": 14,
+    "need_compliance_failures": 11,
+    "invalid_observations": 2,
+    "scripted_expectation_mismatches": 0,
+    "human_gold_status": "UNREVIEWED",
+    "semantic_agreement": "NOT_EVALUATED",
+    "persona_acceptance": "NOT_EVALUATED",
+    "false_pass_rate": "NOT_EVALUATED",
+    "safety_calibration": "NOT_EVALUATED",
+    "medium_high_comparison": "NOT_EVALUATED",
+    "provider_calls": 0,
+    "production_readiness": "NOT_EVALUATED"
+  },
+  "artifact_hashes": {
+    "pytest-final.xml": "b79e7e4b892d2b19634e5fea36f4dc2ab30e4c997cbbe2bd53f4da7fce317501",
+    "replay-summary.json": "d89f69067a3af919fa6c62c26df9b1ecfa85c780d7b328fd820690c0ad05c7f7",
+    "source-manifest-after.json": "be16ea2d31c5783c2260fec2e01595f622f06076ec306e4a8305eeb93861ad2d",
+    "source-manifest-before.json": "798e9198279fa95287840480516a583624c1b8eb95e4fe393788cf0159b8a1dd"
+  }
+}
