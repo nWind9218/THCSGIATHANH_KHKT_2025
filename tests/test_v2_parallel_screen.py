@@ -7,6 +7,7 @@ import pytest
 
 from mimi_v2.core import CounselingEngine
 from mimi_v2.models import ModelError
+from mimi_v2.prompts import REPLY_FAILURE_MESSAGE, SAFETY_UNAVAILABLE_NOTE
 from mimi_v2.store import InMemoryStore
 
 
@@ -69,9 +70,8 @@ async def test_safety_and_assessment_overlap_in_time():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("risk", ["urgent", "uncertain"])
-async def test_unsafe_safety_discards_assessment_and_hands_off(risk):
-    store, model = Store(), Model(risk=risk)
+async def test_urgent_safety_discards_assessment_and_hands_off():
+    store, model = Store(), Model(risk="urgent")
     engine = CounselingEngine(model, store)
     result = await engine.respond("u", "tin nhắn")
     assert result["handoff_status"] == "pending" and store.notified == 1
@@ -81,24 +81,35 @@ async def test_unsafe_safety_discards_assessment_and_hands_off(risk):
     assert saved["known"] == {}  # assessment facts were not stored
     assert "assessment_discarded_not_safe" in result["diagnostics"]
     assert sorted(c["purpose"] for c in result["model_calls"]) == ["assessment", "safety"]
+    assert result["handoff_reason"] == "model:urgent" and result["safety_mode"] == "handoff"
 
 
 @pytest.mark.asyncio
-async def test_assessment_failure_with_safe_safety_still_fails_closed():
+async def test_assessment_failure_with_safe_safety_continues_with_fallback_and_no_alert():
     store, model = Store(), Model(fail="assessment")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
-    assert result["handoff_status"] == "pending" and store.notified == 1 and "reply" not in model.calls
-    assert "assessment_unavailable_or_invalid" in result["diagnostics"]
+    assert result["handoff_status"] == "none" and store.notified == 0 and "reply" in model.calls
+    assert "assessment_unavailable_or_invalid" in result["diagnostics"] and "assessment_fallback" in result["diagnostics"]
     assert "assessment_model_error:timeout:-" in result["diagnostics"]
+    assert result["handoff_reason"] is None
 
 
 @pytest.mark.asyncio
-async def test_safety_failure_fails_closed_even_if_assessment_succeeds():
+async def test_assessment_failure_still_hands_off_when_safety_says_urgent():
+    store, model = Store(), Model(risk="urgent", fail="assessment")
+    result = await CounselingEngine(model, store).respond("u", "xin chào")
+    assert result["handoff_status"] == "pending" and store.notified == 1 and "reply" not in model.calls
+    assert result["handoff_reason"] == "model:urgent"
+
+
+@pytest.mark.asyncio
+async def test_safety_failure_replies_normally_with_a_111_note_and_no_alert():
     store, model = Store(), Model(fail="safety")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
-    assert result["handoff_status"] == "pending" and "reply" not in model.calls
-    assert "safety_unavailable_or_invalid" in result["diagnostics"]
-    assert (await store.load("u"))["known"] == {}
+    assert result["handoff_status"] == "none" and store.notified == 0 and "reply" in model.calls
+    assert "safety_unavailable_or_invalid" in result["diagnostics"] and result["safety_mode"] == "unavailable"
+    assert result["response_parts"][-1].endswith(SAFETY_UNAVAILABLE_NOTE) and "111" in result["response_parts"][-1]
+    assert (await store.load("u"))["known"] == {"grade": "8"}
 
 
 @pytest.mark.asyncio
@@ -125,11 +136,26 @@ async def test_assessment_hint_cleared_by_second_opinion_continues_normally():
 
 
 @pytest.mark.asyncio
-async def test_failed_second_opinion_fails_closed_to_the_hint():
+async def test_failed_second_opinion_keeps_the_hint_level():
+    # hint "uncertain" -> check-in reply (no alert); hint "urgent" -> handoff (never silently lowered).
     store, model = Store(), Model(hint="uncertain", recheck="fail")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
+    assert result["handoff_status"] == "none" and "reply" in model.calls and store.notified == 0
+    assert "assessment_hint_recheck_failed" in result["diagnostics"] and result["safety_mode"] == "checkin"
+    store, model = Store(), Model(hint="urgent", recheck="fail")
+    result = await CounselingEngine(model, store).respond("u", "xin chào")
     assert result["handoff_status"] == "pending" and "reply" not in model.calls and store.notified == 1
-    assert "assessment_hint_recheck_failed" in result["diagnostics"]
+    assert "assessment_hint_recheck_failed" in result["diagnostics"] and result["handoff_reason"] == "model:urgent"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("recheck,mode,handoff", [("uncertain", "checkin", "none"), ("safe", "normal", "none"), ("urgent", "handoff", "pending")])
+async def test_hint_recheck_levels_map_to_checkin_normal_or_handoff(recheck, mode, handoff):
+    store, model = Store(), Model(hint="uncertain", recheck=recheck)
+    result = await CounselingEngine(model, store).respond("u", "xin chào")
+    assert (result["safety_mode"], result["handoff_status"]) == (mode, handoff)
+    assert store.notified == (1 if handoff == "pending" else 0)
+    assert ("reply" in model.calls) == (handoff == "none")
 
 
 @pytest.mark.asyncio
@@ -150,25 +176,40 @@ async def test_deterministic_floor_still_wins_over_a_second_opinion_of_safe():
     result = await CounselingEngine(model, store).respond("u", "tớ muốn tự tử")
     assert result["handoff_status"] == "pending" and "reply" not in model.calls
     assert "safety_floor:suicide" in result["diagnostics"]
+    assert result["handoff_reason"] == "keyword:suicide"
     # The recheck itself re-applies the floor: a "safe" answer cannot lower it.
     engine = CounselingEngine(Model(recheck="safe"), Store())
     session = {"messages": [], "risk_signals": [], "turn_count": 1}
     state = {"session": session, "signals": {"tier1": ["suicide"], "tier2": []}, "diagnostics": [], "timings": {}, "usage": {}, "model_calls": []}
-    assert await engine._recheck_hint(state, "uncertain") == "uncertain"
+    assert await engine._recheck_hint(state, "uncertain") == "urgent"
     assert "assessment_hint_rechecked:safe" in state["diagnostics"] and "safety_floor:suicide" in state["diagnostics"]
     # Same for the accumulated tier-2 floor (3 distinct codes, one of them this turn).
     session = {"messages": [], "risk_signals": [{"code": "burden", "turn": 1}, {"code": "goodbye", "turn": 2}, {"code": "disappear", "turn": 3}], "turn_count": 3}
     state = {"session": session, "signals": {"tier1": [], "tier2": ["disappear"]}, "diagnostics": [], "timings": {}, "usage": {}, "model_calls": []}
-    assert await engine._recheck_hint(state, "uncertain") == "uncertain"
+    assert await engine._recheck_hint(state, "uncertain") == "urgent"
 
 
 @pytest.mark.asyncio
-async def test_both_calls_both_fail_notifies_once():
+async def test_both_calls_fail_sends_fixed_111_message_without_alert():
     class BothFail(Model):
         async def complete(self, messages, purpose):
             self.calls.append(purpose)
             raise ModelError("authentication", status=401)
     store, model = Store(), BothFail()
     result = await CounselingEngine(model, store).respond("u", "xin chào")
+    assert result["handoff_status"] == "none" and store.notified == 0 and result["safety_mode"] == "degraded"
+    assert sorted(model.calls) == ["assessment", "safety"]  # no reply call
+    assert result["response_parts"][-1] == REPLY_FAILURE_MESSAGE and "111" in REPLY_FAILURE_MESSAGE
+    assert "safety_and_assessment_unavailable" in result["diagnostics"]
+
+
+@pytest.mark.asyncio
+async def test_both_calls_fail_but_keyword_floor_still_alerts_once():
+    class BothFail(Model):
+        async def complete(self, messages, purpose):
+            self.calls.append(purpose)
+            raise ModelError("authentication", status=401)
+    store = Store()
+    result = await CounselingEngine(BothFail(), store).respond("u", "tớ muốn tự tử")
     assert result["handoff_status"] == "pending" and store.notified == 1
-    assert sorted(model.calls) == ["assessment", "safety"]
+    assert result["handoff_reason"] == "keyword:suicide"

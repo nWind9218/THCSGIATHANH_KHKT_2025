@@ -79,12 +79,12 @@ async def test_one_transient_failure_is_retried_without_handoff(stage):
 
 
 @pytest.mark.asyncio
-async def test_second_transient_failure_still_fails_closed_with_error_code():
+async def test_second_transient_failure_is_unavailable_not_a_handoff_and_keeps_error_code():
     store = CountingStore()
     errors = [ModelError("provider_error", status=503), ModelError("provider_error", status=502)]
     model = ScriptedModel({"safety": errors})
     result = await CounselingEngine(model, store).respond("u", "Hôm nay mình buồn quá")
-    assert result["handoff_status"] == "pending" and store.notified == 1
+    assert result["handoff_status"] == "none" and store.notified == 0 and "111" in result["response"]
     assert model.calls.count("safety") == 2
     assert "safety_unavailable_or_invalid" in result["diagnostics"]
     assert "safety_model_error:provider_error:502" in result["diagnostics"]
@@ -95,7 +95,7 @@ async def test_second_transient_failure_still_fails_closed_with_error_code():
 async def test_non_transient_failure_is_not_retried(error):
     model = ScriptedModel({"safety": [error, error]})
     result = await CounselingEngine(model, CountingStore()).respond("u", "xin chào")
-    assert model.calls.count("safety") == 1 and result["handoff_status"] == "pending"
+    assert model.calls.count("safety") == 1 and result["handoff_status"] == "none"
     assert f"safety_model_error:{error.code}:{error.status or '-'}" in result["diagnostics"]
 
 
@@ -124,7 +124,7 @@ async def test_turn_log_has_codes_and_timings_but_no_content_or_raw_user_id(capl
     assert len(records) == 1 and records[0].levelno == logging.WARNING
     line = records[0].getMessage()
     info = json.loads(line.split("turn ", 1)[1])
-    assert info["handoff"] == "pending" and "safety_model_error:provider_error:503" in info["diagnostics"]
+    assert info["handoff"] == "none" and info["safety_mode"] == "unavailable" and "safety_model_error:provider_error:503" in info["diagnostics"]
     assert "total" in info["timings"]
     assert secret not in line and uid not in line and "Mình rất lo cho bạn" not in line
 

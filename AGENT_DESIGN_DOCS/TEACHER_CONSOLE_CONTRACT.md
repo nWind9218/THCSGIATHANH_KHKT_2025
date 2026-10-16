@@ -160,6 +160,17 @@ PSID path param must match `^[A-Za-z0-9_-]{1,64}$` → else 404.
   published by the replica that handled the webhook never reaches consoles connected to another replica. The
   browser's 5 s fallback refetch keeps such a setup correct but not instant. (Move the bus to Redis pub/sub before
   scaling out.)
+- **Message stacking is also in-process (same single-replica assumption).** `mimi_v2/stacker.py` +
+  `api/facebook_webhook.py::enqueue_facebook_event`: after a student message the webhook waits
+  `MIMI_V2_STACK_WINDOW` seconds (default 2.5, `0` = off) of quiet for more messages from the same PSID and runs ONE
+  engine turn on the newline-joined text (cap: 15 s after the oldest waiting message, 20 messages / 6000 chars per
+  batch; the rest becomes the next batch). Messages arriving while a turn runs are queued for the next turn and never
+  wait on the Redis conversation lock. Each message is still logged to the console on arrival (so the console shows
+  the individual messages and then Mimi's reply), the typing dots stay on while waiting. Not stacked: admin commands
+  (`#whoami`, admin `#accept`/`#resume`) and the E2E probe PSID, which run immediately. The webhook also drops a
+  redelivered `mid` seen in the last 10 minutes (per-process set). With more than one replica stacking and the
+  duplicate filter are per replica (two replicas could answer one burst twice); a restart mid-window loses the
+  not-yet-answered messages of that window (they remain in the console log).
 - Unsubscribe from the bus on disconnect (`finally`).
 
 ### `scripts/console_demo.py`

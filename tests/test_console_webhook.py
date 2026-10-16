@@ -256,8 +256,9 @@ async def test_handoff_turn_logs_crisis_text_then_greeting_and_mirrors_status(en
     real_engine(monkeypatch, env, "không dùng tới", risk="urgent")
     await webhook.handle_facebook_event("s1", "tớ muốn tự tử")
     history = await env.log.history("s1")
-    assert [e["role"] for e in history] == ["student", "mimi", "mimi"]
-    assert history[1]["text"].startswith(HANDOFF_MESSAGE) and history[2]["text"] == GREETING_MESSAGE
+    assert [e["role"] for e in history] == ["student", "system", "mimi", "mimi"]
+    assert history[1]["text"].startswith("Lý do chuyển thầy cô:") and "tự tử" not in history[1]["text"]
+    assert history[2]["text"].startswith(HANDOFF_MESSAGE) and history[3]["text"] == GREETING_MESSAGE
     assert (await env.log.get_meta("s1"))["handoff_status"] == "pending"
 
 
@@ -278,6 +279,42 @@ async def test_probe_with_parts_skips_console_and_delivery(env):
     await webhook.handle_facebook_event(webhook.E2E_PROBE_PSID, "hi", suppress_delivery=True)
     env.send.assert_not_awaited()
     assert await env.log.list_conversations() == []
+
+
+@pytest.mark.asyncio
+async def test_handoff_reason_entry_is_logged_before_mimi_parts(env):
+    env.engine.respond.return_value = {"response_parts": ["một", "hai"], "response_text": "một\n\nhai",
+                                       "handoff_status": "pending", "handoff_reason": "keyword:suicide"}
+    await webhook.handle_facebook_event("s1", "bí mật của học sinh")
+    assert roles(await env.log.history("s1")) == [
+        ("student", "bí mật của học sinh", None),
+        ("system", "Lý do chuyển thầy cô: từ khoá nguy hiểm (suicide)", None),
+        ("mimi", "một", "sent"), ("mimi", "hai", "sent")]
+
+
+@pytest.mark.asyncio
+async def test_no_reason_entry_when_reason_is_none(env):
+    env.engine.respond.return_value = {"response_text": "ok", "handoff_status": "none", "handoff_reason": None}
+    await webhook.handle_facebook_event("s1", "hi")
+    assert [e["role"] for e in await env.log.history("s1")] == ["student", "mimi"]
+
+
+@pytest.mark.asyncio
+async def test_probe_skips_reason_entry(env):
+    env.engine.respond.return_value = {"response_text": "ok", "handoff_reason": "accumulation"}
+    await webhook.handle_facebook_event(webhook.E2E_PROBE_PSID, "hi", suppress_delivery=True)
+    assert await env.log.list_conversations() == []
+
+
+@pytest.mark.parametrize("code,expected", [
+    ("keyword:self_harm,abuse", "Lý do chuyển thầy cô: từ khoá nguy hiểm (self_harm,abuse)"),
+    ("model:urgent", "Lý do chuyển thầy cô: mô hình đánh giá khẩn cấp"),
+    ("model:uncertain_repeat", "Lý do chuyển thầy cô: nghi ngờ lặp lại nhiều lần"),
+    ("accumulation", "Lý do chuyển thầy cô: nhiều tín hiệu tích luỹ"),
+    ("something_new", "Lý do chuyển thầy cô: something_new"),
+])
+def test_handoff_reason_mapping(code, expected):
+    assert webhook.handoff_reason_text(code) == expected
 
 
 # --- typing indicator (Messenger sender actions + console flag) ----------------------------------------------------

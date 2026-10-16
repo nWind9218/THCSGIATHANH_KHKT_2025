@@ -21,9 +21,10 @@ from .tracing import Trace, model_attrs, summarize
 from .messenger_format import to_messenger
 from .prompts import (ASSESSMENT, CLOSING_MESSAGE, FORMAT, GREETING_MESSAGE, HANDOFF_MESSAGE, HANDOFF_REQUEST_NOT_SENT,
                       HANDOFF_REQUEST_SENT, LISTEN_CLOSING_CONFLICT, LISTEN_MODE, PERSONA, REPLY_FAILURE_MESSAGE,
-                      SAFETY, SAFETY_HINT_ACCUMULATED, SAFETY_HINT_ASSESSMENT, SAFETY_HINT_KEYWORDS, SESSION_LOAD_FAILURE_MESSAGE, STYLE)
+                      SAFETY, SAFETY_CHECKIN, SAFETY_HINT_ACCUMULATED, SAFETY_HINT_ASSESSMENT, SAFETY_HINT_KEYWORDS,
+                      SAFETY_UNAVAILABLE_NOTE, SESSION_LOAD_FAILURE_MESSAGE, STYLE)
 from .store import SessionStore
-from .teencode import detect_register, max_risk, scan
+from .teencode import RISK_ORDER, detect_register, max_risk, scan
 
 
 logger = logging.getLogger("mimi_v2.turn")
@@ -35,10 +36,17 @@ RETRY_BACKOFF_SECONDS = 0.5
 
 # Vague (tier-2) keyword signals are remembered by code only, for this many turns.
 RISK_WINDOW_TURNS = 30
-# Distinct remembered codes (including this turn) that force at least "uncertain".
+# Distinct remembered codes (including this turn) that force "urgent" (handoff).
 RISK_ACCUMULATION_FLOOR = 3
 # Distinct codes from earlier turns that justify telling the safety model about them.
 RISK_ACCUMULATION_HINT = 2
+# A model "uncertain" only triggers a gentle check-in (no teacher alert); a second one within this many
+# turns is treated as "urgent". Turn numbers of uncertain turns are kept in session["uncertain_turns"].
+UNCERTAIN_REPEAT_WINDOW = 5
+UNCERTAIN_TURNS_KEPT = 10
+
+NEEDS = ("listen", "comfort", "clarify", "advice", "explain")
+USER_ROLES = ("unknown", "student", "parent")
 
 
 def is_transient(exc: Exception) -> bool:
@@ -108,6 +116,22 @@ class Turn(TypedDict, total=False):
     trace: object
     signals: dict
     parts: list
+    # normal | checkin | unavailable | degraded | handoff | takeover; handoff_reason is a text-free code.
+    safety_mode: str
+    handoff_reason: str
+
+
+def fallback_assessment(session: dict) -> dict:
+    """Neutral assessment from the previous session, used when the assessment model fails or is invalid."""
+    def text(key: str) -> str:
+        value = session.get(key)
+        return value if isinstance(value, str) else ""
+    need = session.get("need")
+    role = session.get("user_role")
+    return {"known": deepcopy(session.get("known") or {}), "missing_fields": [], "next_question_focus": "",
+            "need": need if need in NEEDS else "comfort", "intent": "support",
+            "topic": text("topic"), "core_issue": text("core_issue"), "safety_hint": "safe",
+            "user_role": role if role in USER_ROLES else "unknown"}
 
 
 def canonical_session(raw: dict | list) -> dict:
@@ -130,6 +154,8 @@ def canonical_session(raw: dict | list) -> dict:
     signals = session.get("risk_signals")
     session["risk_signals"] = [{"code": e["code"], "turn": e["turn"]} for e in signals if isinstance(e, dict)
                                and isinstance(e.get("code"), str) and type(e.get("turn")) is int] if isinstance(signals, list) else []
+    turns = session.get("uncertain_turns")
+    session["uncertain_turns"] = [t for t in turns if type(t) is int and t >= 0][-UNCERTAIN_TURNS_KEPT:] if isinstance(turns, list) else []
     if not isinstance(raw, (dict, list)):
         raise ContractError("invalid_session", "payload")
     normalized = normalize_assessment({"known": session["known"]})
@@ -149,7 +175,10 @@ class CounselingEngine:
         for name in ("screen", "retrieve", "reply", "handoff", "persist"):
             graph.add_node(name, getattr(self, "_" + name))
         graph.add_edge(START, "screen")
-        graph.add_conditional_edges("screen", lambda s: "retrieve" if s["safety"] == "safe" else "handoff")
+        # Only "urgent" hands off. "uncertain" (check-in) and an unavailable safety check reply normally;
+        # when nothing at all could run ("degraded") a fixed message is sent without further model calls.
+        graph.add_conditional_edges("screen", lambda s: "handoff" if s["safety"] == "urgent"
+                                    else "reply" if s.get("safety_mode") == "degraded" else "retrieve")
         graph.add_edge("retrieve", "reply")
         graph.add_edge("reply", "persist")
         graph.add_edge("handoff", "persist")
@@ -194,26 +223,53 @@ class CounselingEngine:
     async def _screen(self, state: Turn) -> dict:
         """Run the safety check and the assessment concurrently (they only read the same messages).
 
-        Safety stays the gate: unless it says "safe" the assessment is discarded, exactly as if it
-        had never run, and the turn goes to handoff. An assessment failure still fails closed.
-        When safety says "safe" but the assessment's own hint disagrees, one stronger safety
-        second opinion decides (the keyword floor still applies) instead of an immediate handoff.
+        Policy (only "urgent" alerts teachers):
+        - urgent (safety model, hint recheck, tier-1 keyword floor, accumulated tier-2 floor) -> handoff;
+          the assessment is discarded as if it had never run.
+        - uncertain from the model -> normal reply with a gentle check-in; a second one within
+          UNCERTAIN_REPEAT_WINDOW turns counts as urgent.
+        - safety model unavailable -> normal reply plus a short 111 note (no alert unless a keyword floor
+          applies); if the assessment failed too, a fixed message with 111.
+        - assessment failure alone never decides anything: a neutral fallback assessment is used.
+        When safety is calmer than the assessment's own hint, one stronger safety second opinion decides.
         """
         safety, assessment = await asyncio.gather(self._safety(state), self._assessment(state))
-        risk = safety["safety"]
-        if risk == "safe" and "assessment" in assessment and assessment["safety"] != "safe":
-            risk = await self._recheck_hint(state, assessment["safety"])
-            if risk == "safe":
-                assessment["safety"] = "safe"
-        if risk != "safe":
-            state["diagnostics"].append("assessment_discarded_not_safe")
-            return {"safety": risk, "diagnostics": state["diagnostics"],
-                    "timings": state["timings"], "usage": state["usage"], "model_calls": state["model_calls"]}
-        return assessment
+        risk, reason, unavailable = safety["risk"], safety["reason"], safety["unavailable"]
+        item = assessment["item"]
+        if risk != "urgent" and RISK_ORDER[item["safety_hint"]] > RISK_ORDER[risk]:
+            rechecked, answered = await self._recheck_hint_ex(state, item["safety_hint"])
+            risk = max_risk(risk, rechecked)
+            reason = f"model:{risk}"
+            unavailable = unavailable and not answered
+        updates = {"diagnostics": state["diagnostics"], "timings": state["timings"],
+                   "usage": state["usage"], "model_calls": state["model_calls"]}
+        if risk == "urgent":
+            session = deepcopy(state["session"])
+            if assessment["ok"]:
+                state["diagnostics"].append("assessment_discarded_not_safe")
+            return {**updates, "safety": "urgent", "safety_mode": "handoff", "handoff_reason": reason, "session": session}
+        session = assessment["session"]
+        if risk == "uncertain":
+            turn = session["turn_count"]
+            recent = [t for t in session["uncertain_turns"] if 0 < turn - t <= UNCERTAIN_REPEAT_WINDOW]
+            session["uncertain_turns"] = [*recent, turn][-UNCERTAIN_TURNS_KEPT:]
+            if recent:
+                state["diagnostics"].append("uncertain_repeat_escalated")
+                if assessment["ok"]:
+                    state["diagnostics"].append("assessment_discarded_not_safe")
+                return {**updates, "safety": "urgent", "safety_mode": "handoff", "handoff_reason": "model:uncertain_repeat",
+                        "session": {**deepcopy(state["session"]), "uncertain_turns": session["uncertain_turns"]}}
+            state["diagnostics"].append("safety_checkin")
+            return {**updates, "safety": "uncertain", "safety_mode": "checkin", "session": session, "assessment": item}
+        if unavailable and not assessment["ok"]:
+            state["diagnostics"].append("safety_and_assessment_unavailable")
+            return {**updates, "safety": "safe", "safety_mode": "degraded", "session": session, "assessment": item}
+        return {**updates, "safety": "safe", "safety_mode": "unavailable" if unavailable else "normal",
+                "session": session, "assessment": item}
 
     @staticmethod
-    def _safety_context(state: Turn) -> tuple[str, str, list[str]]:
-        """Safety prompt with keyword/accumulated hints, plus the deterministic floor and its codes."""
+    def _safety_context(state: Turn) -> tuple[str, str, list[str], str]:
+        """Safety prompt with keyword/accumulated hints, plus the deterministic floor, its codes and reason code."""
         signals = state.get("signals") or {}
         tier1, tier2 = signals.get("tier1", []), signals.get("tier2", [])
         session = state["session"]
@@ -225,10 +281,10 @@ class CounselingEngine:
             prompt += "\n" + SAFETY_HINT_ACCUMULATED.format(codes=", ".join(sorted(earlier)))
         accumulated = earlier | set(tier2)
         if tier1:
-            return prompt, "uncertain", list(tier1)
+            return prompt, "urgent", list(tier1), "keyword:" + "+".join(tier1)
         if tier2 and len(accumulated) >= RISK_ACCUMULATION_FLOOR:
-            return prompt, "uncertain", sorted(accumulated)
-        return prompt, "safe", []
+            return prompt, "urgent", sorted(accumulated), "accumulation"
+        return prompt, "safe", [], ""
 
     @staticmethod
     def _apply_floor(state: Turn, risk: str, floor: str, codes: list[str]) -> str:
@@ -237,25 +293,36 @@ class CounselingEngine:
             state["diagnostics"].append("safety_floor:" + ",".join(codes))
         return raised
 
-    async def _recheck_hint(self, state: Turn, hint: str) -> str:
-        """Second safety opinion when only the assessment's hint flagged the turn. Fails closed to the hint."""
-        prompt, floor, codes = self._safety_context(state)
+    async def _recheck_hint_ex(self, state: Turn, hint: str) -> tuple[str, bool]:
+        """Second safety opinion when the assessment's hint is above the safety result.
+
+        Returns (risk, answered). A failed recheck keeps the hint (answered=False); the floor always applies."""
+        prompt, floor, codes, _ = self._safety_context(state)
+        answered = True
         try:
             risk = Safety.model_validate(parse_decision(await self._complete(
                 state, "safety", prompt + "\n" + SAFETY_HINT_ASSESSMENT.format(level=hint), retry=True, effort="medium"))).risk
             state["diagnostics"].append(f"assessment_hint_rechecked:{risk}")
         except Exception:
-            risk = hint
+            risk, answered = hint, False
             state["diagnostics"].append("assessment_hint_recheck_failed")
-        return self._apply_floor(state, risk, floor, codes)
+        return self._apply_floor(state, risk, floor, codes), answered
+
+    async def _recheck_hint(self, state: Turn, hint: str) -> str:
+        return (await self._recheck_hint_ex(state, hint))[0]
 
     async def _safety(self, state: Turn) -> dict:
-        prompt, floor, codes = self._safety_context(state)
+        """Dedicated safety result: {"risk", "reason", "unavailable"}.
+
+        A model error/timeout/invalid answer is not a risk: it yields "safe" with unavailable=True (the
+        reply then carries a 111 note). Only the deterministic floor can still force "urgent"."""
+        prompt, floor, codes, floor_reason = self._safety_context(state)
+        unavailable = False
         try:
             parsed = Safety.model_validate(parse_decision(await self._complete(state, "safety", prompt, retry=True)))
             risk = parsed.risk
             if risk == "uncertain" and getattr(self.model, "routable", False):
-                # Cheap first pass flagged it: take one stronger second opinion before a handoff.
+                # Cheap first pass flagged it: take one stronger second opinion before a check-in.
                 # A failed or invalid recheck keeps "uncertain", so this can only reduce false alarms.
                 try:
                     risk = Safety.model_validate(parse_decision(await self._complete(state, "safety", prompt, retry=True, effort="medium"))).risk
@@ -266,13 +333,16 @@ class CounselingEngine:
             state["diagnostics"].append("safety_unavailable_or_invalid")
             state["diagnostics"].extend(decision_error("safety", exc))
             state["diagnostics"].extend(model_error_label("safety", exc))
-            risk = "uncertain"
+            risk, unavailable = "safe", True
         # Deterministic floor, applied last so neither the model nor the recheck can lower it.
         risk = self._apply_floor(state, risk, floor, codes)
-        return {"safety": risk, "diagnostics": state["diagnostics"],
-                "timings": state["timings"], "usage": state["usage"], "model_calls": state["model_calls"]}
+        reason = floor_reason if risk == "urgent" and floor == "urgent" else f"model:{risk}"
+        return {"risk": risk, "reason": reason, "unavailable": unavailable}
 
     async def _assessment(self, state: Turn) -> dict:
+        """Structured assessment: {"ok", "item", "session"}.
+
+        A failure never decides safety: it falls back to a neutral assessment from the previous session."""
         previous = state["session"]
         context = json.dumps({k: previous.get(k) for k in ("known", "topic", "core_issue", "need", "user_role")}, ensure_ascii=False)
         try:
@@ -282,7 +352,8 @@ class CounselingEngine:
             state["diagnostics"].append("assessment_unavailable_or_invalid")
             state["diagnostics"].extend(decision_error("assessment", exc))
             state["diagnostics"].extend(model_error_label("assessment", exc))
-            return {"safety": "uncertain", "diagnostics": state["diagnostics"]}
+            state["diagnostics"].append("assessment_fallback")
+            return {"ok": False, "item": fallback_assessment(previous), "session": deepcopy(previous)}
         session = deepcopy(previous)
         session["known"].update(item["known"])
         item["known"] = deepcopy(session["known"])
@@ -294,8 +365,7 @@ class CounselingEngine:
         for key in ("topic", "core_issue", "need", "user_role"):
             session[key] = item[key]
         session["current_topic"] = item["topic"]
-        return {"session": session, "assessment": item, "safety": item["safety_hint"],
-                "timings": state["timings"], "usage": state["usage"], "model_calls": state["model_calls"]}
+        return {"ok": True, "item": item, "session": session}
 
     async def _retrieve(self, state: Turn) -> dict:
         item = state["assessment"]
@@ -316,10 +386,16 @@ class CounselingEngine:
         return {"sources": sources, "diagnostics": state["diagnostics"], "timings": state["timings"]}
 
     async def _reply(self, state: Turn) -> dict:
+        if state.get("safety_mode") == "degraded":
+            # Neither safety nor assessment could run: do not spend more model calls, just point to help.
+            return {"response": REPLY_FAILURE_MESSAGE, "diagnostics": state["diagnostics"]}
+        checkin = state.get("safety_mode") == "checkin"
+        # With the safety check unavailable the reply carries one short 111 line (a check-in already has it).
+        note = "\n\n" + SAFETY_UNAVAILABLE_NOTE if state.get("safety_mode") == "unavailable" else ""
         closing = state["assessment"]["intent"] == "closing"
         listening = state["assessment"]["need"] == "listen"
-        if closing and not listening:
-            return {"response": CLOSING_MESSAGE}
+        if closing and not listening and not checkin:
+            return {"response": CLOSING_MESSAGE + note}
         # A parent is always addressed seriously, whatever register their messages are written in.
         register = "nghiem_tuc" if state["assessment"]["user_role"] == "parent" else detect_register(state["session"]["messages"])
         context = json.dumps({"assessment": state["assessment"], "reference_material": state.get("sources", {}),
@@ -330,18 +406,21 @@ class CounselingEngine:
             # consume the actual context rather than forcing a canned goodbye.
             # This is routing/payload hardening, not a semantic quality guarantee.
             mode += "\n" + LISTEN_CLOSING_CONFLICT
+        if checkin:
+            mode += "\n" + SAFETY_CHECKIN
         try:
             # Listening/closing replies are short reflections; the rest keep the router's default.
-            effort = "none" if listening or closing else ("medium" if state.get("sources") and state["assessment"]["need"] == "explain" else None)
+            effort = "none" if (listening or closing) and not checkin else ("medium" if state.get("sources") and state["assessment"]["need"] == "explain" else None)
             reply = await self._complete(state, "reply", PERSONA + "\n" + STYLE + "\n" + FORMAT + "\nNgữ cảnh hỗ trợ: " + context + "\n" + mode,
                                          retry=getattr(self.model, "routable", False), effort=effort)
             # Messenger shows plain text: turn any LaTeX/Markdown the model still emitted into Unicode math.
             response = to_messenger(reply.strip())
             if not response:
                 raise ValueError("Empty reply")
+            response += note
         except Exception:
             state["diagnostics"].append("reply_unavailable_or_invalid")
-            response = REPLY_FAILURE_MESSAGE
+            response = REPLY_FAILURE_MESSAGE  # already mentions 111
         return {"response": response, "diagnostics": state["diagnostics"],
                 "timings": state["timings"], "usage": state["usage"], "model_calls": state["model_calls"]}
 
@@ -393,6 +472,7 @@ class CounselingEngine:
             "uid": hashlib.sha256(user_id.encode("utf-8")).hexdigest()[:10],
             "handoff": result.get("handoff_status"),
             "safety_hint": assessment.get("safety_hint"),
+            "safety_mode": result.get("safety_mode"), "handoff_reason": result.get("handoff_reason"),
             "need": assessment.get("need"), "intent": assessment.get("intent"),
             "diagnostics": result.get("diagnostics", []),
             "calls": [c.get("purpose") for c in result.get("model_calls", [])],
@@ -448,6 +528,7 @@ class CounselingEngine:
                          signals={"tier1": list(found.tier1), "tier2": list(found.tier2)}, parts=[])
             if session["handoff_status"] == "accepted":
                 state["response"] = ""
+                state["safety_mode"] = "takeover"
                 state.update(await self._persist(state))
                 result = state
             else:
@@ -457,6 +538,7 @@ class CounselingEngine:
             joined = "\n\n".join(parts)
             output = {"response": joined, "response_text": joined, "response_parts": list(parts), "messages": result["session"]["messages"],
                       "assessment": result.get("assessment", {}), "handoff_status": result["session"]["handoff_status"],
+                      "safety_mode": result.get("safety_mode", "normal"), "handoff_reason": result.get("handoff_reason"),
                       "sources": result.get("sources", {}), "diagnostics": result["diagnostics"],
                       "timings": result["timings"], "usage": result["usage"], "model_calls": result["model_calls"]}
             output["trace"] = trace.finish()

@@ -16,6 +16,7 @@ import httpx
 from fastapi import APIRouter, Request, Response, HTTPException, BackgroundTasks
 
 from mimi_v2.messenger_format import to_messenger
+from mimi_v2.stacker import MessageStacker, StackItem
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -179,6 +180,21 @@ async def _stop_typing(psid: str, task: "asyncio.Task | None", *, replying: bool
 class _Parts(list):
     """Messages to deliver; also carries the engine's handoff status for the console mirror."""
     handoff_status: str | None = None
+    handoff_reason: str | None = None
+
+
+_HANDOFF_REASON_LABELS = {
+    "model:urgent": "mô hình đánh giá khẩn cấp",
+    "model:uncertain_repeat": "nghi ngờ lặp lại nhiều lần",
+    "accumulation": "nhiều tín hiệu tích luỹ",
+}
+
+
+def handoff_reason_text(code: str) -> str:
+    """Vietnamese console note for a text-free handoff reason code (never contains student text)."""
+    if code.startswith("keyword:"):
+        return f"Lý do chuyển thầy cô: từ khoá nguy hiểm ({code[len('keyword:'):]})"
+    return f"Lý do chuyển thầy cô: {_HANDOFF_REASON_LABELS.get(code, code)}"
 
 
 async def _process_message(psid: str, text: str) -> list[str]:
@@ -190,6 +206,8 @@ async def _process_message(psid: str, text: str) -> list[str]:
         parts = [result.get("response_text") or ""]
     out = _Parts(part.strip() for part in parts if isinstance(part, str) and part.strip())
     out.handoff_status = result.get("handoff_status")
+    reason = result.get("handoff_reason")
+    out.handoff_reason = reason if isinstance(reason, str) and reason else None
     return out
 
 
@@ -225,8 +243,18 @@ async def handle_facebook_event(
     message_text: str,
     suppress_delivery: bool = False,
     received_at: float | None = None,
+    *,
+    prelogged: bool = False,
+    typing_task: "asyncio.Future | None" = None,
+    allow_commands: bool = True,
+    stacked: int = 1,
 ):
-    """Asynchronous handler for Facebook events to avoid webhook timeouts."""
+    """Run ONE engine turn for a student message (or several joined ones) and deliver the replies.
+
+    The stacker calls this with the joined text and ``prelogged=True``: each message was already logged to the console
+    and had its typing indicator started on arrival, and admin commands were handled before stacking
+    (``allow_commands=False``). Called plainly it does all of that itself (``stacked`` only feeds the latency log).
+    """
     try:
         if _is_production_env():
             logger.info(
@@ -238,8 +266,8 @@ async def handle_facebook_event(
             )
 
         # Check for discovery commands
-        clean_text = message_text.strip().lower()
-        
+        clean_text = message_text.strip().lower() if allow_commands else ""
+
         if clean_text == "#whoami":
             await _send_messenger_message(sender, f"ID Facebook (PSID) của bạn là:\n{sender}")
             return
@@ -284,9 +312,10 @@ async def handle_facebook_event(
                 # If sender is not an admin, we just treat it as a normal message.
                 logger.warning(f"Unauthorized #resume attempt from {sender}")
 
-        typing_task = None if suppress_delivery else _start_typing(sender)  # overlaps the log write and engine
-        _console_typing(sender, True)
-        await _console("append", sender, "student", message_text)
+        if not prelogged:
+            typing_task = None if suppress_delivery else _start_typing(sender)  # overlaps the log write and engine
+            _console_typing(sender, True)
+            await _console("append", sender, "student", message_text)
         handling_started = time.monotonic()
         try:
             response_parts = await _process_message(sender, message_text)
@@ -297,7 +326,10 @@ async def handle_facebook_event(
         await _stop_typing(sender, typing_task, replying=bool(response_parts) and not suppress_delivery)
         engine_done = time.monotonic()
         handoff_status = getattr(response_parts, "handoff_status", None)
+        handoff_reason = getattr(response_parts, "handoff_reason", None)
         try:
+            if handoff_reason:
+                await _console("append", sender, "system", handoff_reason_text(handoff_reason))
             if response_parts:
                 if suppress_delivery:
                     logger.info(
@@ -327,6 +359,7 @@ async def handle_facebook_event(
             "send_s": round(done - engine_done, 3),
             "end_to_end_s": round(done - received_at, 3) if received_at is not None else None,
             "replied": bool(response_parts) and not suppress_delivery,
+            "stacked": stacked,
         }))
     except Exception:
         logger.exception(
@@ -336,6 +369,103 @@ async def handle_facebook_event(
         )
         # Optional: Send a fallback only if it's not a takeover situation
         # For now, we rely on logging for debugging background tasks.
+
+
+# --- message stacking ----------------------------------------------------------------------------------------------
+# Several quick messages from one student become ONE engine turn (see mimi_v2/stacker.py). In-process state: this
+# assumes a single replica; with more, stacking is per replica and nothing else breaks.
+
+def _is_admin_command(sender: str, message_text: str) -> bool:
+    """Commands handle_facebook_event runs itself (never stacked); mirrors its parsing."""
+    clean_text = message_text.strip().lower()
+    if clean_text == "#whoami":
+        return True
+    if clean_text.split()[:1] == ["#accept"] and sender in ADMIN_FACEBOOK_PSIDS:
+        return True
+    return clean_text.startswith("#resume") and sender in ADMIN_FACEBOOK_PSIDS
+
+
+async def _on_stack_arrival(psid: str, item: StackItem) -> None:
+    """Per-message side effects on arrival: seen/typing dots, console typing flag, console log entry."""
+    if not item.suppress:
+        item.typing.append(_start_typing(psid))
+    _console_typing(psid, True)
+    await _console("append", psid, "student", item.text)
+
+
+async def _process_stacked_batch(psid: str, items: list[StackItem]) -> None:
+    typing = [task for item in items for task in item.typing]
+    typing_task = asyncio.gather(*typing, return_exceptions=True) if typing else None
+    suppress = any(item.suppress for item in items)
+    await handle_facebook_event(
+        psid,
+        "\n".join(item.text for item in items),
+        suppress,
+        items[0].received_at,
+        prelogged=True,
+        typing_task=typing_task,
+        allow_commands=False,
+        stacked=len(items),
+    )
+    waiting = get_stacker().pending(psid)
+    if waiting:      # more messages arrived meanwhile: they are the next turn, so keep the dots going
+        _console_typing(psid, True)
+        if not suppress:
+            waiting[-1].typing.append(_start_typing(psid))
+
+
+_stacker: MessageStacker | None = None
+
+
+def get_stacker() -> MessageStacker:
+    global _stacker
+    if _stacker is None:
+        _stacker = MessageStacker(_process_stacked_batch, on_arrival=_on_stack_arrival)
+    return _stacker
+
+
+def reset_stacker() -> None:
+    """Forget the process-wide stacker (tests)."""
+    global _stacker
+    _stacker = None
+
+
+async def enqueue_facebook_event(
+    sender: str,
+    message_text: str,
+    suppress_delivery: bool = False,
+    received_at: float | None = None,
+):
+    """Entry point for webhook deliveries: stack the message, or handle it right away when stacking does not apply."""
+    stacker = get_stacker()
+    if sender == E2E_PROBE_PSID or not stacker.enabled or _is_admin_command(sender, message_text):
+        await handle_facebook_event(sender, message_text, suppress_delivery, received_at)
+        return
+    await stacker.submit(sender, StackItem(text=message_text, suppress=suppress_delivery, received_at=received_at))
+
+
+# Facebook redelivers a webhook when it thinks we were slow; the same message id must not become a second turn.
+_SEEN_MID_TTL = 600.0
+_SEEN_MID_MAX = 5000
+_seen_mids: dict[str, float] = {}
+
+
+def _is_duplicate_mid(mid: Any) -> bool:
+    """True if this message id was already accepted by this process within the TTL; remembers it otherwise."""
+    if not mid or not isinstance(mid, str):
+        return False
+    now = time.monotonic()
+    if len(_seen_mids) >= _SEEN_MID_MAX:
+        for key in [k for k, expires in _seen_mids.items() if expires <= now]:
+            del _seen_mids[key]
+        while len(_seen_mids) >= _SEEN_MID_MAX:      # still full: drop the oldest (dicts keep insertion order)
+            del _seen_mids[next(iter(_seen_mids))]
+    expires = _seen_mids.get(mid)
+    if expires is not None and expires > now:
+        return True
+    _seen_mids.pop(mid, None)
+    _seen_mids[mid] = now + _SEEN_MID_TTL
+    return False
 
 
 @router.get("/webhook/facebook")
@@ -434,12 +564,16 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
             if not message_text:
                 continue
 
+            if _is_duplicate_mid(message.get("mid") or postback.get("mid")):
+                logger.info("[RUNTIME_DIAG] Ignored duplicate Facebook delivery request_id=%s sender=%s", request_id, sender)
+                continue
+
             suppress_delivery = probe_requested and sender == E2E_PROBE_PSID
             if suppress_delivery:
                 suppressed_deliveries += 1
             # Offload processing to background task to respond to Facebook immediately (within 20s)
             background_tasks.add_task(
-                handle_facebook_event,
+                enqueue_facebook_event,
                 sender,
                 message_text,
                 suppress_delivery,

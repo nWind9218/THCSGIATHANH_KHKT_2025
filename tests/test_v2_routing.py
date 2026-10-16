@@ -57,7 +57,7 @@ async def test_recheck_never_lowers_urgent_or_survives_its_own_failure():
     result = await turn(RecordingModel(risks=("uncertain", "urgent")))
     assert result["handoff_status"] == "pending"
     model = RecordingModel(risks=("uncertain",), errors={})
-    # The recheck call fails with a non-transient error: stays uncertain -> handoff, never "safe".
+    # The recheck call fails with a non-transient error: stays uncertain (a check-in, no alert), never "safe".
     original = model.complete
 
     async def flaky(messages, purpose="reply", effort=None, fallback=False):
@@ -66,7 +66,8 @@ async def test_recheck_never_lowers_urgent_or_survives_its_own_failure():
         return await original(messages, purpose, effort, fallback)
     model.complete = flaky
     result = await turn(model)
-    assert result["handoff_status"] == "pending" and "safety_recheck_failed" in result["diagnostics"]
+    assert result["handoff_status"] == "none" and result["safety_mode"] == "checkin"
+    assert "safety_recheck_failed" in result["diagnostics"]
 
 
 @pytest.mark.asyncio
@@ -93,9 +94,12 @@ async def test_plain_models_never_receive_router_arguments():
         async def complete(self, messages, purpose):  # no effort/fallback parameters
             if purpose == "safety":
                 return SimpleNamespace(text='{"risk":"uncertain","reason":"x"}', usage={}, metadata={})
-            raise AssertionError("assessment/reply must not run after an uncertain safety result")
+            raise AssertionError("plain model has no assessment/reply")
     result = await turn(Plain())
-    assert result["handoff_status"] == "pending" and not any(d.startswith("safety_rechecked") for d in result["diagnostics"])
+    # No recheck for a plain model; uncertain is a check-in, and with the assessment/reply models failing too
+    # the user gets the fixed 111 message instead of a teacher alert.
+    assert result["handoff_status"] == "none" and not any(d.startswith("safety_rechecked") for d in result["diagnostics"])
+    assert "111" in result["response"]
 
 
 def test_router_defaults_and_env_overrides():

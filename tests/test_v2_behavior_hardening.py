@@ -69,9 +69,14 @@ def test_identical_fact_duplicates_normalize_without_information_loss():
     assert len(source["known"]) == 2
 
 
-def test_conflicting_fact_duplicates_never_pick_arbitrary_winner():
-    with pytest.raises(ContractError, match="duplicate_fact_key"):
-        normalize_assessment({"known": [{"key": "grade", "value": "8"}, {"key": "grade", "value": "9"}]})
+def test_conflicting_fact_duplicates_keep_the_models_last_correction_and_are_not_fatal():
+    # A repeated key is the model correcting itself: newest value wins, nothing raises (a bad fact must
+    # never fail the whole assessment and, with it, the turn).
+    source = {"known": [{"key": "grade", "value": "8"}, {"key": "grade", "value": "9"}, {"key": "club", "value": "bóng đá"}]}
+    assert normalize_assessment(source)["known"] == {"grade": "9", "club": "bóng đá"}
+    # Other fact validation is unchanged.
+    with pytest.raises(ContractError, match="invalid_fact_key"):
+        normalize_assessment({"known": [{"key": " grade", "value": "8"}]})
 
 
 @pytest.mark.asyncio
@@ -87,7 +92,7 @@ async def test_actual_assessment_and_reply_payloads_ground_user_facts_and_correc
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("risk,hint", [("urgent", "safe"), ("uncertain", "safe"), ("safe", "urgent")])
+@pytest.mark.parametrize("risk,hint", [("urgent", "safe"), ("safe", "urgent")])
 async def test_listen_closing_conflict_never_bypasses_safety(risk, hint):
     store = InMemoryStore()
     model = Model(risk=risk, hint=hint)

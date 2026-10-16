@@ -85,7 +85,7 @@ async def test_listen_instruction_overrides_remaining_missing_info_without_strip
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("risk, hint", [("urgent", "safe"), ("safe", "urgent"), ("bogus", "safe")])
+@pytest.mark.parametrize("risk, hint", [("urgent", "safe"), ("safe", "urgent")])
 async def test_all_risk_routes_pending_and_accepted_silence(risk, hint):
     store = InMemoryStore()
     model = FakeModel([assessment(safety_hint=hint)], risk=risk, recheck="urgent")
@@ -114,7 +114,7 @@ async def test_safety_before_retrieval_and_notification_failure():
             raise AssertionError("must not retrieve before safety")
         async def notify(self, *args):
             raise RuntimeError("notify down")
-    engine = CounselingEngine(FakeModel(fail="safety"), BrokenStore())
+    engine = CounselingEngine(FakeModel(risk="urgent"), BrokenStore())
     result = await engine.respond("a", "message")
     assert "notification_unavailable" in result["diagnostics"]
     assert "chưa gửi được" in result["response"]
@@ -167,12 +167,16 @@ async def test_retrieval_and_reply_failures_are_visible_and_keep_history():
 
 
 @pytest.mark.asyncio
-async def test_invalid_assessment_is_review_not_an_assumed_safe_reply():
+async def test_invalid_assessment_never_hands_off_on_its_own():
+    # The dedicated safety check said "safe": a broken assessment falls back to a neutral one and the
+    # turn is answered normally (the old fail-closed handoff produced false alerts).
+    store = InMemoryStore()
     model = FakeModel([{"verdict": "sufficient", "scratchpad": []}])
-    result = await CounselingEngine(model, InMemoryStore()).respond("a", "hello")
-    assert result["handoff_status"] == "pending"
-    assert "assessment_unavailable_or_invalid" in result["diagnostics"]
-    assert [p for p, _ in model.calls] == ["safety", "assessment"]
+    result = await CounselingEngine(model, store).respond("a", "hello")
+    assert result["handoff_status"] == "none" and store.alerts == []
+    assert "assessment_unavailable_or_invalid" in result["diagnostics"] and "assessment_fallback" in result["diagnostics"]
+    assert [p for p, _ in model.calls] == ["safety", "assessment", "reply"]
+    assert result["assessment"]["intent"] == "support" and result["assessment"]["safety_hint"] == "safe"
 
 
 @pytest.mark.asyncio
@@ -228,19 +232,29 @@ async def test_wire_known_list_normalizes_to_public_and_stored_dict():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("facts,code", [
-    ([{"key": "secret-fact", "value": "private-text"}, {"key": "secret-fact", "value": "changed"}], "duplicate_fact_key"),
     ([{"key": "grade", "value": 9}], "invalid_fact_value"),
     ([{"key": "grade", "value": "9", "other": "private-text"}], "invalid_fact_entry"),
     ([{"key": "", "value": "private-text"}], "invalid_fact_key"),
     ({"grade": {"nested": "private-text"}}, "string_type"),
 ])
-async def test_wire_errors_remain_uncertain_and_private(facts, code):
+async def test_wire_errors_fall_back_without_handoff_and_stay_private(facts, code):
     result = await CounselingEngine(FakeModel([assessment(known=facts)]), InMemoryStore()).respond("a", "test")
-    assert result["handoff_status"] == "pending"
+    assert result["handoff_status"] == "none" and "assessment_fallback" in result["diagnostics"]
     assert "assessment_unavailable_or_invalid" in result["diagnostics"]
     assert any(code in entry for entry in result["diagnostics"])
     assert "secret-fact" not in str(result["diagnostics"])
     assert "private-text" not in str(result["diagnostics"])
+
+
+@pytest.mark.asyncio
+async def test_duplicate_fact_keys_keep_the_last_value_and_do_not_fail_the_turn():
+    # Production incident: a repeated `known` key raised duplicate_fact_key, failed the assessment and
+    # handed a benign message off to teachers.
+    facts = [{"key": "grade", "value": "8"}, {"key": "grade", "value": "9"}]
+    store = InMemoryStore()
+    result = await CounselingEngine(FakeModel([assessment(known=facts)]), store).respond("a", "Em lớp 9")
+    assert result["handoff_status"] == "none" and store.alerts == [] and not result["diagnostics"]
+    assert result["assessment"]["known"] == {"grade": "9"} and (await store.load("a"))["known"] == {"grade": "9"}
 
 
 @pytest.mark.asyncio
@@ -281,7 +295,9 @@ async def test_duplicate_json_property_is_not_silently_last_value_wins():
     class DuplicateSafety(FakeModel):
         async def complete(self, messages, purpose):
             return SimpleNamespace(text='{"risk":"urgent","risk":"safe","reason":"private-text"}', usage={}, metadata={})
-    result = await CounselingEngine(DuplicateSafety(), InMemoryStore()).respond("a", "test")
-    assert result["handoff_status"] == "pending"
+    store = InMemoryStore()
+    result = await CounselingEngine(DuplicateSafety(), store).respond("a", "test")
+    # An ambiguous/invalid safety answer is "unavailable": never trusted as either value, no teacher alert.
+    assert result["handoff_status"] == "none" and store.alerts == [] and result["safety_mode"] == "degraded"
     assert "safety_validation:payload:duplicate_json_property" in result["diagnostics"]
     assert "private-text" not in str(result["diagnostics"])
