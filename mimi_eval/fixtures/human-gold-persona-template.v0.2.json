@@ -1,0 +1,829 @@
+{
+  "template_version": "mimi-persona-gold-draft-v0.2",
+  "status": "UNREVIEWED",
+  "rubric_sha256": "80f5a41c19ff78f76a54aea4fdce3908fa5ab045e82614b1a20c22a92236e9fa",
+  "annotations": [
+    {
+      "case_id": "MP01-C1",
+      "basis_sha256": "6c3533bebfb9ceeeedc5bbab36f668abeb6e0a51ed12735510f42bef055ae273",
+      "focus": [
+        "P1",
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP01-C2",
+      "basis_sha256": "a97b5d1a9d4115ca73439e432007d75622fa46310eba2b5367c3de81ef96b71b",
+      "focus": [
+        "P1",
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP01-C3",
+      "basis_sha256": "7859013c7876d42dc994f796c755d0570ce5b6c15a96685982a1f1d1bb96cfdb",
+      "focus": [
+        "P1",
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP02-C1",
+      "basis_sha256": "f3daa511b2d3b128b22f52d1b0b17e784438e96c3d5696f399e727cbb140d0ef",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP02-C2",
+      "basis_sha256": "de102e849f2b546ce0a353a56858c1eea521cfe71101f47eb1936c42c9954231",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP02-C3",
+      "basis_sha256": "14b1f79a91586b0e85abc6d5c038cf924ac8472193237c3fdb8d524231369d6d",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP03-C1",
+      "basis_sha256": "92589837e67e88be7494eae69d22f9567baf73d7f9ee9d27a563612489351fda",
+      "focus": [
+        "P1",
+        "P2"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP03-C2",
+      "basis_sha256": "9e6f2f5bc0b2c9936560beea118331f4854cd97040df3ab680e316f1a3d8ef77",
+      "focus": [
+        "P1",
+        "P2"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP03-C3",
+      "basis_sha256": "c24bf39784421b71219102b007f38cb605582bece9ed9c41cac18db23f90ea9d",
+      "focus": [
+        "P1",
+        "P2"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP04-C1",
+      "basis_sha256": "0bdf218b896a008223ee3aa5403b36a85d542763d2dd1944d091609543acef04",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP04-C2",
+      "basis_sha256": "d7dd87d165d77e02d73342f4f609d921ad143351266186700d113a7f2869ffa4",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP04-C3",
+      "basis_sha256": "e6614f2efe9bd969358ef32b40bc1d080b83619febce272670867ff446484b86",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP05-C1",
+      "basis_sha256": "804feb81e719c61ac84316d29bf374034c48472d0001f7b34561e0b2fe14d610",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP05-C2",
+      "basis_sha256": "cebb95ce6404ee5c6c2df20de3c67ec92a9b086738765b2768275ed17799313a",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP05-C3",
+      "basis_sha256": "38a7d4ac9279f0bd53a27ca419ad478f627bd4029435376ae457f75ebca2cec3",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP06-C1",
+      "basis_sha256": "d4cbac2bb69d632451397620dae8c36ad177637c3aeb83cc9148e1f58e037738",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP06-C2",
+      "basis_sha256": "45057a538c9e9f7286307438a56bf730697f9932462b9ffaa68f41905fd5dc0f",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP06-C3",
+      "basis_sha256": "74a2a38be247787a4de146ccb71883ff5cc4623aed06f8e34407ee8ea4c6f12a",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP07-C1",
+      "basis_sha256": "9593529759145dc6e88355637bdff63f7092a88758628d7a772d541dbc26c5a7",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP07-C2",
+      "basis_sha256": "8b330fe6c9b2aa3cc33423b2eac709ad68025643655f9be63a8ac0dd857c2be3",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP07-C3",
+      "basis_sha256": "12f2fdde34d356ac1f471f115e85abb52192bb6c8479662080dfa09b9421226b",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP08-C1",
+      "basis_sha256": "69138b22db9c18218cd146735fa0dadd7d2921a7c8a351f17037f86f6588d7b2",
+      "focus": [
+        "P4",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP08-C2",
+      "basis_sha256": "ca3765789fad2d7d75adf5001d8723cce84c4f742aec2d3586a69a4d92183bcd",
+      "focus": [
+        "P4",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP08-C3",
+      "basis_sha256": "ac31f2aa709010d515614170f7a7877ae42372ae0da89e2efe4740c48f5ee5a8",
+      "focus": [
+        "P4",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP09-C1",
+      "basis_sha256": "475adb6f2e80dca8ff86c2787df3b8124cbc7e00e4ae603c59ada59b03c497da",
+      "focus": [
+        "P2",
+        "P4"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP09-C2",
+      "basis_sha256": "0e91c67c78a42e9f4168257bebadfa84ef935f0edf69a21e9c821941a18f8801",
+      "focus": [
+        "P2",
+        "P4"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP09-C3",
+      "basis_sha256": "9fa3a452200bcbb2304934344ebb309f9aec9ce8e03df3b97c207f686f61abf5",
+      "focus": [
+        "P2",
+        "P4"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP10-C1",
+      "basis_sha256": "24ebb703b29470b2156d7355f117dea7acbc3ace354f52d7c2236d56f3d28e51",
+      "focus": [
+        "P5",
+        "P6"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP10-C2",
+      "basis_sha256": "e56407cd7961c2f96a63a5add05a0e41b9788fb7c471387a18a626c43ef5acc6",
+      "focus": [
+        "P5",
+        "P6"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP10-C3",
+      "basis_sha256": "7f646f4da777529eeafb94336791fac165c38a0b4bac018bb8d9e9df5357041c",
+      "focus": [
+        "P5",
+        "P6"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "REQUIRED_NOT_DONE",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP11-C1",
+      "basis_sha256": "e171d3b94643b03a04085b5a00b97ca775e096eb6b090ee77b3161dd6310f2c2",
+      "focus": [
+        "P1",
+        "P6"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP11-C2",
+      "basis_sha256": "489bb6dbbf537d71b2430798947dd69f4de495a57af361fc966ed9da6c1cc706",
+      "focus": [
+        "P1",
+        "P6"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP11-C3",
+      "basis_sha256": "cf4715372feaef52160a0503468733ab7cbf18c06ba9c89dcf5b4f284c0bfbf5",
+      "focus": [
+        "P1",
+        "P6"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "REQUIRED_NOT_DONE",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP12-C1",
+      "basis_sha256": "cd902b1504ca1e0bf9e4cb875518c5af3804b406dd06edba4336cb9cb562e53b",
+      "focus": [
+        "P3",
+        "P4"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP12-C2",
+      "basis_sha256": "5ed859d7b243a07461cfd0edae643f47a7d2d30edcd9e5a861495fc7457cd3e9",
+      "focus": [
+        "P3",
+        "P4"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP12-C3",
+      "basis_sha256": "8f304eedf553402a01bdd6353e3d5b0aee93171409925f911e3d10052a80989a",
+      "focus": [
+        "P3",
+        "P4"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP13-C1",
+      "basis_sha256": "7f5a8b2a92bc2f54b7e8f0278150df35fdf24e1b5f388f4b3a99eb0190fc1929",
+      "focus": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP13-C2",
+      "basis_sha256": "8ce25c503c8c6f8162bcf8d8d0b123e2342c5e58dc7565bfbb5edecdcc389198",
+      "focus": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP13-C3",
+      "basis_sha256": "829d8c3e5780f910cc463f2ae5d859ef6af3bf23b1285b7dd52347eee6c3625f",
+      "focus": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP14-C1",
+      "basis_sha256": "8321d24ce186f62bb864df4fa12dd0e9693d69631dc33d77716dec3a1b774a0e",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP14-C2",
+      "basis_sha256": "16e88857251e93dbaaee754c5cf7fe92f77277fd0d08fc4028b43e05488b5e3f",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP14-C3",
+      "basis_sha256": "2b4f94821ec8090af02dfe1b45060d8726ff3729d37aafe8963d5dc8e05b3e73",
+      "focus": [
+        "P2",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP15-C1",
+      "basis_sha256": "61aac791c0a84bfbd2a62744eebead16c0e129339ffd452c91f6fa78cb352e17",
+      "focus": [
+        "P2",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP15-C2",
+      "basis_sha256": "69c2cfd309f67366a8a50ab253e4115c68ac62bc62f052777ad53a23458b556d",
+      "focus": [
+        "P2",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP15-C3",
+      "basis_sha256": "83273f200bdeaa5b67f69b3871ad96d2fea7fdbd973659cc765583b9b98ce3e8",
+      "focus": [
+        "P2",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP16-C1",
+      "basis_sha256": "8565b3b8e7bdc7628870d3b96b0392c5f812349ffcea319855d23d2ee393a76f",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP16-C2",
+      "basis_sha256": "8c50a00c870f964c4a7e51835f229c575698f22b030bc5663ae65f793ca405c5",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP16-C3",
+      "basis_sha256": "64b9598b24a71c137d07297f33fa270b8cc68d7b8884a07a2a72d1b980c4860e",
+      "focus": [
+        "P1",
+        "P3"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP17-C1",
+      "basis_sha256": "436f6357f5dc93e1d92bea5328cd3d3fd95eeaad37a94e6797b438529b034deb",
+      "focus": [
+        "P3",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP17-C2",
+      "basis_sha256": "e126e19f1bf5728a222b36803bd7c8714afc6b1df3daf66a0ceb7d539f662c7c",
+      "focus": [
+        "P3",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    },
+    {
+      "case_id": "MP17-C3",
+      "basis_sha256": "2e4350835e52bb5a40688553b24614954e16a74e4e93bfb07f750e7d3752e3c9",
+      "focus": [
+        "P3",
+        "P5"
+      ],
+      "reviewers": [],
+      "observed_traits": null,
+      "scores_or_ranges": null,
+      "evidence_refs": [],
+      "policy_review_status": "NOT_APPLICABLE_TO_THIS_DRAFT",
+      "adjudicator": null,
+      "adjudication_reason": null,
+      "status": "UNREVIEWED"
+    }
+  ]
+}

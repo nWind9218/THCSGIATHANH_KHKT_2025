@@ -32,7 +32,15 @@ Reports keep response_quality, router_policy and system_actions separate. scoped
 
 See specs/student-perspective-review-v0.2.md for the reviewed design intent and concrete Vietnamese contrasts. T21–T24 hold the final “Trời ơi, em phải làm sao đây...” utterance and reusable replies constant while changing the preceding purpose; T23/T24 also hold no-questions constant. T25 tests genuine ambiguity despite a complete prefix. These are scripted hypotheses, all UNREVIEWED, not observed LLM classification results.
 
-Q3 assesses communication quality with no slang quota. It shares tone concerns with persona, but does not establish complete Mimi persona acceptance; a dedicated persona case set has not been added. Persona acceptance is explicitly NOT_EVALUATED in the report. Reports under reports/offline-v0.2/ and pytest-final.xml are historical baseline receipts; latest revision receipts are under reports/student-lens-r1/.
+Q3 assesses communication quality with no slang quota. It shares tone concerns with persona, but does not establish complete Mimi persona acceptance; the later persona draft provides separate cases but no scorer or acceptance gate. Persona acceptance is explicitly NOT_EVALUATED in the report. Reports under reports/offline-v0.2/ and pytest-final.xml are historical baseline receipts; latest revision receipts are under reports/student-lens-r1/.
+
+## Separate persona draft (r1)
+
+See specs/mimi-persona-rubric-v0.2.md and its JSON source: six proposed facets with 0–3 anchors, scoped evidence, and four context-sensitive tone directions confirmed by the product owner (subtle playful, mischievous playful, gentle warm, energetic encouraging). No slang/emoji quota; no single default temperament is imposed across contexts.
+
+fixtures/mimi-persona-suite-draft-v0.2.json has 17 scenarios × 3 candidates = 51 illustrative candidates, with an independent fixture schema and empty human-gold-persona-template.v0.2.json. All detailed scores remain PROPOSED/UNREVIEWED. Existing Q2/Q3 schemas, validator and 79-case replay are unchanged; persona draft cannot be passed into that replay as if it had been graded. No new model adapter, observer output contract, persona scorer or production prompt change.
+
+Validation receipts under reports/persona-draft-r1/ cover draft structure, source/span integrity and the existing offline suite. They do not measure persona acceptance or judge semantic accuracy. For independent human annotation, hide draft_scores/style_variant/appropriate_modes from the annotation packet rather than treating the illustrations as gold.
 
 ## Known limits and next phase
 

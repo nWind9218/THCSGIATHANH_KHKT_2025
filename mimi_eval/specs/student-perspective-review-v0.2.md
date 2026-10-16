@@ -1,3 +1,5 @@
+> Historical student-lens-r1 design note. A later separate persona draft now exists at mimi-persona-rubric-v0.2.md and ../fixtures/mimi-persona-suite-draft-v0.2.json. Persona acceptance remains NOT_EVALUATED; no persona scoring or live run has been added.
+
 # Student lens r1 — Q2/Q3 và câu “em phải làm sao?”
 
 Nguồn thay đổi: product owner yêu cầu đưa góc nhìn nhập vai học sinh vào rubric và bổ sung cặp than/xin giải pháp. Đây là ngữ liệu synthetic để thiết kế; không phải phỏng vấn học sinh thật, không đại diện cho mọi học sinh Việt Nam và không phải persona chuẩn của Mimi. Toàn bộ fixture mới vẫn UNREVIEWED.
