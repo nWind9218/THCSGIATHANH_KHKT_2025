@@ -4,8 +4,10 @@ Pure functions, stdlib only, no LLM. Used by the core to (1) pick the speaking r
 writes and (2) raise (never lower) the safety risk via a keyword floor plus hints for the LLM safety classifier.
 
 Trade-offs (principle: "thà nhắc thừa còn hơn bỏ sót"):
-- tier1 = explicit statements (tự tử, rạch tay, treo cổ, nhảy lầu, bị bố đánh đập, bị sờ...). Floor = "urgent",
-  so a false positive costs one extra teacher handoff, a false negative could cost a child. Known ambiguous bare forms
+- tier1 = explicit statements (tự tử, rạch tay, treo cổ, nhảy lầu, bị bố đánh đập, bị sờ...). The scan is context-blind
+  (it also matches "em không có ý nghĩ làm đau mình"), so core.py treats a tier-1 hit as a TRIGGER for a deeper
+  multi-round safety review (negation, jokes, quotes, intent), not as a verdict; only if that review cannot run does a
+  tier-1 hit fail closed to handoff. Hand-written negation rules are deliberately not attempted here. Known ambiguous bare forms
   without diacritics ("tu tu" = từ từ, "treo co" = treo cờ, "tu hai" = từ hai, "that co" = thật có, "nhay cau" =
   diving) are guarded by context rules; text with explicit diacritics "từ từ"/"treo cờ"/"từ hai" is never a hit.
 - tier2 = vague signals, hint only. Clear jokes ("chết cười", "xỉu ngang", "mệt chết", "muốn chết vì bài tập")

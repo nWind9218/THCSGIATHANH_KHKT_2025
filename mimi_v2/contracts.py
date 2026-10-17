@@ -12,6 +12,21 @@ def _object(properties: dict) -> dict:
 
 SAFETY_SCHEMA = _object({
     "risk": {"type": "string", "enum": ["safe", "urgent", "uncertain"]},
+    "confidence": {"type": "string", "enum": ["high", "low"]},
+    "reason": {"type": "string"},
+})
+
+DELIBERATE_SCHEMA = _object({
+    "cues": {"type": "array", "items": {"type": "string"}},
+    "about_self": {"type": "boolean"},
+    "negated_or_denied": {"type": "boolean"},
+    "joking_or_hyperbole": {"type": "boolean"},
+    "quoted_or_hypothetical": {"type": "boolean"},
+    "intent": {"type": "string", "enum": ["none", "passive", "active"]},
+    "plan_or_means": {"type": "boolean"},
+    "abuse_or_danger_from_others": {"type": "boolean"},
+    "context_trend": {"type": "string"},
+    "risk": {"type": "string", "enum": ["safe", "uncertain", "urgent"]},
     "reason": {"type": "string"},
 })
 
@@ -29,6 +44,7 @@ ASSESSMENT_SCHEMA = _object({
 
 SCHEMAS = {
     "safety": {"name": "mimi_safety", "schema": SAFETY_SCHEMA, "strict": True},
+    "deliberate": {"name": "mimi_safety_deliberation", "schema": DELIBERATE_SCHEMA, "strict": True},
     "assessment": {"name": "mimi_assessment", "schema": ASSESSMENT_SCHEMA, "strict": True},
 }
 

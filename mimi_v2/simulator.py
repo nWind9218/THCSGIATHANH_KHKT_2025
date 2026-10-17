@@ -42,7 +42,12 @@ class OfflineModel:
         elif purpose == "legacy_memory":
             output = json.dumps({"should_store": False})
         elif purpose == "safety":
-            output = json.dumps({"risk": "urgent" if urgent else "safe", "reason": "offline fixture"})
+            output = json.dumps({"risk": "urgent" if urgent else "safe", "confidence": "high", "reason": "offline fixture"})
+        elif purpose == "deliberate":
+            output = json.dumps({"cues": [], "about_self": True, "negated_or_denied": False, "joking_or_hyperbole": False,
+                                 "quoted_or_hypothetical": False, "intent": "active" if urgent else "none", "plan_or_means": False,
+                                 "abuse_or_danger_from_others": False, "context_trend": "",
+                                 "risk": "urgent" if urgent else "safe", "reason": "offline fixture"})
         elif purpose == "assessment":
             parent = "phụ huynh" in all_text or "tôi là mẹ" in all_text or "tôi là bố" in all_text
             listen = "lắng nghe" in all_text or "không cần lời khuyên" in all_text
@@ -78,14 +83,17 @@ class FaultStore(InMemoryStore):
 def load_local_model_environment(path: str | Path = ".env") -> dict:
     """Copy only authorized model variables, never Facebook/DB/Redis credentials."""
     allowed = {"OPENAI_API_KEY", "OPENAI_CHAT_MODEL", "MIMI_V2_BASE_URL", "MIMI_V2_API_KEY", "MIMI_V2_MODEL", "MIMI_V2_API",
-               "MIMI_V2_REASONING_EFFORT", "MIMI_V2_VERBOSITY", "MIMI_V2_MAX_OUTPUT_TOKENS", "MIMI_V2_TIMEOUT"}
-    result = {key: os.environ[key] for key in allowed if os.environ.get(key)}
+               "MIMI_V2_REASONING_EFFORT", "MIMI_V2_VERBOSITY", "MIMI_V2_MAX_OUTPUT_TOKENS", "MIMI_V2_TIMEOUT",
+               "MIMI_V2_ROUTING", "MIMI_V2_FALLBACK_MODEL", "MIMI_V2_FALLBACK_EFFORT"}
+    prefixes = ("MIMI_V2_MODEL_", "MIMI_V2_EFFORT_")  # per-flow routing overrides read by RoutedModel
+    ok = lambda key: key in allowed or key.startswith(prefixes)
+    result = {key: value for key, value in os.environ.items() if ok(key) and value}
     if Path(path).is_file():
         from dotenv import dotenv_values
         values = dotenv_values(path, interpolate=False)
-        for key in allowed:
-            if key not in result and values.get(key):
-                result[key] = values[key]
+        for key, value in values.items():
+            if ok(key) and key not in result and value:
+                result[key] = value
     return result
 
 
@@ -169,8 +177,10 @@ def build_app(config=None):
     theme = gr.themes.Default(font=["system-ui", "Arial", "sans-serif"],
                               font_mono=["Consolas", "monospace"])
     with gr.Blocks(title="Mimi — mô phỏng Messenger local", analytics_enabled=False, theme=theme) as app:
+        routing_note = " Routing: **adaptive**." if (config or {}).get("routing") == "adaptive" else " Routing: **off**."
         gr.Markdown("# Mimi — kiểm thử Messenger local\nDữ liệu chỉ nằm trong RAM. Không kết nối Facebook, database, email hoặc alert production. "
-                    + ("**Live model đang bật: request OpenAI có thể phát sinh phí.**" if (config or {}).get("live") else "Model giả lập offline: kiểm tra luồng, không đánh giá chất lượng trí tuệ."))
+                    + ("**Live model đang bật: request OpenAI có thể phát sinh phí.**" if (config or {}).get("live") else "Model giả lập offline: kiểm tra luồng, không đánh giá chất lượng trí tuệ.")
+                    + (routing_note if (config or {}).get("live") else ""))
         state = gr.State(None)
         identity = gr.Textbox(label="PSID giả lập của phiên", interactive=False)
         with gr.Row():
@@ -217,14 +227,27 @@ def build_app(config=None):
     return app
 
 
+def resolve_routing(flag: str | None = None) -> str:
+    """CLI flag wins; otherwise follow MIMI_V2_ROUTING like production."""
+    if flag:
+        return flag
+    value = load_local_model_environment().get("MIMI_V2_ROUTING", "").strip().lower()
+    return "adaptive" if value == "adaptive" else "off"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Local-only Gradio Messenger simulator")
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--api", choices=["responses", "chat_completions"], default="responses")
     parser.add_argument("--model", default=None, help="defaults to MIMI_V2_MODEL / OPENAI_CHAT_MODEL")
+    parser.add_argument("--routing", choices=["adaptive", "off"], default=None,
+                        help="defaults to MIMI_V2_ROUTING from the local model environment (as production)")
     parser.add_argument("--port", type=int, default=7860)
     args = parser.parse_args()
-    build_app({"live": args.live, "api": args.api, **({"model": args.model} if args.model else {})}).queue().launch(
+    config = {"live": args.live, "api": args.api, **({"model": args.model} if args.model else {})}
+    if args.live and resolve_routing(args.routing) == "adaptive":
+        config["routing"] = "adaptive"
+    build_app(config).queue().launch(
         server_name="127.0.0.1", server_port=args.port, share=False, show_error=False)
 
 

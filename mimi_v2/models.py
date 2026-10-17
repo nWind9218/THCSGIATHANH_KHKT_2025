@@ -282,7 +282,7 @@ class OpenAIModel:
                 raise ModelError("unsupported_input")
             clean.append({"role": message["role"], "content": message["content"]})
         schema = None
-        if purpose in {"safety", "assessment"}:
+        if purpose in {"safety", "deliberate", "assessment"}:
             if not _supports_structured_output(self.config.model):
                 raise ModelError("unsupported_structured_output")
             from .contracts import schema_for_purpose
@@ -369,7 +369,7 @@ class OpenAIModel:
 
 # Per-flow defaults measured on OpenAI: gpt-5.4-mini was both faster and at least as
 # accurate on safety as gpt-5-mini. Safety never drops below "low".
-ROUTE_DEFAULTS = {"safety": ("gpt-5.4-mini", "low"), "assessment": ("gpt-5.4-mini", "none"), "reply": ("gpt-5.4-mini", "low")}
+ROUTE_DEFAULTS = {"safety": ("gpt-5.4-mini", "low"), "deliberate": ("gpt-5.4-mini", "medium"), "assessment": ("gpt-5.4-mini", "none"), "reply": ("gpt-5.4-mini", "low")}
 FALLBACK_DEFAULT = ("gpt-5-mini", "low")
 
 
@@ -409,7 +409,7 @@ class RoutedModel:
         return cls(ModelConfig.from_env(env), routes, fallback, **kwargs)
 
     def _config_for(self, purpose: str, effort: str | None, fallback: bool) -> ModelConfig:
-        if fallback and purpose != "safety" and self._fallback is not None:
+        if fallback and purpose not in {"safety", "deliberate"} and self._fallback is not None:
             model, route_effort = self._fallback  # a per-turn effort is tuned for the primary model
             effort = None
         else:

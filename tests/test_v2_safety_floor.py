@@ -1,4 +1,4 @@
-"""Deterministic keyword floor and accumulated-signal memory around the LLM safety gate. Offline."""
+"""Keyword / accumulated-signal memory around the LLM safety gate: cues trigger a deliberation, never decide. Offline."""
 import json
 import logging
 from types import SimpleNamespace
@@ -22,10 +22,11 @@ def assessment():
 
 
 class Model:
-    """Always-safe LLM unless told otherwise; records every safety prompt it receives."""
+    """Always-safe triage unless told otherwise; the deliberation says `deliberate` (default urgent: a cue that
+    reaches round 2 is treated as real). Records every safety prompt it receives."""
 
-    def __init__(self, risks=("safe",), routable=False):
-        self.risks, self.routable = list(risks), routable
+    def __init__(self, risks=("safe",), routable=False, deliberate="urgent"):
+        self.risks, self.routable, self.deliberate = list(risks), routable, deliberate
         self.safety_prompts, self.calls = [], []
 
     async def complete(self, messages, purpose="reply", effort=None, fallback=False):
@@ -34,6 +35,11 @@ class Model:
             self.safety_prompts.append(messages[0]["content"])
             risk = self.risks.pop(0) if len(self.risks) > 1 else self.risks[0]
             text = json.dumps({"risk": risk, "reason": "fixture"})
+        elif purpose == "deliberate":
+            text = json.dumps(dict(cues=[], about_self=True, negated_or_denied=False, joking_or_hyperbole=False,
+                                   quoted_or_hypothetical=False, intent="none", plan_or_means=False,
+                                   abuse_or_danger_from_others=False, context_trend="", reason="fixture",
+                                   risk=self.deliberate))
         elif purpose == "assessment":
             text = json.dumps(assessment())
         else:
@@ -42,25 +48,25 @@ class Model:
 
 
 @pytest.mark.asyncio
-async def test_tier1_keyword_forces_handoff_even_when_llm_says_safe():
+async def test_tier1_keyword_triggers_deliberation_and_its_urgent_verdict_hands_off():
     store, model = InMemoryStore(), Model()
     result = await CounselingEngine(model, store).respond("u", SUICIDE)
     assert result["handoff_status"] == "pending" and len(store.alerts) == 1
     assert ("reply", None) not in model.calls
-    assert "safety_floor:suicide" in result["diagnostics"]
+    assert "deliberation:urgent" in result["diagnostics"] and "safety_floor:suicide" not in result["diagnostics"]
+    assert result["handoff_reason"] == "keyword:suicide" and result["safety_rounds"] == 2
 
 
 @pytest.mark.asyncio
-async def test_recheck_cannot_lower_the_floor():
-    # Routable model: first pass "uncertain", stronger recheck says "safe"; the tier-1 floor still wins.
-    model = Model(risks=("uncertain", "safe"), routable=True)
+async def test_deliberation_runs_at_medium_effort_and_round3_at_high_effort():
+    # Routable model: triage "uncertain" -> medium deliberation says "safe" with a keyword present -> high re-check.
+    model = Model(risks=("uncertain",), routable=True, deliberate="safe")
     result = await CounselingEngine(model, InMemoryStore()).respond("u", SUICIDE)
-    assert [c for c in model.calls if c[0] == "safety"] == [("safety", None), ("safety", "medium")]
-    assert "safety_rechecked:safe" in result["diagnostics"]
-    assert result["handoff_status"] == "pending"
-    assert any(d.startswith("safety_floor:") for d in result["diagnostics"])
-    # Control: without a keyword the same recheck does clear the turn.
-    model = Model(risks=("uncertain", "safe"), routable=True)
+    assert [c for c in model.calls if c[0] in {"safety", "deliberate"}] == [("safety", None), ("deliberate", "medium"), ("deliberate", "high")]
+    assert result["safety_rounds"] == 3 and result["handoff_status"] == "none"
+    assert {"deliberation:safe", "deliberation_round3:safe"} <= set(result["diagnostics"])
+    # Control: without a keyword the same deliberation clears the turn after a single extra round.
+    model = Model(risks=("uncertain",), routable=True, deliberate="safe")
     assert (await CounselingEngine(model, InMemoryStore()).respond("u", NEUTRAL))["handoff_status"] == "none"
 
 
@@ -71,10 +77,10 @@ async def test_three_different_tier2_signals_hand_off_on_the_third_message():
     first = await engine.respond("u", DISAPPEAR)
     second = await engine.respond("u", BURDEN)
     assert first["handoff_status"] == second["handoff_status"] == "none"
-    assert not any(d.startswith("safety_floor") for d in first["diagnostics"] + second["diagnostics"])
+    assert not any(d.startswith("deliberation") for d in first["diagnostics"] + second["diagnostics"])
     third = await engine.respond("u", GOODBYE)
     assert third["handoff_status"] == "pending" and len(store.alerts) == 1
-    assert "safety_floor:burden,disappear,goodbye" in third["diagnostics"]
+    assert "deliberation:urgent" in third["diagnostics"] and third["handoff_reason"] == "accumulation"
     assert len([c for c in model.calls if c[0] == "reply"]) == 2
 
 
@@ -84,7 +90,7 @@ async def test_single_or_repeated_same_tier2_signal_does_not_force_handoff():
     for _ in range(4):
         result = await engine.respond("u", DISAPPEAR)
         assert result["handoff_status"] == "none"
-        assert not any(d.startswith("safety_floor") for d in result["diagnostics"])
+        assert not any(d.startswith("deliberation") for d in result["diagnostics"])
     saved = await engine.store.load("u")
     assert saved["turn_count"] == 4 and {e["code"] for e in saved["risk_signals"]} == {"disappear"}
 
@@ -96,7 +102,7 @@ async def test_floor_does_not_repeat_on_later_neutral_messages():
     for text in (DISAPPEAR, BURDEN, GOODBYE):
         await engine.respond("u", text)
     follow = await engine.respond("u", NEUTRAL)
-    assert not any(d.startswith("safety_floor") for d in follow["diagnostics"])
+    assert not any(d.startswith("deliberation") for d in follow["diagnostics"])
     assert len(store.alerts) == 1
     assert follow["response_parts"] == ["Mimi hiểu nè."]
 
@@ -126,7 +132,7 @@ async def test_diagnostics_and_logs_carry_codes_but_never_user_text(caplog):
     text = f"{SUICIDE} vì {secret}"
     caplog.set_level(logging.DEBUG, logger="mimi_v2.turn")
     result = await CounselingEngine(Model(), InMemoryStore()).respond("u", text)
-    assert "safety_floor:suicide" in result["diagnostics"]
+    assert "deliberation:urgent" in result["diagnostics"]
     blob = json.dumps(result["diagnostics"], ensure_ascii=False) + caplog.text
     assert "suicide" in caplog.text
     assert secret not in blob and "tự tử" not in blob and text not in blob

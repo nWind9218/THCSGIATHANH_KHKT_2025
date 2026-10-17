@@ -19,8 +19,9 @@ class RecordingModel:
     """Routable stand-in: records (purpose, effort, fallback) and replays scripted risks/errors."""
     routable = True
 
-    def __init__(self, risks=("safe",), errors=None, need="comfort"):
+    def __init__(self, risks=("safe",), errors=None, need="comfort", deliberations=("safe",)):
         self.risks, self.errors, self.need, self.calls = list(risks), {k: list(v) for k, v in (errors or {}).items()}, need, []
+        self.deliberations = list(deliberations)
 
     async def complete(self, messages, purpose="reply", effort=None, fallback=False):
         self.calls.append((purpose, effort, fallback))
@@ -28,6 +29,11 @@ class RecordingModel:
             raise self.errors[purpose].pop(0)
         if purpose == "safety":
             text = json.dumps({"risk": self.risks.pop(0), "reason": "fixture"})
+        elif purpose == "deliberate":
+            text = json.dumps(dict(cues=[], about_self=True, negated_or_denied=False, joking_or_hyperbole=False,
+                                   quoted_or_hypothetical=False, intent="none", plan_or_means=False,
+                                   abuse_or_danger_from_others=False, context_trend="", reason="fixture",
+                                   risk=self.deliberations.pop(0)))
         elif purpose == "assessment":
             text = json.dumps(assessment(self.need))
         else:
@@ -45,29 +51,33 @@ async def turn(model):
 
 
 @pytest.mark.asyncio
-async def test_uncertain_safety_gets_stronger_second_opinion_that_can_clear_it():
-    model = RecordingModel(risks=("uncertain", "safe"))
+async def test_uncertain_safety_gets_medium_deliberation_that_can_clear_it():
+    model = RecordingModel(risks=("uncertain",), deliberations=("safe",))
     result = await turn(model)
-    assert [c for c in model.calls if c[0] == "safety"] == [("safety", None, False), ("safety", "medium", False)]
-    assert result["handoff_status"] == "none" and "safety_rechecked:safe" in result["diagnostics"]
+    assert [c for c in model.calls if c[0] in {"safety", "deliberate"}] == [("safety", None, False), ("deliberate", "medium", False)]
+    assert result["handoff_status"] == "none" and "deliberation:safe" in result["diagnostics"] and result["safety_rounds"] == 2
 
 
 @pytest.mark.asyncio
-async def test_recheck_never_lowers_urgent_or_survives_its_own_failure():
-    result = await turn(RecordingModel(risks=("uncertain", "urgent")))
+async def test_deliberation_never_lowers_urgent_triage_and_failure_keeps_triage_level():
+    # Clear crisis (high-confidence urgent) is not delayed by any extra round.
+    model = RecordingModel(risks=("urgent",))
+    result = await turn(model)
+    assert result["handoff_status"] == "pending" and result["safety_rounds"] == 1 and "deliberate" not in [c[0] for c in model.calls]
+    result = await turn(RecordingModel(risks=("uncertain",), deliberations=("urgent",)))
     assert result["handoff_status"] == "pending"
     model = RecordingModel(risks=("uncertain",), errors={})
-    # The recheck call fails with a non-transient error: stays uncertain (a check-in, no alert), never "safe".
+    # The deliberation call fails with a non-transient error: stays uncertain (a check-in, no alert), never "safe".
     original = model.complete
 
     async def flaky(messages, purpose="reply", effort=None, fallback=False):
-        if purpose == "safety" and effort == "medium":
+        if purpose == "deliberate":
             raise ModelError("authentication", status=401)
         return await original(messages, purpose, effort, fallback)
     model.complete = flaky
     result = await turn(model)
     assert result["handoff_status"] == "none" and result["safety_mode"] == "checkin"
-    assert "safety_recheck_failed" in result["diagnostics"]
+    assert "deliberation_failed" in result["diagnostics"]
 
 
 @pytest.mark.asyncio

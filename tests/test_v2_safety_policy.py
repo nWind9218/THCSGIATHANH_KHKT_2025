@@ -1,8 +1,9 @@
 """Risk-level policy: only "urgent" alerts teachers. Offline, scripted models, in-memory store.
 
 | signal                                              | action                                            |
-| urgent (model / hint recheck / tier-1 / accumulation) | handoff + one teacher email                       |
-| model "uncertain" (after the medium recheck)         | normal reply + SAFETY_CHECKIN, no email           |
+| urgent (high-confidence triage, or the deliberation) | handoff + one teacher email                       |
+| tier-1 keyword / accumulation: a deliberation trigger, not a floor; fail closed only if deliberation fails |
+| model "uncertain" (after the deliberation)           | normal reply + SAFETY_CHECKIN, no email           |
 | 2nd model "uncertain" within 5 turns                 | treated as urgent -> handoff                      |
 | safety model error/invalid                           | normal reply + 111 note, no email (floor aside)   |
 | safety AND assessment failed                         | fixed message with 111, no email (floor aside)    |
@@ -42,11 +43,14 @@ class Model:
         self.calls.append(purpose)
         if purpose in self.fail:
             raise ModelError("timeout")
-        if purpose == "safety":
-            if self.recheck and "Bộ phân tích phụ" in messages[0]["content"]:
-                risk = self.recheck
-            else:
-                risk = self.risks.pop(0) if len(self.risks) > 1 else self.risks[0]
+        if purpose == "deliberate":
+            # `recheck` is the deliberation's risk; by default it confirms the triage verdict.
+            text = json.dumps(dict(cues=[], about_self=True, negated_or_denied=False, joking_or_hyperbole=False,
+                                   quoted_or_hypothetical=False, intent="none", plan_or_means=False,
+                                   abuse_or_danger_from_others=False, context_trend="", reason="fixture",
+                                   risk=self.recheck or getattr(self, "last_risk", "safe")))
+        elif purpose == "safety":
+            risk = self.last_risk = self.risks.pop(0) if len(self.risks) > 1 else self.risks[0]
             text = json.dumps({"risk": risk, "reason": "fixture"})
         elif purpose == "assessment":
             text = self.assessment_text or assessment_json(safety_hint=self.hint, **self.assess)
@@ -177,8 +181,8 @@ async def test_uncertain_hint_recheck_counts_as_an_uncertain_turn_and_repeat_esc
 
 
 @pytest.mark.asyncio
-async def test_routable_uncertain_cleared_by_medium_recheck_is_not_recorded():
-    store, model = Store(), Model(risks=("uncertain", "safe"), routable=True)
+async def test_uncertain_cleared_by_deliberation_is_not_recorded():
+    store, model = Store(), Model(risks=("uncertain",), recheck="safe", routable=True)
     result = await CounselingEngine(model, store).respond("u", "ừ")
     assert result["safety_mode"] == "normal" and (await store.load("u"))["uncertain_turns"] == []
 
@@ -198,29 +202,45 @@ async def test_urgent_model_hands_off_once_with_reason():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("risks", [("safe",), ("uncertain",)])
-async def test_tier1_keyword_hands_off_even_if_model_says_safe_or_uncertain(risks):
-    store, model = Store(), Model(risks=risks)
+async def test_tier1_keyword_triggers_deliberation_and_urgent_verdict_hands_off(risks):
+    store, model = Store(), Model(risks=risks, recheck="urgent")
     result = await CounselingEngine(model, store).respond("u", "tớ muốn tự tử")
     assert result["handoff_status"] == "pending" and store.notified == 1
-    assert result["handoff_reason"] == "keyword:suicide" and "safety_floor:suicide" in result["diagnostics"]
-    assert "reply" not in model.calls
+    assert result["handoff_reason"] == "keyword:suicide" and "deliberation:urgent" in result["diagnostics"]
+    assert "reply" not in model.calls and model.calls.count("deliberate") == 1
 
 
 @pytest.mark.asyncio
-async def test_model_can_never_lower_the_floor_even_with_recheck_and_hint_safe():
-    store, model = Store(), Model(risks=("uncertain", "safe"), routable=True, recheck="safe")
+async def test_tier1_keyword_fails_closed_when_deliberation_fails():
+    store, model = Store(), Model(fail={"deliberate"})
     result = await CounselingEngine(model, store).respond("u", "tớ muốn tự tử")
-    assert result["handoff_status"] == "pending" and result["handoff_reason"].startswith("keyword:")
+    assert result["handoff_status"] == "pending" and result["handoff_reason"] == "keyword:suicide"
+    assert "deliberation_failed" in result["diagnostics"] and "reply" not in model.calls and store.notified == 1
 
 
 @pytest.mark.asyncio
-async def test_accumulation_floor_is_urgent_with_reason():
-    store, model = Store(), Model()
+async def test_tier1_keyword_cleared_only_after_the_round3_recheck_says_safe():
+    store, model = Store(), Model(recheck="safe")
+    result = await CounselingEngine(model, store).respond("u", "tớ muốn tự tử")
+    assert result["handoff_status"] == "none" and store.notified == 0 and result["safety_rounds"] == 3
+    assert "deliberation:safe" in result["diagnostics"] and "deliberation_round3:safe" in result["diagnostics"]
+
+
+@pytest.mark.asyncio
+async def test_accumulation_triggers_deliberation_and_urgent_verdict_hands_off_with_reason():
+    store, model = Store(), Model(recheck="urgent")
     engine = CounselingEngine(model, store)
     results = [await engine.respond("u", t) for t in ("tớ muốn biến mất", "tớ thấy mình là gánh nặng", "tạm biệt mọi người")]
-    assert [r["handoff_status"] for r in results[:2]] == ["none", "none"]
+    assert [r["handoff_status"] for r in results[:2]] == ["none", "none"] and [r["safety_rounds"] for r in results] == [1, 1, 2]
     assert results[2]["handoff_status"] == "pending" and results[2]["handoff_reason"] == "accumulation"
     assert store.notified == 1
+    # A deliberation that calms the drip down is trusted; a failed one is at least a check-in.
+    engine = CounselingEngine(Model(recheck="safe"), Store())
+    last = [await engine.respond("u", t) for t in ("tớ muốn biến mất", "tớ thấy mình là gánh nặng", "tạm biệt mọi người")][-1]
+    assert last["handoff_status"] == "none" and last["safety_mode"] == "normal"
+    engine = CounselingEngine(Model(fail={"deliberate"}), Store())
+    last = [await engine.respond("u", t) for t in ("tớ muốn biến mất", "tớ thấy mình là gánh nặng", "tạm biệt mọi người")][-1]
+    assert last["safety_mode"] == "checkin"
 
 
 @pytest.mark.asyncio
@@ -235,10 +255,10 @@ async def test_safety_uncertain_but_assessment_hint_urgent_gets_a_recheck():
     # Two model opinions disagree upward: one stronger safety opinion decides.
     store, model = Store(), Model(risks=("uncertain",), hint="urgent", recheck="urgent")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
-    assert result["handoff_status"] == "pending" and model.calls.count("safety") == 2
+    assert result["handoff_status"] == "pending" and model.calls.count("safety") == 1 and model.calls.count("deliberate") == 1
     store, model = Store(), Model(risks=("uncertain",), hint="urgent", recheck="safe")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
-    assert result["safety_mode"] == "checkin" and store.notified == 0  # never lower than the safety model's own "uncertain"
+    assert result["safety_mode"] == "normal" and store.notified == 0  # the deliberation's verdict is final
 
 
 # --------------------------------------------------------------------------- degraded paths
@@ -262,8 +282,8 @@ async def test_safety_error_replies_with_111_note_and_no_email(error):
 
 
 @pytest.mark.asyncio
-async def test_safety_error_with_keyword_floor_still_alerts():
-    store, model = Store(), Model(fail={"safety"})
+async def test_safety_error_with_keyword_still_alerts_when_deliberation_says_urgent():
+    store, model = Store(), Model(fail={"safety"}, recheck="urgent")
     result = await CounselingEngine(model, store).respond("u", "tớ muốn tự tử")
     assert result["handoff_status"] == "pending" and store.notified == 1 and result["handoff_reason"] == "keyword:suicide"
     assert "safety_unavailable_or_invalid" in result["diagnostics"]
@@ -274,7 +294,7 @@ async def test_safety_error_but_urgent_assessment_hint_is_rechecked_not_ignored(
     # The dedicated check failed once; the stronger recheck answers: its verdict decides.
     class FlakySafety(Model):
         async def complete(self, messages, purpose="reply", effort=None, fallback=False):
-            if purpose == "safety" and "Bộ phân tích phụ" not in messages[0]["content"]:
+            if purpose == "safety":
                 self.calls.append(purpose)
                 raise ModelError("timeout")
             return await super().complete(messages, purpose, effort, fallback)
@@ -338,7 +358,7 @@ def test_uncertain_turns_are_normalized_on_load():
 async def test_handoff_reason_is_logged_as_a_code_never_text(caplog):
     secret = "ZQXSECRET"
     caplog.set_level(logging.DEBUG, logger="mimi_v2.turn")
-    result = await CounselingEngine(Model(), Store()).respond("u", f"tớ muốn tự tử vì {secret}")
+    result = await CounselingEngine(Model(recheck="urgent"), Store()).respond("u", f"tớ muốn tự tử vì {secret}")
     line = next(r.getMessage() for r in caplog.records if r.name == "mimi_v2.turn")
     info = json.loads(line.split("turn ", 1)[1])
     assert info["handoff_reason"] == "keyword:suicide" and info["safety_mode"] == "handoff"

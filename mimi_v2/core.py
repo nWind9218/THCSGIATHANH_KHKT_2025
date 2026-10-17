@@ -21,7 +21,8 @@ from .tracing import Trace, model_attrs, summarize
 from .messenger_format import to_messenger
 from .prompts import (ASSESSMENT, CLOSING_MESSAGE, FORMAT, GREETING_MESSAGE, HANDOFF_MESSAGE, HANDOFF_REQUEST_NOT_SENT,
                       HANDOFF_REQUEST_SENT, LISTEN_CLOSING_CONFLICT, LISTEN_MODE, PERSONA, REPLY_FAILURE_MESSAGE,
-                      SAFETY, SAFETY_CHECKIN, SAFETY_HINT_ACCUMULATED, SAFETY_HINT_ASSESSMENT, SAFETY_HINT_KEYWORDS,
+                      SAFETY, SAFETY_CHECKIN, SAFETY_DELIBERATE, SAFETY_HINT_ACCUMULATED, SAFETY_HINT_KEYWORDS,
+                      SAFETY_REVIEW_LINE, SAFETY_TRIAGE_LINE,
                       SAFETY_UNAVAILABLE_NOTE, SESSION_LOAD_FAILURE_MESSAGE, STYLE)
 from .store import SessionStore
 from .teencode import RISK_ORDER, detect_register, max_risk, scan
@@ -68,6 +69,24 @@ class Safety(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     risk: Literal["safe", "urgent", "uncertain"]
     reason: str
+    # Missing from an older/simpler model answer means "high" (no extra review).
+    confidence: Literal["high", "low"] = "high"
+
+
+class Deliberation(BaseModel):
+    """Round 2/3 safety review: the structured fields are the reasoning (no free-form chain of thought)."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+    cues: list[str]
+    about_self: bool
+    negated_or_denied: bool
+    joking_or_hyperbole: bool
+    quoted_or_hypothetical: bool
+    intent: Literal["none", "passive", "active"]
+    plan_or_means: bool
+    abuse_or_danger_from_others: bool
+    context_trend: str
+    risk: Literal["safe", "uncertain", "urgent"]
+    reason: str
 
 
 class Assessment(BaseModel):
@@ -94,7 +113,7 @@ class StoredIdentity(BaseModel):
 def decision_error(stage: str, exc: Exception) -> list[str]:
     """Safe field/type diagnostics; no model payload, validation inputs or fact keys."""
     if isinstance(exc, ValidationError):
-        fields = set(Assessment.model_fields) | set(Safety.model_fields) | set(StoredIdentity.model_fields)
+        fields = set(Assessment.model_fields) | set(Safety.model_fields) | set(Deliberation.model_fields) | set(StoredIdentity.model_fields)
         return [f"{stage}_validation:{error['loc'][0] if error['loc'] and error['loc'][0] in fields else 'payload'}:{error['type']}"
                 for error in exc.errors(include_input=False, include_context=False)][:8]
     if isinstance(exc, ContractError):
@@ -119,6 +138,7 @@ class Turn(TypedDict, total=False):
     # normal | checkin | unavailable | degraded | handoff | takeover; handoff_reason is a text-free code.
     safety_mode: str
     handoff_reason: str
+    safety_rounds: int
 
 
 def fallback_assessment(session: dict) -> dict:
@@ -221,35 +241,48 @@ class CounselingEngine:
                           error=(getattr(error, "code", type(error).__name__) if error else None))
 
     async def _screen(self, state: Turn) -> dict:
-        """Run the safety check and the assessment concurrently (they only read the same messages).
+        """Multi-round safety review. Only "urgent" alerts teachers.
 
-        Policy (only "urgent" alerts teachers):
-        - urgent (safety model, hint recheck, tier-1 keyword floor, accumulated tier-2 floor) -> handoff;
-          the assessment is discarded as if it had never run.
-        - uncertain from the model -> normal reply with a gentle check-in; a second one within
-          UNCERTAIN_REPEAT_WINDOW turns counts as urgent.
-        - safety model unavailable -> normal reply plus a short 111 note (no alert unless a keyword floor
-          applies); if the assessment failed too, a fixed message with 111.
-        - assessment failure alone never decides anything: a neutral fallback assessment is used.
-        When safety is calmer than the assessment's own hint, one stronger safety second opinion decides.
+        Round 1 (always): fast triage and the assessment run concurrently over the same messages.
+        - triage "urgent" with high confidence -> handoff at once (clear crisis, no extra delay).
+        Round 2 ("deliberate", medium effort) runs ONLY for ambiguous turns: triage "uncertain"; low confidence with
+        any cue; triage and assessment hint disagree; a tier-1 keyword the triage called "safe"; accumulated tier-2
+        signals. It returns structured fields (negated? joking? quoted? intent? plan?) and the final risk.
+        Round 3 (high effort, once) only resolves a contradiction inside round 2: "urgent" although negated/joking/
+        quoted, or "safe" although a tier-1 keyword is present. Its verdict is final. At most 2 extra calls.
+        Outcome: urgent -> handoff (reason "keyword:<codes>" with a tier-1 keyword, else "accumulation"/"model:urgent");
+        uncertain -> check-in (a second one within UNCERTAIN_REPEAT_WINDOW turns -> handoff); safe -> normal reply.
+        A tier-1 keyword is a trigger, not a verdict; but if deliberation fails while one is present we fail closed
+        to handoff. Without a tier-1 keyword a failed deliberation falls back to the triage verdict raised to the
+        assessment hint (accumulated signals raise it to at least a check-in). The assessment never decides safety by itself.
         """
         safety, assessment = await asyncio.gather(self._safety(state), self._assessment(state))
-        risk, reason, unavailable = safety["risk"], safety["reason"], safety["unavailable"]
+        triage, confidence, unavailable = safety["risk"], safety["confidence"], safety["unavailable"]
         item = assessment["item"]
-        if risk != "urgent" and RISK_ORDER[item["safety_hint"]] > RISK_ORDER[risk]:
-            rechecked, answered = await self._recheck_hint_ex(state, item["safety_hint"])
-            risk = max_risk(risk, rechecked)
-            reason = f"model:{risk}"
-            unavailable = unavailable and not answered
-        updates = {"diagnostics": state["diagnostics"], "timings": state["timings"],
-                   "usage": state["usage"], "model_calls": state["model_calls"]}
-        if risk == "urgent":
+        _, tier1, accumulation = self._cues(state)
+        tier2 = (state.get("signals") or {}).get("tier2", [])
+        hint = item["safety_hint"] if assessment["ok"] else "safe"
+        rounds, final = 1, triage
+        direct = triage == "urgent" and confidence == "high"
+        if not direct:
+            triggers = [name for name, hit in (
+                ("uncertain", triage == "uncertain"),
+                ("low_confidence", confidence == "low" and bool(tier1 or tier2 or triage != "safe")),
+                ("hint_disagrees", hint != triage),
+                ("tier1_vs_safe", bool(tier1) and triage == "safe"),
+                ("accumulation", accumulation)) if hit]
+            if triggers:
+                final, rounds, unavailable = await self._deliberate_rounds(state, safety, hint, tier1, accumulation, unavailable)
+        updates = {"diagnostics": state["diagnostics"], "timings": state["timings"], "usage": state["usage"],
+                   "model_calls": state["model_calls"], "safety_rounds": rounds}
+        if final == "urgent":
+            reason = "keyword:" + "+".join(tier1) if tier1 else "accumulation" if accumulation and not direct else "model:urgent"
             session = deepcopy(state["session"])
             if assessment["ok"]:
                 state["diagnostics"].append("assessment_discarded_not_safe")
             return {**updates, "safety": "urgent", "safety_mode": "handoff", "handoff_reason": reason, "session": session}
         session = assessment["session"]
-        if risk == "uncertain":
+        if final == "uncertain":
             turn = session["turn_count"]
             recent = [t for t in session["uncertain_turns"] if 0 < turn - t <= UNCERTAIN_REPEAT_WINDOW]
             session["uncertain_turns"] = [*recent, turn][-UNCERTAIN_TURNS_KEPT:]
@@ -268,76 +301,78 @@ class CounselingEngine:
                 "session": session, "assessment": item}
 
     @staticmethod
-    def _safety_context(state: Turn) -> tuple[str, str, list[str], str]:
-        """Safety prompt with keyword/accumulated hints, plus the deterministic floor, its codes and reason code."""
+    def _cues(state: Turn) -> tuple[str, list[str], bool]:
+        """Hint lines for the safety prompts (keyword + accumulated codes), tier-1 codes, and whether tier-2
+        signals have accumulated to RISK_ACCUMULATION_FLOOR distinct codes (a deliberation trigger, not a floor)."""
         signals = state.get("signals") or {}
-        tier1, tier2 = signals.get("tier1", []), signals.get("tier2", [])
+        tier1, tier2 = list(signals.get("tier1", [])), list(signals.get("tier2", []))
         session = state["session"]
         earlier = {e["code"] for e in session["risk_signals"] if e["turn"] < session["turn_count"]}
-        prompt = SAFETY
+        hints = ""
         if tier1 or tier2:
-            prompt += "\n" + SAFETY_HINT_KEYWORDS.format(codes=", ".join([*tier1, *tier2]))
+            hints += "\n" + SAFETY_HINT_KEYWORDS.format(codes=", ".join([*tier1, *tier2]))
         if len(earlier) >= RISK_ACCUMULATION_HINT:
-            prompt += "\n" + SAFETY_HINT_ACCUMULATED.format(codes=", ".join(sorted(earlier)))
-        accumulated = earlier | set(tier2)
-        if tier1:
-            return prompt, "urgent", list(tier1), "keyword:" + "+".join(tier1)
-        if tier2 and len(accumulated) >= RISK_ACCUMULATION_FLOOR:
-            return prompt, "urgent", sorted(accumulated), "accumulation"
-        return prompt, "safe", [], ""
+            hints += "\n" + SAFETY_HINT_ACCUMULATED.format(codes=", ".join(sorted(earlier)))
+        return hints, tier1, bool(tier2) and len(earlier | set(tier2)) >= RISK_ACCUMULATION_FLOOR
 
-    @staticmethod
-    def _apply_floor(state: Turn, risk: str, floor: str, codes: list[str]) -> str:
-        raised = max_risk(risk, floor)
-        if raised != risk:
-            state["diagnostics"].append("safety_floor:" + ",".join(codes))
-        return raised
-
-    async def _recheck_hint_ex(self, state: Turn, hint: str) -> tuple[str, bool]:
-        """Second safety opinion when the assessment's hint is above the safety result.
-
-        Returns (risk, answered). A failed recheck keeps the hint (answered=False); the floor always applies."""
-        prompt, floor, codes, _ = self._safety_context(state)
-        answered = True
+    async def _deliberation_call(self, state: Turn, prompt: str, effort: str, tag: str) -> Deliberation | None:
+        """One structured review call. Returns None (and logs code-only diagnostics) when it fails or is invalid."""
         try:
-            risk = Safety.model_validate(parse_decision(await self._complete(
-                state, "safety", prompt + "\n" + SAFETY_HINT_ASSESSMENT.format(level=hint), retry=True, effort="medium"))).risk
-            state["diagnostics"].append(f"assessment_hint_rechecked:{risk}")
-        except Exception:
-            risk, answered = hint, False
-            state["diagnostics"].append("assessment_hint_recheck_failed")
-        return self._apply_floor(state, risk, floor, codes), answered
+            result = Deliberation.model_validate(parse_decision(await self._complete(
+                state, "deliberate", prompt, retry=True, effort=effort)))
+        except Exception as exc:
+            state["diagnostics"].append(tag + "_failed")
+            state["diagnostics"].extend(decision_error("deliberate", exc))
+            state["diagnostics"].extend(model_error_label("deliberate", exc))
+            return None
+        # Sanity guard (can only raise): a real, active, planned self-harm intent is never "safe"/"uncertain".
+        if (result.risk != "urgent" and result.about_self and result.intent == "active" and result.plan_or_means
+                and not (result.negated_or_denied or result.joking_or_hyperbole or result.quoted_or_hypothetical)):
+            state["diagnostics"].append(tag + "_raised_inconsistent")
+            result = result.model_copy(update={"risk": "urgent"})
+        state["diagnostics"].append(f"{tag}:{result.risk}")
+        return result
 
-    async def _recheck_hint(self, state: Turn, hint: str) -> str:
-        return (await self._recheck_hint_ex(state, hint))[0]
+    async def _deliberate_rounds(self, state: Turn, triage: dict, hint: str, tier1: list[str], accumulation: bool,
+                                 unavailable: bool) -> tuple[str, int, bool]:
+        """Rounds 2 and 3. Returns (final risk, total rounds incl. triage, triage_still_unavailable)."""
+        hints = self._cues(state)[0]
+        base = SAFETY_DELIBERATE + hints + "\n" + SAFETY_TRIAGE_LINE.format(
+            risk=triage["risk"], confidence=triage["confidence"], hint=hint)
+        second = await self._deliberation_call(state, base, "medium", "deliberation")
+        if second is None:
+            if tier1:
+                return "urgent", 2, unavailable   # keyword present and unverifiable: fail closed
+            # Triage verdict, raised to the assessment's own hint (the old "failed recheck keeps the hint" policy).
+            fallback = max_risk(triage["risk"], hint)
+            return (max_risk(fallback, "uncertain") if accumulation else fallback), 2, unavailable
+        final, rounds = second.risk, 2
+        contradiction = ((final == "urgent" and (second.negated_or_denied or second.joking_or_hyperbole or second.quoted_or_hypothetical))
+                         or (final == "safe" and bool(tier1)))
+        if contradiction:
+            review = base + "\n" + SAFETY_REVIEW_LINE.format(previous=final, reason=second.reason[:200])
+            third = await self._deliberation_call(state, review, "high", "deliberation_round3")
+            rounds = 3
+            if third is not None:
+                final = third.risk
+            elif final == "safe":
+                final = "uncertain"   # a keyword the first review waved off could not be re-checked: gentle check-in
+        return final, rounds, False
 
     async def _safety(self, state: Turn) -> dict:
-        """Dedicated safety result: {"risk", "reason", "unavailable"}.
+        """Round 1 triage: {"risk", "confidence", "reason", "unavailable"}.
 
         A model error/timeout/invalid answer is not a risk: it yields "safe" with unavailable=True (the
-        reply then carries a 111 note). Only the deterministic floor can still force "urgent"."""
-        prompt, floor, codes, floor_reason = self._safety_context(state)
-        unavailable = False
+        reply then carries a 111 note); a tier-1 keyword still triggers deliberation in that case."""
+        hints = self._cues(state)[0]
         try:
-            parsed = Safety.model_validate(parse_decision(await self._complete(state, "safety", prompt, retry=True)))
-            risk = parsed.risk
-            if risk == "uncertain" and getattr(self.model, "routable", False):
-                # Cheap first pass flagged it: take one stronger second opinion before a check-in.
-                # A failed or invalid recheck keeps "uncertain", so this can only reduce false alarms.
-                try:
-                    risk = Safety.model_validate(parse_decision(await self._complete(state, "safety", prompt, retry=True, effort="medium"))).risk
-                    state["diagnostics"].append(f"safety_rechecked:{risk}")
-                except Exception:
-                    state["diagnostics"].append("safety_recheck_failed")
+            parsed = Safety.model_validate(parse_decision(await self._complete(state, "safety", SAFETY + hints, retry=True)))
+            return {"risk": parsed.risk, "confidence": parsed.confidence, "reason": parsed.reason, "unavailable": False}
         except Exception as exc:
             state["diagnostics"].append("safety_unavailable_or_invalid")
             state["diagnostics"].extend(decision_error("safety", exc))
             state["diagnostics"].extend(model_error_label("safety", exc))
-            risk, unavailable = "safe", True
-        # Deterministic floor, applied last so neither the model nor the recheck can lower it.
-        risk = self._apply_floor(state, risk, floor, codes)
-        reason = floor_reason if risk == "urgent" and floor == "urgent" else f"model:{risk}"
-        return {"risk": risk, "reason": reason, "unavailable": unavailable}
+            return {"risk": "safe", "confidence": "high", "reason": "", "unavailable": True}
 
     async def _assessment(self, state: Turn) -> dict:
         """Structured assessment: {"ok", "item", "session"}.
@@ -473,6 +508,7 @@ class CounselingEngine:
             "handoff": result.get("handoff_status"),
             "safety_hint": assessment.get("safety_hint"),
             "safety_mode": result.get("safety_mode"), "handoff_reason": result.get("handoff_reason"),
+            "safety_rounds": result.get("safety_rounds"),
             "need": assessment.get("need"), "intent": assessment.get("intent"),
             "diagnostics": result.get("diagnostics", []),
             "calls": [c.get("purpose") for c in result.get("model_calls", [])],
@@ -539,6 +575,7 @@ class CounselingEngine:
             output = {"response": joined, "response_text": joined, "response_parts": list(parts), "messages": result["session"]["messages"],
                       "assessment": result.get("assessment", {}), "handoff_status": result["session"]["handoff_status"],
                       "safety_mode": result.get("safety_mode", "normal"), "handoff_reason": result.get("handoff_reason"),
+                      "safety_rounds": result.get("safety_rounds", 0),
                       "sources": result.get("sources", {}), "diagnostics": result["diagnostics"],
                       "timings": result["timings"], "usage": result["usage"], "model_calls": result["model_calls"]}
             output["trace"] = trace.finish()

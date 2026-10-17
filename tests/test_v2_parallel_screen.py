@@ -18,17 +18,24 @@ def assessment(**changes):
     return result
 
 
+def deliberation(risk, **changes):
+    result = dict(cues=[], about_self=True, negated_or_denied=False, joking_or_hyperbole=False, quoted_or_hypothetical=False,
+                  intent="none", plan_or_means=False, abuse_or_danger_from_others=False, context_trend="", risk=risk, reason="x")
+    result.update(changes)
+    return result
+
+
 class Model:
-    def __init__(self, risk="safe", hint="safe", fail=None, delay=0.05, recheck=None, routable=False):
-        # recheck: answer to the second safety opinion asked when only the assessment hint flagged the turn
-        # ("fail" makes that call raise).
+    def __init__(self, risk="safe", hint="safe", fail=None, delay=0.05, recheck=None, routable=False, confidence="high"):
+        # recheck: answer to the round-2 deliberation asked on ambiguous turns ("fail" makes that call raise).
         self.risk, self.hint, self.fail, self.delay, self.recheck, self.routable = risk, hint, fail, delay, recheck, routable
+        self.confidence = confidence
         self.efforts = []
         self.calls, self.active, self.max_active = [], 0, 0
 
     async def complete(self, messages, purpose, effort=None, fallback=False):
         self.calls.append(purpose)
-        is_recheck = purpose == "safety" and "Bộ phân tích phụ" in messages[0]["content"]
+        is_recheck = purpose == "deliberate"
         self.efforts.append((purpose, effort, is_recheck))
         self.active += 1
         self.max_active = max(self.max_active, self.active)
@@ -36,8 +43,8 @@ class Model:
             await asyncio.sleep(self.delay)
             if self.fail == purpose or (is_recheck and self.recheck == "fail"):
                 raise ModelError("timeout")
-            risk = self.recheck if is_recheck and self.recheck else self.risk
-            text = {"safety": json.dumps({"risk": risk, "reason": "x"}),
+            text = {"safety": json.dumps({"risk": self.risk, "confidence": self.confidence, "reason": "x"}),
+                    "deliberate": json.dumps(deliberation(self.recheck or "safe")),
                     "assessment": json.dumps(assessment(safety_hint=self.hint)),
                     "reply": "Mimi hiểu."}[purpose]
             return SimpleNamespace(text=text, usage={"total_tokens": 1}, metadata={})
@@ -118,10 +125,10 @@ async def test_assessment_hint_confirmed_by_second_opinion_hands_off(hint):
     store, model = Store(), Model(hint=hint, recheck="urgent")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
     assert result["handoff_status"] == "pending" and "reply" not in model.calls and store.notified == 1
-    assert "assessment_hint_rechecked:urgent" in result["diagnostics"]
+    assert "deliberation:urgent" in result["diagnostics"] and result["safety_rounds"] == 2
     assert "assessment_discarded_not_safe" in result["diagnostics"]
     assert result["assessment"] == {} and (await store.load("u"))["known"] == {}
-    assert model.calls.count("safety") == 2
+    assert model.calls.count("safety") == 1 and model.calls.count("deliberate") == 1
 
 
 @pytest.mark.asyncio
@@ -129,10 +136,10 @@ async def test_assessment_hint_cleared_by_second_opinion_continues_normally():
     store, model = Store(), Model(hint="uncertain", recheck="safe")
     result = await CounselingEngine(model, store).respond("u", "nay bị gọi lên bảng xỉu ngang")
     assert result["handoff_status"] == "none" and store.notified == 0 and "reply" in model.calls
-    assert "assessment_hint_rechecked:safe" in result["diagnostics"]
+    assert "deliberation:safe" in result["diagnostics"] and result["safety_rounds"] == 2
     assert "assessment_discarded_not_safe" not in result["diagnostics"]
     assert result["assessment"]["known"] == {"grade": "8"}  # the assessment was kept, not discarded
-    assert model.calls.count("safety") == 2
+    assert model.calls.count("safety") == 1 and model.calls.count("deliberate") == 1
 
 
 @pytest.mark.asyncio
@@ -141,11 +148,11 @@ async def test_failed_second_opinion_keeps_the_hint_level():
     store, model = Store(), Model(hint="uncertain", recheck="fail")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
     assert result["handoff_status"] == "none" and "reply" in model.calls and store.notified == 0
-    assert "assessment_hint_recheck_failed" in result["diagnostics"] and result["safety_mode"] == "checkin"
+    assert "deliberation_failed" in result["diagnostics"] and result["safety_mode"] == "checkin"
     store, model = Store(), Model(hint="urgent", recheck="fail")
     result = await CounselingEngine(model, store).respond("u", "xin chào")
     assert result["handoff_status"] == "pending" and "reply" not in model.calls and store.notified == 1
-    assert "assessment_hint_recheck_failed" in result["diagnostics"] and result["handoff_reason"] == "model:urgent"
+    assert "deliberation_failed" in result["diagnostics"] and result["handoff_reason"] == "model:urgent"
 
 
 @pytest.mark.asyncio
@@ -159,34 +166,28 @@ async def test_hint_recheck_levels_map_to_checkin_normal_or_handoff(recheck, mod
 
 
 @pytest.mark.asyncio
-async def test_second_opinion_prompt_effort_and_agreeing_hint_costs_nothing_extra():
+async def test_deliberation_effort_and_agreeing_hint_costs_nothing_extra():
     model = Model(hint="uncertain", recheck="safe", routable=True)
     await CounselingEngine(model, Store()).respond("u", "xin chào")
-    assert [e for e in model.efforts if e[0] == "safety"] == [("safety", None, False), ("safety", "medium", True)]
+    assert [e[:2] for e in model.efforts if e[0] in {"safety", "deliberate"}] == [("safety", None), ("deliberate", "medium")]
     # No disagreement (both safe): exactly one safety call, no extra latency.
     model = Model()
     await CounselingEngine(model, Store()).respond("u", "xin chào")
-    assert model.calls.count("safety") == 1
+    assert model.calls.count("safety") == 1 and "deliberate" not in model.calls
 
 
 @pytest.mark.asyncio
-async def test_deterministic_floor_still_wins_over_a_second_opinion_of_safe():
-    # Whole turn: the keyword floor already hands off, and no second opinion is even needed.
+async def test_tier1_keyword_is_a_trigger_not_a_verdict():
+    # Keyword + deliberation (and the round-3 re-check) both say safe: no handoff.
     store, model = Store(), Model(hint="uncertain", recheck="safe")
     result = await CounselingEngine(model, store).respond("u", "tớ muốn tự tử")
-    assert result["handoff_status"] == "pending" and "reply" not in model.calls
-    assert "safety_floor:suicide" in result["diagnostics"]
-    assert result["handoff_reason"] == "keyword:suicide"
-    # The recheck itself re-applies the floor: a "safe" answer cannot lower it.
-    engine = CounselingEngine(Model(recheck="safe"), Store())
-    session = {"messages": [], "risk_signals": [], "turn_count": 1}
-    state = {"session": session, "signals": {"tier1": ["suicide"], "tier2": []}, "diagnostics": [], "timings": {}, "usage": {}, "model_calls": []}
-    assert await engine._recheck_hint(state, "uncertain") == "urgent"
-    assert "assessment_hint_rechecked:safe" in state["diagnostics"] and "safety_floor:suicide" in state["diagnostics"]
-    # Same for the accumulated tier-2 floor (3 distinct codes, one of them this turn).
-    session = {"messages": [], "risk_signals": [{"code": "burden", "turn": 1}, {"code": "goodbye", "turn": 2}, {"code": "disappear", "turn": 3}], "turn_count": 3}
-    state = {"session": session, "signals": {"tier1": [], "tier2": ["disappear"]}, "diagnostics": [], "timings": {}, "usage": {}, "model_calls": []}
-    assert await engine._recheck_hint(state, "uncertain") == "urgent"
+    assert result["handoff_status"] == "none" and "reply" in model.calls and store.notified == 0
+    assert result["safety_rounds"] == 3 and model.calls.count("deliberate") == 2
+    # Deliberation says urgent: handoff with the keyword reason.
+    store, model = Store(), Model(hint="uncertain", recheck="urgent")
+    result = await CounselingEngine(model, store).respond("u", "tớ muốn tự tử")
+    assert result["handoff_status"] == "pending" and "reply" not in model.calls and store.notified == 1
+    assert result["handoff_reason"] == "keyword:suicide" and "safety_floor:suicide" not in result["diagnostics"]
 
 
 @pytest.mark.asyncio
@@ -204,7 +205,7 @@ async def test_both_calls_fail_sends_fixed_111_message_without_alert():
 
 
 @pytest.mark.asyncio
-async def test_both_calls_fail_but_keyword_floor_still_alerts_once():
+async def test_both_calls_fail_but_keyword_fails_closed_and_alerts_once():
     class BothFail(Model):
         async def complete(self, messages, purpose):
             self.calls.append(purpose)
